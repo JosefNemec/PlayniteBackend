@@ -10,16 +10,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Playnite.Common\Extensions\CloneObject.cs" Link="Common\CloneObject.cs" />
-    <Compile Include="..\Playnite.Common\Extensions\LongExtensions.cs" Link="Common\LongExtensions.cs" />
-    <Compile Include="..\Playnite.Common\Extensions\ObjectExtensions.cs" Link="Common\ObjectExtensions.cs" />
-    <Compile Include="..\Playnite.Common\Extensions\StringExtensions.cs" Link="Common\StringExtensions.cs" />
-    <Compile Include="..\Playnite.Common\InteropMethods.cs" Link="Common\InteropMethods.cs" />
-    <Compile Include="..\Playnite.Common\Roman.cs" Link="Common\Roman.cs" />
-    <Compile Include="..\Playnite.Common\Serialization.cs" Link="Common\Serialization.cs" />
-    <Compile Include="..\Playnite.Common\FileSystem.cs" Link="Common\FileSystem.cs" />
-    <Compile Include="..\Playnite.Common\Paths.cs" Link="Common\Paths.cs" />
-    <Compile Include="..\Playnite\DiagnosticPackageInfo.cs" Link="Common\DiagnosticPackageInfo.cs" />
+    <Compile Remove="Common\**" />
+    <Content Remove="Common\**" />
+    <EmbeddedResource Remove="Common\**" />
+    <None Remove="Common\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\CloneObject.cs" Link="Shared\CloneObject.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\LongExtensions.cs" Link="Shared\LongExtensions.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\ObjectExtensions.cs" Link="Shared\ObjectExtensions.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\StringExtensions.cs" Link="Shared\StringExtensions.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\FileSystem.cs" Link="Shared\FileSystem.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\InteropMethods.cs" Link="Shared\InteropMethods.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Paths.cs" Link="Shared\Paths.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Roman.cs" Link="Shared\Roman.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Serialization.cs" Link="Shared\Serialization.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\DiagnosticPackageInfo.cs" Link="Shared\DiagnosticPackageInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,11 +46,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Common\" />
+    <Folder Include="Shared\" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PlayniteSDK\Playnite.SDK.csproj" />
+    <ProjectReference Include="..\..\PlayniteRepo\source\PlayniteSDK\Playnite.SDK.csproj" />
   </ItemGroup>
 
 </Project>
