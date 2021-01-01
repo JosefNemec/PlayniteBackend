@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Playnite.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -21,7 +22,7 @@ namespace PlayniteServicesTests.Controllers.Playnite
         [Fact]
         public async Task PostUserTest()
         {
-            var user = new PlayniteServices.Models.Playnite.User()
+            var user = new User()
             {
                 Id = "testId",
                 WinVersion = "windversion",

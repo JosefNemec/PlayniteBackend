@@ -1,7 +1,7 @@
 ﻿using LiteDB;
 using Microsoft.AspNetCore.Mvc;
+using Playnite.Services.Models;
 using PlayniteServices.Filters;
-using PlayniteServices.Models.Playnite;
 using PlayniteServices.Models.Stats;
 using System;
 using System.Collections.Generic;

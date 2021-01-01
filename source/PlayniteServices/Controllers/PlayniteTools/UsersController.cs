@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using PlayniteServices.Models.Playnite;
 using LiteDB;
+using Playnite.Services.Models;
 
 namespace PlayniteServices.Controllers.PlayniteTools
 {
@@ -24,7 +24,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
             var dbUser = usersColl.FindById(user.Id);
             user.LastLaunch = DateTime.Now;
             if (dbUser == null)
-            {               
+            {
                 usersColl.Insert(user);
             }
             else

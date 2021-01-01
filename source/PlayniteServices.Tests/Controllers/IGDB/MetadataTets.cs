@@ -127,6 +127,23 @@ namespace PlayniteServicesTests.Controllers.IGDB
             Assert.Equal("Dishonored: Death of the Outsider", metadata.name);
         }
 
+        [Fact]
+        public async Task CrashNameTests()
+        {
+            await GetMetadata(new SdkModels.Game(@"\millennium 2"));
+            await GetMetadata(new SdkModels.Game("BroForce.v864.201901211236"));
+            await GetMetadata(new SdkModels.Game("Danganronpa １・２ Reload"));
+            await GetMetadata(new SdkModels.Game("ココロクローバー パート１/Kokoro Clover Part1"));
+        }
+
+        [Fact]
+        public async Task DashSearch()
+        {
+            var response = await (await client.GetAsync(@"/igdb/games/x-com")).Content.ReadAsStringAsync();
+            var data = Serialization.FromJson<ServicesResponse<List<ExpandedGameLegacy>>>(response);
+            Assert.NotNull(data.Data.FirstOrDefault(a => a.name == "X-COM: UFO Defense"));
+        }
+
         //[Fact]
         //public async Task BigMatchingTest()
         //{

@@ -27,6 +27,7 @@
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Roman.cs" Link="Shared\Roman.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Serialization.cs" Link="Shared\Serialization.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\DiagnosticPackageInfo.cs" Link="Shared\DiagnosticPackageInfo.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Services\Models\Playnite.cs" Link="Models\Playnite\Playnite.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Models\Playnite\" />
     <Folder Include="Shared\" />
   </ItemGroup>
 
