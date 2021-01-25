@@ -41,6 +41,13 @@ namespace PlayniteServices
         public string GitHubSecret { get; set; }
     }
 
+    public class Addons
+    {
+        public string AddonRepository { get; set; }
+        public string DatabasePath { get; set; }
+        public string GitHubSecret { get; set; }
+    }
+
     public class AppSettings
     {
         public string DbPath { get; set; }
@@ -52,6 +59,7 @@ namespace PlayniteServices
         public IgdbSettings IGDB { get; set; }
         public PatreonSettings Patreon { get; set; }
         public GitHubSettings GitHub { get; set; }
+        public Addons Addons { get; set; }
     }
 
     public class UpdatableAppSettings

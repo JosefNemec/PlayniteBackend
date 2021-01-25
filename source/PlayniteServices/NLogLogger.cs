@@ -58,6 +58,16 @@ namespace PlayniteServices
             logger.Warn(exception, message);
         }
 
+        public void Trace(string message)
+        {
+            logger.Trace(message);
+        }
+
+        public void Trace(Exception exception, string message)
+        {
+            logger.Trace(exception, message);
+        }
+
         public static void ConfigureLogger()
         {
             var config = new LoggingConfiguration();

@@ -9,6 +9,8 @@ using PlayniteServices.Databases;
 using Microsoft.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using Playnite.SDK;
+using LiteDB;
+using Playnite;
 
 namespace PlayniteServices
 {
@@ -16,10 +18,9 @@ namespace PlayniteServices
     {
         private static readonly ILogger logger = LogManager.GetLogger();
 
-        public static Database Database
-        {
-            get; private set;
-        }
+        public static Database Database { get; private set; }
+        public static LiteDatabase AddonsDatabase { get; private set; }
+        public static LiteCollection<AddonManifestBase> AddonsCollection { get; private set; }
 
         public static IWebHost BuildWebHost(string[] args)
         {
@@ -34,6 +35,17 @@ namespace PlayniteServices
                 .Build();
 
             Database = new Database(Database.Path);
+
+            var addonDbPath = Startup.Configuration.GetSection(nameof(AppSettings.Addons)).GetSection(nameof(Addons.DatabasePath)).Value;
+            if (!Playnite.Common.Paths.IsFullPath(addonDbPath))
+            {
+                addonDbPath = Path.Combine(Paths.ExecutingDirectory, addonDbPath);
+            }
+
+            AddonsDatabase = new LiteDatabase($"Filename={addonDbPath};Mode=Exclusive");
+            AddonsCollection = AddonsDatabase.GetCollection<AddonManifestBase>();
+            BsonMapper.Global.Entity<AddonManifestBase>().Id(a => a.AddonId);
+            AddonsCollection.EnsureIndex(a => a.AddonId);
             return host;
         }
 

@@ -28,7 +28,7 @@ namespace PlayniteServices.Controllers.Webhooks
             appSettings = settings.Value;
         }
 
-        private static string GetPayloadHash(string payload, string key)
+        public static string GetPayloadHash(string payload, string key)
         {
             var encoding = new UTF8Encoding();
             var textBytes = encoding.GetBytes(payload);
