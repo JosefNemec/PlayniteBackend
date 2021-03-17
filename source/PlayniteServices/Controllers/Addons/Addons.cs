@@ -123,31 +123,49 @@ namespace PlayniteServices.Controllers.Addons
                 logger.Info("Regenerating addons database.");
                 lock (generatorLock)
                 {
-                    var repoPackage = Path.Combine(Paths.ExecutingDirectory, "repo.zip");
-                    FileSystem.DeleteFile(repoPackage);
-                    using (var webClient = new WebClient())
-                    {
-                        webClient.DownloadFile(settings.Settings.Addons.AddonRepository, repoPackage);
-                    }
-
                     var col = Program.AddonsCollection;
                     col.Delete(Query.All());
 
-                    using (var zip = ZipFile.OpenRead(repoPackage))
+                    if (settings.Settings.Addons.AddonRepository.IsHttpUrl())
                     {
-                        foreach (var manifestFile in zip.Entries.Where(a => a.Name.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)))
+                        var repoPackage = Path.Combine(Paths.ExecutingDirectory, "repo.zip");
+                        FileSystem.DeleteFile(repoPackage);
+                        using (var webClient = new WebClient())
                         {
-                            using (var entry = zip.GetEntry(manifestFile.FullName).Open())
+                            webClient.DownloadFile(settings.Settings.Addons.AddonRepository, repoPackage);
+                        }
+
+                        using (var zip = ZipFile.OpenRead(repoPackage))
+                        {
+                            foreach (var manifestFile in zip.Entries.Where(a => a.Name.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)))
                             {
-                                try
+                                using (var entry = zip.GetEntry(manifestFile.FullName).Open())
                                 {
-                                    var manifest = Serialization.FromYamlStream<AddonManifestBase>(entry);
-                                    col.Upsert(manifest);
+                                    try
+                                    {
+                                        var manifest = Serialization.FromYamlStream<AddonManifestBase>(entry);
+                                        col.Upsert(manifest);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        logger.Error(e, $"Failed to parse addon manifest {manifestFile.FullName}");
+                                    }
                                 }
-                                catch (Exception e)
-                                {
-                                    logger.Error(e, $"Failed to parse addon manifest {manifestFile.FullName}");
-                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var manifestFile in Directory.GetFiles(settings.Settings.Addons.AddonRepository, "*.yaml", SearchOption.AllDirectories))
+                        {
+                            try
+                            {
+                                var manifest = Serialization.FromYamlFile<AddonManifestBase>(manifestFile);
+                                col.Upsert(manifest);
+                            }
+                            catch (Exception e)
+                            {
+                                logger.Error(e, $"Failed to parse addon manifest {manifestFile}");
                             }
                         }
                     }
