@@ -74,19 +74,27 @@ namespace PlayniteServices.Controllers.IGDB
             Collections = new Collections(this);
         }
 
-        private static void SaveTokens(string accessToken)
+        private static async Task SaveTokens(string accessToken)
         {
-            File.WriteAllText(
-                Path.Combine(Paths.ExecutingDirectory, "twitchTokens.json"),
-                JsonConvert.SerializeObject(new Dictionary<string, object>()
-                {
-                    { nameof(AppSettings.IGDB), new Dictionary<string, string>()
-                        {
-                            { nameof(AppSettings.IGDB.AccessToken), accessToken },
-                        }
+            await Task.Delay(2000);
+            var path = Path.Combine(Paths.ExecutingDirectory, "twitchTokens.json");
+            var config = new Dictionary<string, object>()
+            {
+                { "IGDB", new Dictionary<string, string>()
+                    {
+                        { "AccessToken", accessToken }
                     }
-                })
-            );
+                }
+            };
+
+            try
+            {
+                File.WriteAllText(path, JsonConvert.SerializeObject(config, Formatting.Indented));
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to save new twitch API token.");
+            }
         }
 
         private async Task Authenticate()
@@ -102,9 +110,11 @@ namespace PlayniteServices.Controllers.IGDB
             }
             else
             {
-                logger.Info("New IGDB auth token generated.");
+                logger.Info($"New IGDB auth token generated: {auth.access_token}");
                 settings.Settings.IGDB.AccessToken = auth.access_token;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 SaveTokens(auth.access_token);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
         }
 
