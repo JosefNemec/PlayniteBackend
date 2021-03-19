@@ -39,10 +39,10 @@
 
   <ItemGroup>
     <PackageReference Include="JsonApiSerializer" Version="1.7.4" />
-    <PackageReference Include="LiteDB" Version="4.1.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.13" />
+    <PackageReference Include="MongoDB.Driver" Version="2.12.0" />
     <PackageReference Include="Nett" Version="0.12.0" />
-    <PackageReference Include="NLog" Version="4.5.11" />
+    <PackageReference Include="NLog" Version="4.7.8" />
     <PackageReference Include="RateLimiter" Version="2.1.0" />
     <PackageReference Include="YamlDotNet" Version="5.3.0" />
   </ItemGroup>

@@ -1,6 +1,6 @@
-﻿using LiteDB;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using Playnite.Common;
 using Playnite.SDK;
 using PlayniteServices.Databases;
@@ -69,7 +69,8 @@ namespace PlayniteServices.Controllers.IGDB
                 }
                 else
                 {
-                    var match = Database.IGBDGameIdMatches.FindById(matchId);
+                    var filter = Builders<GameIdMatch>.Filter.Eq(a => a.Id, matchId);
+                    var match = Database.Instance.IGBDGameIdMatches.Find(filter).FirstOrDefault();
                     if (match != null)
                     {
                         igdbId = match.IgdbId;
@@ -79,7 +80,8 @@ namespace PlayniteServices.Controllers.IGDB
 
             if (igdbId == 0)
             {
-                var match = Database.IGDBSearchIdMatches.FindById(searchId);
+                var filter = Builders<SearchIdMatch>.Filter.Eq(a => a.Id, searchId);
+                var match = Database.Instance.IGDBSearchIdMatches.Find(filter).FirstOrDefault();
                 if (match != null)
                 {
                     igdbId = match.IgdbId;
@@ -111,7 +113,7 @@ namespace PlayniteServices.Controllers.IGDB
             {
                 if (isKnownPlugin && !isSteamPlugin)
                 {
-                    Database.IGBDGameIdMatches.Upsert(new GameIdMatch
+                    Database.Instance.IGBDGameIdMatches.InsertOne(new GameIdMatch
                     {
                         GameId = game.GameId,
                         Id = matchId,
@@ -120,7 +122,7 @@ namespace PlayniteServices.Controllers.IGDB
                     });
                 }
 
-                Database.IGDBSearchIdMatches.Upsert(new SearchIdMatch
+                Database.Instance.IGDBSearchIdMatches.InsertOne(new SearchIdMatch
                 {
                     Term = game.Name,
                     Id = searchId,

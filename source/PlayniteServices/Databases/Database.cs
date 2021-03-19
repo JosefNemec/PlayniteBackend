@@ -1,4 +1,7 @@
-﻿using LiteDB;
+﻿using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Driver;
+using Playnite;
 using PlayniteServices.Models.IGDB;
 using PlayniteServices.Models.Steam;
 using System;
@@ -11,68 +14,95 @@ namespace PlayniteServices.Databases
 {
     public class Database : IDisposable
     {
-        public const string SteamIgdbMatchCollectionName = "IGBDSteamIdCache";
-        public const string IGBDGameIdMatchesCollectionName = "IGBDGameIdMatches";
-        public const string IGDBSearchIdMatchesCollectionName = "IGDBSearchIdMatches";
-        public const string SteamUserNamesCacheCollectionName = "SteamUserNamesCache";
-
-        public static LiteCollection<GameIdMatch> IGBDGameIdMatches { get; private set; }
-        public static LiteCollection<SearchIdMatch> IGDBSearchIdMatches { get; private set; }
-        public static LiteCollection<SteamIdGame> SteamIgdbMatches { get; private set; }
-        public static LiteCollection<SteamNameCache> SteamUserNamesCache { get; private set; }
-        public static string Path
+        public class IgnoreDefaultPropertiesConvention : IMemberMapConvention
         {
-            get
+            public string Name => "Ignore default properties.";
+            public void Apply(BsonMemberMap mm)
             {
-                var path = Startup.Configuration.GetSection("DbPath").Value;
-                if (System.IO.Path.IsPathRooted(path))
-                {
-                    return path;
-                }
-                else
-                {
-                    return System.IO.Path.Combine(Paths.ExecutingDirectory, path);
-                }
+                mm.SetIgnoreIfDefault(true);
             }
         }
 
-        private LiteDatabase liteDB;
+        private readonly MongoClient client;
+        public static Database Instance { get; set; }
+        public readonly IMongoDatabase MongoDb;
 
-        public Database(string path)
+        public readonly IMongoCollection<Models.User> Users;
+        public readonly IMongoCollection<SteamIdGame> SteamIgdbMatches;
+        public readonly IMongoCollection<GameIdMatch> IGBDGameIdMatches;
+        public readonly IMongoCollection<SearchIdMatch> IGDBSearchIdMatches;
+        public readonly IMongoCollection<AddonManifestBase> Addons;
+        public readonly IMongoCollection<IgdbSearchResult> IgdbStdSearches;
+        public readonly IMongoCollection<IgdbSearchResult> IgdbAltSearches;
+
+        public Database(string connectionString)
         {
-            liteDB =  new LiteDatabase(string.Format("Filename={0}", path));
+            ConventionRegistry.Register(
+                "Custom Conventions",
+                new ConventionPack { new IgnoreDefaultPropertiesConvention() },
+                t => t.FullName.StartsWith("Playnite"));
 
-            IGBDGameIdMatches = liteDB.GetCollection<GameIdMatch>(IGBDGameIdMatchesCollectionName);
-            IGBDGameIdMatches.EnsureIndex(nameof(GameIdMatch.Id));
+            BsonClassMap.RegisterClassMap<IgdbItem>(cm => {
+                cm.AutoMap();
+                cm.MapIdMember(p => p.id);
+                cm.SetIsRootClass(true);
+            });
 
-            IGDBSearchIdMatches = liteDB.GetCollection<SearchIdMatch>(IGDBSearchIdMatchesCollectionName);
-            IGDBSearchIdMatches.EnsureIndex(nameof(SearchIdMatch.Id));
+            BsonClassMap.RegisterClassMap<Models.User>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.Id);
+            });
 
-            SteamIgdbMatches = liteDB.GetCollection<SteamIdGame>(SteamIgdbMatchCollectionName);
-            SteamIgdbMatches.EnsureIndex(nameof(SteamIdGame.steamId));
+            BsonClassMap.RegisterClassMap<SteamIdGame>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.steamId);
+            });
 
-            SteamUserNamesCache = liteDB.GetCollection<SteamNameCache>(SteamUserNamesCacheCollectionName);
-            SteamUserNamesCache.EnsureIndex(nameof(SteamNameCache.Name));
+            BsonClassMap.RegisterClassMap<GameIdMatch>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.Id);
+            });
+
+            BsonClassMap.RegisterClassMap<SearchIdMatch>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.Id);
+            });
+
+            BsonClassMap.RegisterClassMap<AddonManifestBase>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.AddonId);
+            });
+
+            BsonClassMap.RegisterClassMap<IgdbSearchResult>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.Id);
+            });
+
+            client = new MongoClient(connectionString);
+            MongoDb = client.GetDatabase("playnitebackend");
+            Users = MongoDb.GetCollection<Models.User>("Users");
+            SteamIgdbMatches = MongoDb.GetCollection<SteamIdGame>("SteamIgdbMatches");
+            IGBDGameIdMatches = MongoDb.GetCollection<GameIdMatch>("IGBDGameIdMatches");
+            IGDBSearchIdMatches = MongoDb.GetCollection<SearchIdMatch>("IGDBSearchIdMatches");
+            Addons = MongoDb.GetCollection<AddonManifestBase>("Addons");
+            IgdbStdSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_StdSearches");
+            IgdbAltSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_AltSearches");
         }
 
         public void Dispose()
         {
-            liteDB.Dispose();
-        }
-
-        public LiteCollection<T> GetCollection<T>(string name)
-        {
-            return liteDB.GetCollection<T>(name);
-        }
-
-        public LiteCollection<BsonDocument> GetCollection(string name)
-        {
-            return liteDB.GetCollection(name);
-        }
-
-        public bool DropCollection(string name)
-        {
-            return liteDB.DropCollection(name);
         }
     }
 }

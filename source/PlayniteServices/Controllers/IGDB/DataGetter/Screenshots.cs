@@ -13,8 +13,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class Screenshots : DataGetter<GameImage>
     {
-        private static readonly object cacheLock = new object();
-        public Screenshots(IgdbApi igdbApi) : base(igdbApi, "screenshots", cacheLock)
+        public Screenshots(IgdbApi igdbApi) : base(igdbApi, "screenshots")
         {
         }
     }

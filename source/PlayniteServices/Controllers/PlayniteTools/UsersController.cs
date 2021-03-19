@@ -3,35 +3,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LiteDB;
-using Playnite.Services.Models;
+using MongoDB.Driver;
+using MongoDB.Bson;
+using PlayniteServices.Databases;
 
 namespace PlayniteServices.Controllers.PlayniteTools
 {
     [Route("playnite/users")]
     public class UsersController : Controller
     {
-        private static LiteCollection<User> usersColl = Program.Database.GetCollection<User>("PlayniteUsers");
+        private static readonly ReplaceOptions userReplaceOptions = new ReplaceOptions { IsUpsert = true };
 
         [HttpPost]
-        public IActionResult Create([FromBody]User user)
+        public IActionResult Create([FromBody]Models.User user)
         {
             if (user == null)
             {
                 return BadRequest(new ErrorResponse(new Exception("No user data provided.")));
             }
 
-            var dbUser = usersColl.FindById(user.Id);
-            user.LastLaunch = DateTime.Now;
-            if (dbUser == null)
-            {
-                usersColl.Insert(user);
-            }
-            else
-            {
-                usersColl.Update(user);
-            }
-
+            user.LastLaunch = DateTime.Today;
+            Database.Instance.Users.ReplaceOne(
+                Builders<Models.User>.Filter.Eq(u => u.Id, user.Id),
+                user,
+                userReplaceOptions);
             return Ok();
         }
     }

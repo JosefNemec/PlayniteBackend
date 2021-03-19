@@ -12,8 +12,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class Franchises : DataGetter<Franchise>
     {
-        private static readonly object cacheLock = new object();
-        public Franchises(IgdbApi igdbApi) : base(igdbApi, "franchises", cacheLock)
+        public Franchises(IgdbApi igdbApi) : base(igdbApi, "franchises")
         {
         }
     }

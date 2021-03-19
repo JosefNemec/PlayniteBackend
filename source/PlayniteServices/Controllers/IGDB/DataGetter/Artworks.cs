@@ -13,8 +13,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class Artworks : DataGetter<GameImage>
     {
-        private static readonly object cacheLock = new object();
-        public Artworks(IgdbApi igdbApi) : base(igdbApi, "artworks", cacheLock)
+        public Artworks(IgdbApi igdbApi) : base(igdbApi, "artworks")
         {
         }
     }

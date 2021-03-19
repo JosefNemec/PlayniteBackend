@@ -12,8 +12,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class Genres : DataGetter<Genre>
     {
-        private static readonly object cacheLock = new object();
-        public Genres(IgdbApi igdbApi) : base(igdbApi, "genres", cacheLock)
+        public Genres(IgdbApi igdbApi) : base(igdbApi, "genres")
         {
         }
     }

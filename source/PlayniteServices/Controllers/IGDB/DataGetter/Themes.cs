@@ -13,8 +13,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class Themes : DataGetter<Theme>
     {
-        private static readonly object cacheLock = new object();
-        public Themes(IgdbApi igdbApi) : base(igdbApi, "themes", cacheLock)
+        public Themes(IgdbApi igdbApi) : base(igdbApi, "themes")
         {
         }
     }

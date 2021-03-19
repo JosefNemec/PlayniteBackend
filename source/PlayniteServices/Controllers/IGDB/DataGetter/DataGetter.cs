@@ -1,26 +1,45 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization;
+using MongoDB.Driver;
+using PlayniteServices.Databases;
+using PlayniteServices.Models.IGDB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
-    public class DataGetter<T>
+    public class DataGetter<T> where T : IgdbItem
     {
-        internal object collectonLock;
         internal string endpointPath;
         internal IgdbApi igdbApi;
+        public readonly IMongoCollection<T> Collection;
 
-        public DataGetter(IgdbApi igdbApi, string endpointPath, object collectonLock)
+        public DataGetter(IgdbApi igdbApi, string endpointPath)
         {
             this.igdbApi = igdbApi;
             this.endpointPath = endpointPath;
-            this.collectonLock = collectonLock;
+
+            if (!BsonClassMap.IsClassMapRegistered(typeof(T)))
+            {
+                BsonClassMap.RegisterClassMap<T>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.SetIgnoreExtraElements(true);
+                });
+            }
+
+            Collection = Database.Instance.MongoDb.GetCollection<T>($"IGDB_col_{endpointPath}");
         }
 
-        public virtual async Task<T> Get(ulong ageId)
+        public virtual async Task<T> Get(ulong objectId)
         {
-            return await igdbApi.GetItem<T>(ageId, endpointPath, collectonLock);
+            return await igdbApi.GetItem(objectId, endpointPath, Collection);
+        }
+
+        public virtual async Task<List<T>> Get(List<ulong> objectIds)
+        {
+            return await igdbApi.GetItem(objectIds, endpointPath, Collection);
         }
     }
 }

@@ -1,9 +1,11 @@
-﻿using LiteDB;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Playnite;
 using Playnite.Common;
 using Playnite.SDK;
 using PlayniteServices.Controllers.Webhooks;
+using PlayniteServices.Databases;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.GitHub;
 using System;
@@ -39,28 +41,34 @@ namespace PlayniteServices.Controllers.Addons
         [HttpGet()]
         public ServicesResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
         {
-            var col = Program.AddonsCollection;
-            List<AddonManifestBase> addons = null;
+            var col = Database.Instance.Addons;
+            List<AddonManifestBase> addons = new List<AddonManifestBase>();
             if (!request.AddonId.IsNullOrEmpty())
             {
-                addons = col.Find(a => a.AddonId == request.AddonId).ToList();
+                var filter = Builders<AddonManifestBase>.Filter.Eq(u => u.AddonId, request.AddonId);
+                addons = col.Find(filter).ToList();
             }
             else
             {
-                var query = col.FindAll();
-                if (!request.SearchTerm.IsNullOrEmpty())
+                // TODO convert to proper query
+                foreach (var addon in col.Find(new BsonDocument()).ToCursor().ToEnumerable())
                 {
-                    query = query.Where(a =>
-                        a.Name.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        a.Tags.ContainsString(request.SearchTerm, StringComparison.OrdinalIgnoreCase));
-                }
+                    if (request.Type != null && addon.Type != request.Type)
+                    {
+                        continue;
+                    }
 
-                if (request.Type != null)
-                {
-                    query = query.Where(a => a.Type == request.Type);
-                }
+                    if (!request.SearchTerm.IsNullOrEmpty())
+                    {
+                        if (!(addon.Name.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                              addon.Tags.ContainsString(request.SearchTerm, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            continue;
+                        }
+                    }
 
-                addons = query.ToList();
+                    addons.Add(addon);
+                }
             }
 
             return new ServicesResponse<List<AddonManifestBase>>(addons);
@@ -123,8 +131,8 @@ namespace PlayniteServices.Controllers.Addons
                 logger.Info("Regenerating addons database.");
                 lock (generatorLock)
                 {
-                    var col = Program.AddonsCollection;
-                    col.Delete(Query.All());
+                    var col = Database.Instance.Addons;
+                    col.DeleteMany(new BsonDocument());
 
                     if (settings.Settings.Addons.AddonRepository.IsHttpUrl())
                     {
@@ -144,7 +152,7 @@ namespace PlayniteServices.Controllers.Addons
                                     try
                                     {
                                         var manifest = Serialization.FromYamlStream<AddonManifestBase>(entry);
-                                        col.Upsert(manifest);
+                                        col.InsertOne(manifest);
                                     }
                                     catch (Exception e)
                                     {
@@ -161,7 +169,7 @@ namespace PlayniteServices.Controllers.Addons
                             try
                             {
                                 var manifest = Serialization.FromYamlFile<AddonManifestBase>(manifestFile);
-                                col.Upsert(manifest);
+                                col.InsertOne(manifest);
                             }
                             catch (Exception e)
                             {

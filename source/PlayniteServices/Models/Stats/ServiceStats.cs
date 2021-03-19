@@ -9,8 +9,8 @@ namespace PlayniteServices.Models.Stats
     {
         public int UserCount;
         public int LastWeekUserCount;
-        public Dictionary<string, int> UsersByVersion;
-        public Dictionary<string, int> UsersByWinVersion;
+        public Dictionary<string, int> UsersByVersion = new Dictionary<string, int>();
+        public Dictionary<string, int> UsersByWinVersion = new Dictionary<string, int>();
         public int X86Count;
         public int X64Count;
     }

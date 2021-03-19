@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace PlayniteServices
@@ -74,7 +75,7 @@ namespace PlayniteServices
 #if DEBUG
             var consoleTarget = new ColoredConsoleTarget()
             {
-                Layout = @"${level:uppercase=true}|${logger}:${message}${onexception:${newline}${exception}}"
+                Layout = @"${message}${onexception:${newline}${exception}}"
             };
 
             config.AddTarget("console", consoleTarget);
@@ -85,12 +86,13 @@ namespace PlayniteServices
             var fileTarget = new FileTarget()
             {
                 FileName = Path.Combine(Paths.ExecutingDirectory, "playnite.log"),
-                Layout = "${longdate}|${level:uppercase=true}:${message}${onexception:${newline}${exception:format=toString}}",
+                Layout = "${date:format=dd-MM HH\\:mm\\:ss.fff}|${level:uppercase=true:padding=-5}|${message}${onexception:${newline}${exception:format=toString}}",
                 KeepFileOpen = false,
                 ArchiveFileName = Path.Combine(Paths.ExecutingDirectory, "playnite.{#####}.log"),
                 ArchiveAboveSize = 4096000,
                 ArchiveNumbering = ArchiveNumberingMode.Sequence,
-                MaxArchiveFiles = 10
+                MaxArchiveFiles = 10,
+                Encoding = Encoding.UTF8
             };
 
             config.AddTarget("file", fileTarget);

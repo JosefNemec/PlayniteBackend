@@ -9,9 +9,6 @@ namespace PlayniteServices
     public class SteamSettings
     {
         public string ApiKey { get; set; }
-        public int StoreCacheTimeout { get; set; }
-        public int AppInfoCacheTimeout { get; set; }
-        public string CacheDirectory { get; set; }
     }
 
     public class IgdbSettings
@@ -20,7 +17,6 @@ namespace PlayniteServices
         public string ClientId { get; set; }
         public string AccessToken { get; set; }
         public string ClientSecret { get; set; }
-        public string CacheDirectory { get; set; }
         public int SearchCacheTimeout { get; set; }
         public string WebHookSecret { get; set; }
         public bool AlternativeSearch { get; set; }
@@ -51,6 +47,7 @@ namespace PlayniteServices
     public class AppSettings
     {
         public string DbPath { get; set; }
+        public string DatabaseConString { get; set; }
         public string DiagsDirectory { get; set; }
         public string ServiceKey { get; set; }
         public bool RestrictPlayniteVersion { get; set; }

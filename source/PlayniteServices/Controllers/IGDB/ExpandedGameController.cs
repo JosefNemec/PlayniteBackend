@@ -54,97 +54,17 @@ namespace PlayniteServices.Controllers.IGDB
                 total_rating = game.total_rating
             };
 
-            if (game.alternative_names?.Any() == true)
-            {
-                parsedGame.alternative_names = new List<AlternativeName>();
-                foreach (var nameId in game.alternative_names)
-                {
-                    parsedGame.alternative_names.Add(await igdbApi.AlternativeNames.Get(nameId));
-                }
-            }
-
-            if (game.involved_companies?.Any() == true)
-            {
-                parsedGame.involved_companies = new List<ExpandedInvolvedCompany>();
-                foreach (var companyId in game.involved_companies)
-                {
-                    parsedGame.involved_companies.Add(await igdbApi.InvolvedCompanies.GetItem(companyId));
-                }
-            }
-
-            if (game.genres?.Any() == true)
-            {
-                parsedGame.genres = new List<Genre>();
-                foreach (var genreId in game.genres)
-                {
-                    parsedGame.genres.Add(await igdbApi.Genres.Get(genreId));
-                }
-            }
-
-            if (game.websites?.Any() == true)
-            {
-                parsedGame.websites = new List<Website>();
-                foreach (var websiteId in game.websites)
-                {
-                    parsedGame.websites.Add(await igdbApi.Websites.Get(websiteId));
-                }
-            }
-
-            if (game.game_modes?.Any() == true)
-            {
-                parsedGame.game_modes = new List<GameMode>();
-                foreach (var modeId in game.game_modes)
-                {
-                    parsedGame.game_modes.Add(await igdbApi.GameModes.Get(modeId));
-                }
-            }
-
-            if (game.player_perspectives?.Any() == true)
-            {
-                parsedGame.player_perspectives = new List<PlayerPerspective>();
-                foreach (var persId in game.player_perspectives)
-                {
-                    parsedGame.player_perspectives.Add(await igdbApi.PlayerPerspectives.Get(persId));
-                }
-            }
-
-            if (game.cover > 0)
-            {
-                parsedGame.cover = await igdbApi.Covers.Get(game.cover);
-            }
-
-            if (game.artworks?.Any() == true)
-            {
-                parsedGame.artworks = new List<GameImage>();
-                foreach (var artworkId in game.artworks)
-                {
-                    parsedGame.artworks.Add(await igdbApi.Artworks.Get(artworkId));
-                }
-            }
-
-            if (game.screenshots?.Any() == true)
-            {
-                parsedGame.screenshots = new List<GameImage>();
-                foreach (var screenshotId in game.screenshots)
-                {
-                    parsedGame.screenshots.Add(await igdbApi.Screenshots.Get(screenshotId));
-                }
-            }
-
-            if (game.age_ratings?.Any() == true)
-            {
-                parsedGame.age_ratings = new List<AgeRating>();
-                foreach (var ageId in game.age_ratings)
-                {
-                    parsedGame.age_ratings.Add(await igdbApi.AgeRatings.Get(ageId));
-                }
-            }
-
-            if (game.collection > 0)
-            {
-                parsedGame.collection = await igdbApi.Collections.Get(game.collection);
-            }
-
+            parsedGame.alternative_names = await igdbApi.AlternativeNames.Get(game.alternative_names);
+            parsedGame.involved_companies = await igdbApi.InvolvedCompanies.GetExpanded(game.involved_companies);
+            parsedGame.genres = await igdbApi.Genres.Get(game.genres);
+            parsedGame.websites = await igdbApi.Websites.Get(game.websites);
+            parsedGame.game_modes = await igdbApi.GameModes.Get(game.game_modes);
+            parsedGame.player_perspectives = await igdbApi.PlayerPerspectives.Get(game.player_perspectives);
+            parsedGame.cover = await igdbApi.Covers.Get(game.cover);
+            parsedGame.artworks = await igdbApi.Artworks.Get(game.artworks);
+            parsedGame.screenshots = await igdbApi.Screenshots.Get(game.screenshots);
+            parsedGame.age_ratings = await igdbApi.AgeRatings.Get(game.age_ratings);
+            parsedGame.collection = await igdbApi.Collections.Get(game.collection);
             return parsedGame;
         }
     }

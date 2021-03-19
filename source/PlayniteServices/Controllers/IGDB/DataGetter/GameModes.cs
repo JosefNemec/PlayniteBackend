@@ -12,8 +12,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class GameModes : DataGetter<GameMode>
     {
-        private static readonly object cacheLock = new object();
-        public GameModes(IgdbApi igdbApi) : base(igdbApi, "game_modes", cacheLock)
+        public GameModes(IgdbApi igdbApi) : base(igdbApi, "game_modes")
         {
         }
     }

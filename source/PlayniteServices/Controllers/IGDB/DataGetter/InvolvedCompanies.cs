@@ -10,32 +10,47 @@ using System.Threading.Tasks;
 
 namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
-    public class InvolvedCompanies : DataGetter<ExpandedInvolvedCompany>
+    public class InvolvedCompanies : DataGetter<InvolvedCompany>
     {
-        private static readonly object cacheLock = new object();
-        private Companies companies;
-
-        public InvolvedCompanies(IgdbApi igdbApi) : base(igdbApi, "involved_companies", cacheLock)
+        public InvolvedCompanies(IgdbApi igdbApi) : base(igdbApi, "involved_companies")
         {
-            companies = new Companies(igdbApi);
         }
 
-        public override Task<ExpandedInvolvedCompany> Get(ulong ageId)
+        public async Task<ExpandedInvolvedCompany> GetExpanded(ulong companyId)
         {
-            return GetItem(ageId);
-        }
-
-        public async Task<ExpandedInvolvedCompany> GetItem(ulong companyId)
-        {
-            var company = await igdbApi.GetItem<InvolvedCompany>(companyId, endpointPath, collectonLock);
+            var involvedCompany = await igdbApi.GetItem(companyId, endpointPath, Collection);
             var expandedCompany = new ExpandedInvolvedCompany();
-            company.CopyProperties(expandedCompany, false, new List<string>()
+            involvedCompany.CopyProperties(expandedCompany, false, new List<string>()
             {
                 nameof(InvolvedCompany.company)
             });
 
-            expandedCompany.company = await companies.Get(company.company);
+            expandedCompany.company = await igdbApi.Companies.Get(involvedCompany.company);
             return expandedCompany;
+        }
+
+        public async Task<List<ExpandedInvolvedCompany>> GetExpanded(List<ulong> objectIds)
+        {
+            var involvedCompanies = await igdbApi.GetItem(objectIds, endpointPath, Collection);
+            var expandedCompanies = new List<ExpandedInvolvedCompany>();
+            foreach (var company in involvedCompanies)
+            {
+                var expandedCompany = new ExpandedInvolvedCompany();
+                company.CopyProperties(expandedCompany, false, new List<string>()
+                {
+                    nameof(InvolvedCompany.company)
+                });
+
+                expandedCompanies.Add(expandedCompany);
+            }
+
+            var realCompanies = await igdbApi.Companies.Get(involvedCompanies.Select(a => a.company).Distinct().ToList());
+            for (int i = 0; i < involvedCompanies.Count; i++)
+            {
+                expandedCompanies[i].company = realCompanies.FirstOrDefault(a => a.id == involvedCompanies[i].company);
+            }
+
+            return expandedCompanies;
         }
     }
 }

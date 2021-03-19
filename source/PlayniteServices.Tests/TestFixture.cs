@@ -25,7 +25,6 @@ namespace PlayniteServicesTests
     {
         private readonly TestServer server;
         public HttpClient Client { get; }
-        public Database Database { get; }
 
         public TestFixture() : this(Path.Combine("source"))
         {
@@ -49,13 +48,7 @@ namespace PlayniteServicesTests
             Client = server.CreateClient();
             Client.BaseAddress = new Uri("http://localhost");
 
-            if (File.Exists(Database.Path))
-            {
-                File.Delete(Database.Path);
-            }
-
-            Database = new Database(Database.Path);
-
+            Database.Instance = new Database(Startup.Configuration.GetSection(nameof(AppSettings.DatabaseConString)).Value);
             NLogLogger.ConfigureLogger();
             LogManager.Init(new NLogLogProvider());
         }

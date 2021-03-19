@@ -14,6 +14,8 @@ using Microsoft.Extensions.Options;
 using PlayniteServices.Filters;
 using System.Text.RegularExpressions;
 using PlayniteServices.Controllers.IGDB.DataGetter;
+using MongoDB.Driver;
+using PlayniteServices.Databases;
 
 namespace PlayniteServices.Controllers.IGDB
 {
@@ -22,21 +24,17 @@ namespace PlayniteServices.Controllers.IGDB
     public class GamesController : Controller
     {
         private static readonly JsonSerializer jsonSerializer = new JsonSerializer();
-        private static readonly object CacheLock = new object();
-        private const string cacheDirName = "game_search";
         private static ILogger logger = LogManager.GetLogger();
         private static readonly char[] bracketsMatchList = new char[] { '[', ']', '(', ')', '{', '}' };
 
         private UpdatableAppSettings settings;
         private IgdbApi igdbApi;
-        private Games games;
         private AlternativeNames alternativeNames;
 
         public GamesController(UpdatableAppSettings settings, IgdbApi igdbApi)
         {
             this.settings = settings;
             this.igdbApi = igdbApi;
-            games = new Games(igdbApi);
             alternativeNames = new AlternativeNames(igdbApi);
         }
 
@@ -67,28 +65,15 @@ namespace PlayniteServices.Controllers.IGDB
                 return new List<ExpandedGameLegacy>();
             }
 
-            List<Game> searchResult = null;
+            List<ulong> searchResult = null;
             var modifiedSearchString = ModelsUtils.GetIgdbSearchString(searchString);
-            var cachePath = Path.Combine(
-                igdbApi.CacheRoot,
-                cacheDirName,
-                (alternativeSearch ? "alt_" : "srch_") + Playnite.Common.Paths.GetSafePathName(modifiedSearchString) + ".json");
-            lock (CacheLock)
+            var filter = Builders<IgdbSearchResult>.Filter.Eq(a => a.Id, modifiedSearchString);
+            var col = alternativeSearch ? Database.Instance.IgdbAltSearches : Database.Instance.IgdbStdSearches;
+
+            var cached = col.Find(filter).FirstOrDefault();
+            if (cached != null)
             {
-                if (System.IO.File.Exists(cachePath))
-                {
-                    var fileInfo = new FileInfo(cachePath);
-                    fileInfo.Refresh();
-                    if ((DateTime.Now - fileInfo.LastWriteTime).TotalHours <= settings.Settings.IGDB.SearchCacheTimeout)
-                    {
-                        using (var fs = new FileStream(cachePath, FileMode.Open, FileAccess.Read))
-                        using (var sr = new StreamReader(fs))
-                        using (var reader = new JsonTextReader(sr))
-                        {
-                            searchResult = jsonSerializer.Deserialize<List<Game>>(reader);
-                        }
-                    }
-                }
+                searchResult = cached.Games;
             }
 
             if (searchResult == null)
@@ -103,48 +88,38 @@ namespace PlayniteServices.Controllers.IGDB
                 var searchQuery = $"search \"{matchString}\"; fields id; limit 50;";
                 var query = alternativeSearch ? whereQuery : searchQuery;
                 var searchStringResult = await igdbApi.SendStringRequest("games", query);
-                searchResult = JsonConvert.DeserializeObject<List<Game>>(searchStringResult);
-
-                lock (CacheLock)
+                var tempRes = JsonConvert.DeserializeObject<List<Game>>(searchStringResult);
+                searchResult = tempRes.Select(a => a.id).ToList();
+                col.InsertOne(new IgdbSearchResult
                 {
-                    Playnite.Common.FileSystem.PrepareSaveFile(cachePath);
-                    System.IO.File.WriteAllText(cachePath, searchStringResult);
-                }
+                    Id = modifiedSearchString,
+                    Games = searchResult
+                });
+            }
+
+            if (!searchResult.HasItems())
+            {
+                return new List<ExpandedGameLegacy>();
             }
 
             var finalResult = new List<ExpandedGameLegacy>();
-            for (int i = 0; i < searchResult.Count; i++)
+            foreach (var game in await igdbApi.Games.Get(searchResult))
             {
-                Game result = null;
-                try
-                {
-                    result = await games.Get(searchResult[i].id);
-                }
-                catch (Exception e)
-                {
-                    logger.Error(e, $"Failed to get game {searchResult[i].id}");
-                    continue;
-                }
-
-                if (result.id == 0)
+                if (game.id == 0)
                 {
                     continue;
                 }
 
                 var xpanded = new ExpandedGameLegacy()
                 {
-                    id = result.id,
-                    name = result.name,
-                    first_release_date = result.first_release_date * 1000
+                    id = game.id,
+                    name = game.name,
+                    first_release_date = game.first_release_date * 1000
                 };
 
-                if (result.alternative_names?.Any() == true)
+                if (game.alternative_names?.Any() == true)
                 {
-                    xpanded.alternative_names = new List<AlternativeName>();
-                    foreach (var nameId in result.alternative_names)
-                    {
-                        xpanded.alternative_names.Add(await alternativeNames.Get(nameId));
-                    }
+                    xpanded.alternative_names = await alternativeNames.Get(game.alternative_names);
                 }
 
                 finalResult.Add(xpanded);

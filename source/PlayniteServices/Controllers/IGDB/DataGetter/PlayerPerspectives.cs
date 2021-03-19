@@ -12,8 +12,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class PlayerPerspectives : DataGetter<PlayerPerspective>
     {
-        private static readonly object cacheLock = new object();
-        public PlayerPerspectives(IgdbApi igdbApi) : base(igdbApi, "player_perspectives", cacheLock)
+        public PlayerPerspectives(IgdbApi igdbApi) : base(igdbApi, "player_perspectives")
         {
         }
     }

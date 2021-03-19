@@ -1,4 +1,5 @@
 ﻿using ComposableAsync;
+using MongoDB.Driver;
 using Newtonsoft.Json;
 using Playnite.Common;
 using Playnite.SDK;
@@ -41,8 +42,7 @@ namespace PlayniteServices.Controllers.IGDB
         public Screenshots Screenshots;
         public AgeRatings AgeRatings;
         public Collections Collections;
-
-        public string CacheRoot { get; }
+        public Companies Companies;
 
         public HttpClient HttpClient { get; }
 
@@ -54,11 +54,6 @@ namespace PlayniteServices.Controllers.IGDB
                 .AsDelegatingHandler();
             HttpClient = new HttpClient(requestLimiterHandler);
             HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-            CacheRoot = settings.Settings.IGDB.CacheDirectory;
-            if (!Path.IsPathRooted(CacheRoot))
-            {
-                CacheRoot = Path.Combine(Paths.ExecutingDirectory, CacheRoot);
-            }
 
             Games = new Games(this);
             AlternativeNames = new AlternativeNames(this);
@@ -72,6 +67,7 @@ namespace PlayniteServices.Controllers.IGDB
             Screenshots = new Screenshots(this);
             AgeRatings = new AgeRatings(this);
             Collections = new Collections(this);
+            Companies = new Companies(this);
         }
 
         private static async Task SaveTokens(string accessToken)
@@ -165,14 +161,24 @@ namespace PlayniteServices.Controllers.IGDB
             }
             else
             {
-                logger.Error(await response.Content.ReadAsStringAsync());
-                throw new Exception($"Uknown IGDB API response {response.StatusCode}.");
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                logger.Error(errorMessage);
+                // Request sometimes fails on generic error, but then works when sent again...
+                if (errorMessage.Contains("Internal server error") && reTry)
+                {
+                    return await SendStringRequest(url, query, false);
+                }
+                else
+                {
+                    throw new Exception($"Uknown IGDB API response {response.StatusCode}.");
+                }
             }
         }
 
         public async Task<ulong> GetSteamIgdbMatch(ulong gameId)
         {
-            var cache = Database.SteamIgdbMatches.FindById(gameId);
+            var filter = Builders<SteamIdGame>.Filter.Eq(a => a.steamId, gameId);
+            var cache = Database.Instance.SteamIgdbMatches.Find(filter).FirstOrDefault();
             if (cache != null)
             {
                 return cache.igdbId;
@@ -183,13 +189,14 @@ namespace PlayniteServices.Controllers.IGDB
             var games = JsonConvert.DeserializeObject<List<Game>>(libraryStringResult);
             if (games.Any())
             {
-                Database.SteamIgdbMatches.Upsert(new SteamIdGame()
+                var game = games.First();
+                Database.Instance.SteamIgdbMatches.InsertOne(new SteamIdGame()
                 {
                     steamId = gameId,
-                    igdbId = games.First().id
+                    igdbId = game.id
                 });
 
-                return games.First().id;
+                return game.id;
             }
             else
             {
@@ -197,31 +204,25 @@ namespace PlayniteServices.Controllers.IGDB
             }
         }
 
-        public async Task<TItem> GetItem<TItem>(ulong itemId, string endpointPath, object cacheLock)
+        public async Task<TItem> GetItem<TItem>(ulong itemId, string endpointPath, IMongoCollection<TItem> collection) where TItem : IgdbItem
         {
-            var cachePath = Path.Combine(CacheRoot, endpointPath, itemId + ".json");
-            lock (cacheLock)
+            if (itemId == 0)
             {
-                if (System.IO.File.Exists(cachePath))
-                {
-                    using (var fs = new FileStream(cachePath, FileMode.Open, FileAccess.Read))
-                    using (var sr = new StreamReader(fs))
-                    using (var reader = new JsonTextReader(sr))
-                    {
-                        var cacheItem = jsonSerializer.Deserialize<TItem>(reader);
-                        if (cacheItem != null)
-                        {
-                            return cacheItem;
-                        }
-                    }
-                }
+                return null;
+            }
+
+            var filter = Builders<TItem>.Filter.Eq(nameof(IgdbItem.id), itemId);
+            var cacheItem = collection.Find(filter).FirstOrDefault();
+            if (cacheItem != null)
+            {
+                return cacheItem;
             }
 
             var stringResult = await SendStringRequest(endpointPath, $"fields *; where id = {itemId};");
             var items = Serialization.FromJson<List<TItem>>(stringResult);
 
             TItem item;
-            // IGDB resturns empty results of the id is a duplicate of another game
+            // IGDB resturns empty results if an id is a duplicate of another game
             if (items.Count > 0)
             {
                 item = items[0];
@@ -231,21 +232,30 @@ namespace PlayniteServices.Controllers.IGDB
                 item = typeof(TItem).CrateInstance<TItem>();
             }
 
-            lock (cacheLock)
-            {
-                FileSystem.PrepareSaveFile(cachePath);
+            collection.InsertOne(item);
+            return item;
+        }
 
-                if (items.Count > 0)
-                {
-                    System.IO.File.WriteAllText(cachePath, stringResult.Trim(arrayTrim), Encoding.UTF8);
-                }
-                else
-                {
-                    System.IO.File.WriteAllText(cachePath, Serialization.ToJson(item), Encoding.UTF8);
-                }
+        public async Task<List<TItem>> GetItem<TItem>(List<ulong> itemIds, string endpointPath, IMongoCollection<TItem> collection) where TItem : IgdbItem
+        {
+            if (!itemIds.HasItems())
+            {
+                return null;
             }
 
-            return item;
+            var filter = Builders<TItem>.Filter.In(nameof(IgdbItem.id), itemIds);
+            var cacheItems = collection.Find(filter).ToList();
+            if (cacheItems.Count == itemIds.Count)
+            {
+                return cacheItems;
+            }
+
+            var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, cacheItems.Select(a => a.id));
+            var stringResult = await SendStringRequest(endpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
+            var items = Serialization.FromJson<List<TItem>>(stringResult);
+            collection.InsertMany(items);
+            cacheItems.AddRange(items);
+            return cacheItems;
         }
     }
 }
