@@ -33,7 +33,7 @@ try
     }
 
     Write-OperationLog "Building..."
-    $compiler = StartAndWait "dotnet" ("publish -c {0} -o {1}" -f $Configuration, $OutputPath)
+    $compiler = StartAndWait "dotnet" ("publish -c {0} -o {1} --runtime win-x64 --no-self-contained" -f $Configuration, $OutputPath)
     if ($compiler -ne 0)
     {
         Write-Host "Build failed." -ForegroundColor "Red"
