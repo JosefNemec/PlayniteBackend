@@ -46,7 +46,6 @@ namespace PlayniteServices
 
     public class AppSettings
     {
-        public string DbPath { get; set; }
         public string DatabaseConString { get; set; }
         public string DiagsDirectory { get; set; }
         public string ServiceKey { get; set; }
