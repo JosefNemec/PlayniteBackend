@@ -71,6 +71,13 @@ namespace PlayniteServices
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.Use(async (context, next) =>
+            {
+                // Makes it so we can re-read request body in ApiExceptionFilter.
+                context.Request.EnableBuffering();
+                await next.Invoke();
+            });
+
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {

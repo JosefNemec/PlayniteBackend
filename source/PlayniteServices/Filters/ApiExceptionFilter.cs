@@ -26,6 +26,7 @@ namespace PlayniteServices.Filters
             {
                 if (context.HttpContext.Request.ContentLength > 0)
                 {
+                    context.HttpContext.Request.Body.Seek(0, SeekOrigin.Begin);
                     using (var reader = new StreamReader(context.HttpContext.Request.Body))
                     {
                         logger.Error(await reader.ReadToEndAsync());
