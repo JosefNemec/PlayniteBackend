@@ -21,6 +21,9 @@
     <Content Include="..\PlayniteServices\appsettings.json" Link="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\PlayniteServices\twitchTokens.json" Link="twitchTokens.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
