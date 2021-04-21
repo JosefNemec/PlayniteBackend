@@ -113,21 +113,27 @@ namespace PlayniteServices.Controllers.IGDB
             {
                 if (isKnownPlugin && !isSteamPlugin)
                 {
-                    Database.Instance.IGBDGameIdMatches.InsertOne(new GameIdMatch
-                    {
-                        GameId = game.GameId,
-                        Id = matchId,
-                        IgdbId = igdbId,
-                        Library = game.PluginId
-                    });
+                    Database.Instance.IGBDGameIdMatches.ReplaceOne(
+                        Builders<GameIdMatch>.Filter.Eq(a => a.Id, matchId),
+                        new GameIdMatch
+                        {
+                            GameId = game.GameId,
+                            Id = matchId,
+                            IgdbId = igdbId,
+                            Library = game.PluginId
+                        },
+                        Database.ItemUpsertOptions);
                 }
 
-                Database.Instance.IGDBSearchIdMatches.InsertOne(new SearchIdMatch
-                {
-                    Term = game.Name,
-                    Id = searchId,
-                    IgdbId = igdbId
-                });
+                Database.Instance.IGDBSearchIdMatches.ReplaceOne(
+                    Builders<SearchIdMatch>.Filter.Eq(a => a.Id, searchId),
+                    new SearchIdMatch
+                    {
+                        Term = game.Name,
+                        Id = searchId,
+                        IgdbId = igdbId
+                    },
+                    Database.ItemUpsertOptions);
             }
 
             return new ServicesResponse<T>(foundMetadata);

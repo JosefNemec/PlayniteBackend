@@ -25,6 +25,7 @@ namespace PlayniteServices.Databases
 
         private readonly MongoClient client;
         public static Database Instance { get; set; }
+        public static readonly ReplaceOptions ItemUpsertOptions = new ReplaceOptions { IsUpsert = true };
         public readonly IMongoDatabase MongoDb;
 
         public readonly IMongoCollection<Models.User> Users;

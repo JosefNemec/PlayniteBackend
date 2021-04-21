@@ -90,11 +90,14 @@ namespace PlayniteServices.Controllers.IGDB
                 var searchStringResult = await igdbApi.SendStringRequest("games", query);
                 var tempRes = JsonConvert.DeserializeObject<List<Game>>(searchStringResult);
                 searchResult = tempRes.Select(a => a.id).ToList();
-                col.InsertOne(new IgdbSearchResult
-                {
-                    Id = modifiedSearchString,
-                    Games = searchResult
-                });
+                col.ReplaceOne(
+                    Builders<IgdbSearchResult>.Filter.Eq(u => u.Id, modifiedSearchString),
+                    new IgdbSearchResult
+                    {
+                        Id = modifiedSearchString,
+                        Games = searchResult
+                    },
+                    Database.ItemUpsertOptions);
             }
 
             if (!searchResult.HasItems())

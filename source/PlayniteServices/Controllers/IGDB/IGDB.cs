@@ -54,6 +54,7 @@ namespace PlayniteServices.Controllers.IGDB
                 .AsDelegatingHandler();
             HttpClient = new HttpClient(requestLimiterHandler);
             HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            HttpClient.Timeout = new TimeSpan(0, 0, 50);
 
             Games = new Games(this);
             AlternativeNames = new AlternativeNames(this);
@@ -98,7 +99,7 @@ namespace PlayniteServices.Controllers.IGDB
             var clientId = settings.Settings.IGDB.ClientId;
             var clientSecret = settings.Settings.IGDB.ClientSecret;
             var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
-            var response = await HttpClient.PostAsync(authUrl, null);
+            var response = await HttpClient.PostAsync(authUrl, null).ConfigureAwait(false);
             var auth = Serialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
             if (auth?.access_token.IsNullOrEmpty() != false)
             {
@@ -132,7 +133,7 @@ namespace PlayniteServices.Controllers.IGDB
         {
             logger.Debug($"IGDB Live: {url}, {query}");
             var sharedRequest = CreateRequest(url, query, settings.Settings.IGDB.AccessToken);
-            var response = await HttpClient.SendAsync(sharedRequest);
+            var response = await HttpClient.SendAsync(sharedRequest).ConfigureAwait(false);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -190,11 +191,14 @@ namespace PlayniteServices.Controllers.IGDB
             if (games.Any())
             {
                 var game = games.First();
-                Database.Instance.SteamIgdbMatches.InsertOne(new SteamIdGame()
-                {
-                    steamId = gameId,
-                    igdbId = game.id
-                });
+                Database.Instance.SteamIgdbMatches.ReplaceOne(
+                    Builders<SteamIdGame>.Filter.Eq(a => a.steamId, gameId),
+                    new SteamIdGame()
+                    {
+                        steamId = gameId,
+                        igdbId = game.id
+                    },
+                    Database.ItemUpsertOptions);
 
                 return game.id;
             }
@@ -232,7 +236,10 @@ namespace PlayniteServices.Controllers.IGDB
                 item = typeof(TItem).CrateInstance<TItem>();
             }
 
-            collection.InsertOne(item);
+            collection.ReplaceOne(
+                Builders<TItem>.Filter.Eq(u => u.id, item.id),
+                item,
+                Database.ItemUpsertOptions);
             return item;
         }
 
@@ -253,7 +260,10 @@ namespace PlayniteServices.Controllers.IGDB
             var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, cacheItems.Select(a => a.id));
             var stringResult = await SendStringRequest(endpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
             var items = Serialization.FromJson<List<TItem>>(stringResult);
-            collection.InsertMany(items);
+            items.ForEach(a => collection.ReplaceOne(
+                Builders<TItem>.Filter.Eq(u => u.id, a.id),
+                a,
+                Database.ItemUpsertOptions));
             cacheItems.AddRange(items);
             return cacheItems;
         }

@@ -12,8 +12,6 @@ namespace PlayniteServices.Controllers.PlayniteTools
     [Route("playnite/users")]
     public class UsersController : Controller
     {
-        private static readonly ReplaceOptions userReplaceOptions = new ReplaceOptions { IsUpsert = true };
-
         [HttpPost]
         public IActionResult Create([FromBody]Models.User user)
         {
@@ -26,7 +24,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
             Database.Instance.Users.ReplaceOne(
                 Builders<Models.User>.Filter.Eq(u => u.Id, user.Id),
                 user,
-                userReplaceOptions);
+                Database.ItemUpsertOptions);
             return Ok();
         }
     }

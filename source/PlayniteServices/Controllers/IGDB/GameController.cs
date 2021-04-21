@@ -6,6 +6,7 @@ using Playnite;
 using Playnite.Common;
 using Playnite.SDK;
 using PlayniteServices.Controllers.IGDB.DataGetter;
+using PlayniteServices.Databases;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.IGDB;
 using System;
@@ -22,7 +23,6 @@ namespace PlayniteServices.Controllers.IGDB
     public class GameController : Controller
     {
         private static ILogger logger = LogManager.GetLogger();
-        private static readonly ReplaceOptions gameReplaceOptions = new ReplaceOptions { IsUpsert = true };
         private UpdatableAppSettings settings;
         private IgdbApi igdbApi;
 
@@ -79,7 +79,7 @@ namespace PlayniteServices.Controllers.IGDB
                     igdbApi.Games.Collection.ReplaceOne(
                         Builders<Game>.Filter.Eq(a => a.id, game.id),
                         game,
-                        gameReplaceOptions);
+                        Database.ItemUpsertOptions);
                 }
                 catch (Exception e)
                 {
