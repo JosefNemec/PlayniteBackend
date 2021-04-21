@@ -31,6 +31,11 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 
         public async Task<List<ExpandedInvolvedCompany>> GetExpanded(List<ulong> objectIds)
         {
+            if (!objectIds.HasItems())
+            {
+                return null;
+            }
+
             var involvedCompanies = await igdbApi.GetItem(objectIds, endpointPath, Collection);
             var expandedCompanies = new List<ExpandedInvolvedCompany>();
             foreach (var company in involvedCompanies)
