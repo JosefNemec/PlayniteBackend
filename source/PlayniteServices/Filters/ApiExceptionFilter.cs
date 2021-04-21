@@ -22,12 +22,18 @@ namespace PlayniteServices.Filters
             }
 
             logger.Error(context.Exception, $"Request failed: {context.HttpContext.Request.Method}, {context.HttpContext.Request.Path}");
-            if (context.HttpContext.Request.Method == "POST" && context.HttpContext.Request.ContentLength > 0)
+            if (context.HttpContext.Request.Method == "POST")
             {
-                context.HttpContext.Request.Body.Seek(0, SeekOrigin.Begin);
-                using (var reader = new StreamReader(context.HttpContext.Request.Body))
+                if (context.HttpContext.Request.ContentLength > 0)
                 {
-                    logger.Error(await reader.ReadToEndAsync());
+                    using (var reader = new StreamReader(context.HttpContext.Request.Body))
+                    {
+                        logger.Error(await reader.ReadToEndAsync());
+                    }
+                }
+                else
+                {
+                    logger.Error("POST request with no content.");
                 }
             }
 
