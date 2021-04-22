@@ -1,5 +1,7 @@
 ﻿using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Playnite;
 using PlayniteServices.Models.IGDB;
@@ -42,6 +44,10 @@ namespace PlayniteServices.Databases
                 "Custom Conventions",
                 new ConventionPack { new IgnoreDefaultPropertiesConvention() },
                 t => t.FullName.StartsWith("Playnite"));
+
+            // BSON doesn't support unsigned numbers so we need to use specific converter for ulong numbers
+            BsonSerializer.RegisterSerializer(
+                new UInt64Serializer(MongoDB.Bson.BsonType.Int64, new RepresentationConverter(true, true)));
 
             BsonClassMap.RegisterClassMap<IgdbItem>(cm => {
                 cm.AutoMap();
