@@ -40,7 +40,6 @@ namespace PlayniteServices
     public class Addons
     {
         public string AddonRepository { get; set; }
-        public string DatabasePath { get; set; }
         public string GitHubSecret { get; set; }
     }
 

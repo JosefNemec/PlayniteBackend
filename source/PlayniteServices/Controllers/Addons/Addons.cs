@@ -10,6 +10,7 @@ using PlayniteServices.Filters;
 using PlayniteServices.Models.GitHub;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -131,40 +132,30 @@ namespace PlayniteServices.Controllers.Addons
                 logger.Info("Regenerating addons database.");
                 lock (generatorLock)
                 {
-                    var col = Database.Instance.Addons;
-                    col.DeleteMany(new BsonDocument());
-
-                    if (settings.Settings.Addons.AddonRepository.IsHttpUrl())
+                    try
                     {
-                        var repoPackage = Path.Combine(Paths.ExecutingDirectory, "repo.zip");
-                        FileSystem.DeleteFile(repoPackage);
-                        using (var webClient = new WebClient())
-                        {
-                            webClient.DownloadFile(settings.Settings.Addons.AddonRepository, repoPackage);
-                        }
+                        var col = Database.Instance.Addons;
+                        col.DeleteMany(new BsonDocument());
 
-                        using (var zip = ZipFile.OpenRead(repoPackage))
+                        var addonDirectory = settings.Settings.Addons.AddonRepository;
+                        if (settings.Settings.Addons.AddonRepository.IsHttpUrl())
                         {
-                            foreach (var manifestFile in zip.Entries.Where(a => a.Name.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)))
+                            addonDirectory = Path.Combine(Paths.ExecutingDirectory, "PlayniteAddonDatabase");
+                            FileSystem.DeleteDirectory(addonDirectory, true);
+
+                            var info = new ProcessStartInfo("git")
                             {
-                                using (var entry = zip.GetEntry(manifestFile.FullName).Open())
-                                {
-                                    try
-                                    {
-                                        var manifest = Serialization.FromYamlStream<AddonManifestBase>(entry);
-                                        col.InsertOne(manifest);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        logger.Error(e, $"Failed to parse addon manifest {manifestFile.FullName}");
-                                    }
-                                }
-                            }
+                                Arguments = $"clone --depth=1 --branch=master {settings.Settings.Addons.AddonRepository}",
+                                WorkingDirectory = Paths.ExecutingDirectory,
+                                CreateNoWindow = true,
+                                UseShellExecute = false,
+                            };
+
+                            using (var proc = Process.Start(info))
+                                proc.WaitForExit();
                         }
-                    }
-                    else
-                    {
-                        foreach (var manifestFile in Directory.GetFiles(settings.Settings.Addons.AddonRepository, "*.yaml", SearchOption.AllDirectories))
+
+                        foreach (var manifestFile in Directory.GetFiles(addonDirectory, "*.yaml", SearchOption.AllDirectories))
                         {
                             try
                             {
@@ -176,6 +167,11 @@ namespace PlayniteServices.Controllers.Addons
                                 logger.Error(e, $"Failed to parse addon manifest {manifestFile}");
                             }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e, "Failed to generate addon database.");
+                        throw;
                     }
                 }
             });
