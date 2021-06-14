@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace PlayniteServices.Controllers.IGDB
 {
-    public class IgdbApi
+    public class IgdbApi : IDisposable
     {
         public class AuthResponse
         {
@@ -29,6 +29,7 @@ namespace PlayniteServices.Controllers.IGDB
         private static readonly JsonSerializer jsonSerializer = new JsonSerializer();
         private readonly UpdatableAppSettings settings;
         private readonly DelegatingHandler requestLimiterHandler;
+        private System.Threading.Timer webhookTimer;
 
         public Games Games;
         public AlternativeNames AlternativeNames;
@@ -69,6 +70,64 @@ namespace PlayniteServices.Controllers.IGDB
             AgeRatings = new AgeRatings(this);
             Collections = new Collections(this);
             Companies = new Companies(this);
+
+            webhookTimer = new System.Threading.Timer(
+                (_) => RegiserWebhooks(),
+                null,
+                new TimeSpan(0),
+                new TimeSpan(1, 0, 0));
+        }
+
+        public void Dispose()
+        {
+            webhookTimer.Dispose();
+        }
+
+        private Task RegiserWebhooks()
+        {
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
+                    var webhooks = Serialization.FromJson<List<Webhook>>(webhooksString);
+                    if (!webhooks.HasItems() || !webhooks[0].active)
+                    {
+                        logger.Error("IGDB webhook is NOT active.");
+                        logger.Error(webhooksString);
+
+                        var registeredStr = await SendStringRequest(
+                            "games/webhooks",
+                            new FormUrlEncodedContent(new Dictionary<string, string>
+                            {
+                                { "method", "update" },
+                                { "secret", settings.Settings.IGDB.WebHookSecret },
+                                { "url", "http://api.playnite.link/api/igdb/game" }
+                            }),
+                            HttpMethod.Post,
+                            false);
+                        var registeredHooks = Serialization.FromJson<List<Webhook>>(registeredStr);
+                        if (!registeredHooks.HasItems() || !registeredHooks[0].active)
+                        {
+                            logger.Error("Failed to register IGDB webhook.");
+                            logger.Error(registeredStr);
+                        }
+                        else
+                        {
+                            logger.Info("Registered new IGDB webhook.");
+                            logger.Info(registeredStr);
+                        }
+                    }
+                    else
+                    {
+                        logger.Info("IGDB webhook is active.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e, "Failed to register IGDB webhooks.");
+                }
+            });
         }
 
         private static async Task SaveTokens(string accessToken)
@@ -99,7 +158,7 @@ namespace PlayniteServices.Controllers.IGDB
             var clientId = settings.Settings.IGDB.ClientId;
             var clientSecret = settings.Settings.IGDB.ClientSecret;
             var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
-            var response = await HttpClient.PostAsync(authUrl, null).ConfigureAwait(false);
+            var response = await HttpClient.PostAsync(authUrl, null);
             var auth = Serialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
             if (auth?.access_token.IsNullOrEmpty() != false)
             {
@@ -115,16 +174,16 @@ namespace PlayniteServices.Controllers.IGDB
             }
         }
 
-        private HttpRequestMessage CreateRequest(string url, string query, string apiKey)
+        private HttpRequestMessage CreateRequest(string url, HttpContent content, HttpMethod method)
         {
             var request = new HttpRequestMessage()
             {
                 RequestUri = new Uri(settings.Settings.IGDB.ApiEndpoint + url),
-                Method = HttpMethod.Post,
-                Content = new StringContent(query)
+                Method = method,
+                Content = content
             };
 
-            request.Headers.Add("Authorization", $"Bearer {apiKey}");
+            request.Headers.Add("Authorization", $"Bearer {settings.Settings.IGDB.AccessToken}");
             request.Headers.Add("Client-ID", settings.Settings.IGDB.ClientId);
             return request;
         }
@@ -132,8 +191,13 @@ namespace PlayniteServices.Controllers.IGDB
         public async Task<string> SendStringRequest(string url, string query, bool reTry = true)
         {
             logger.Debug($"IGDB Live: {url}, {query}");
-            var sharedRequest = CreateRequest(url, query, settings.Settings.IGDB.AccessToken);
-            var response = await HttpClient.SendAsync(sharedRequest).ConfigureAwait(false);
+            return await SendStringRequest(url, new StringContent(query), HttpMethod.Post, reTry);
+        }
+
+        public async Task<string> SendStringRequest(string url, HttpContent content, HttpMethod method, bool reTry = true)
+        {
+            var sharedRequest = CreateRequest(url, content, method);
+            var response = await HttpClient.SendAsync(sharedRequest);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -145,7 +209,7 @@ namespace PlayniteServices.Controllers.IGDB
             {
                 logger.Error($"IGDB request failed on authentication {response.StatusCode}.");
                 await Authenticate();
-                return await SendStringRequest(url, query, false);
+                return await SendStringRequest(url, content, method, false);
             }
             else if (authFailed)
             {
@@ -154,7 +218,7 @@ namespace PlayniteServices.Controllers.IGDB
             else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests && reTry)
             {
                 await Task.Delay(250);
-                return await SendStringRequest(url, query, false);
+                return await SendStringRequest(url, content, method, false);
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             {
@@ -167,7 +231,7 @@ namespace PlayniteServices.Controllers.IGDB
                 // Request sometimes fails on generic error, but then works when sent again...
                 if (errorMessage.Contains("Internal server error") && reTry)
                 {
-                    return await SendStringRequest(url, query, false);
+                    return await SendStringRequest(url, content, method, false);
                 }
                 else
                 {
