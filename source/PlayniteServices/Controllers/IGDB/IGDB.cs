@@ -44,6 +44,7 @@ namespace PlayniteServices.Controllers.IGDB
         public AgeRatings AgeRatings;
         public Collections Collections;
         public Companies Companies;
+        public Platforms Platforms;
 
         public HttpClient HttpClient { get; }
 
@@ -70,17 +71,21 @@ namespace PlayniteServices.Controllers.IGDB
             AgeRatings = new AgeRatings(this);
             Collections = new Collections(this);
             Companies = new Companies(this);
+            Platforms = new Platforms(this);
 
-            webhookTimer = new System.Threading.Timer(
-                (_) => RegiserWebhooks(),
-                null,
-                new TimeSpan(0),
-                new TimeSpan(1, 0, 0));
+            if (settings.Settings.IGDB.RegisterWebhooks)
+            {
+                webhookTimer = new System.Threading.Timer(
+                    (_) => RegiserWebhooks(),
+                    null,
+                    new TimeSpan(0),
+                    new TimeSpan(1, 0, 0));
+            }
         }
 
         public void Dispose()
         {
-            webhookTimer.Dispose();
+            webhookTimer?.Dispose();
         }
 
         private Task RegiserWebhooks()
