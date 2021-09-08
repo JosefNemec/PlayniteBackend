@@ -22,12 +22,21 @@
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\ObjectExtensions.cs" Link="Shared\ObjectExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\StringExtensions.cs" Link="Shared\StringExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\FileSystem.cs" Link="Shared\FileSystem.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\InteropMethods.cs" Link="Shared\InteropMethods.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Paths.cs" Link="Shared\Paths.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Roman.cs" Link="Shared\Roman.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Serialization.cs" Link="Shared\Serialization.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Database\OldModels\Ver2.cs" Link="Models\Playnite\Ver2.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\DiagnosticPackageInfo.cs" Link="Shared\DiagnosticPackageInfo.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Manifests\AddonManifestBase.cs" Link="Models\Playnite\AddonManifestBase.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Fileapi.cs" Link="Shared\Native\Fileapi.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Kernel32.cs" Link="Shared\Native\Kernel32.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Ntdll.cs" Link="Shared\Native\Ntdll.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Processthreadsapi.cs" Link="Shared\Native\Processthreadsapi.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Shlwapi.cs" Link="Shared\Native\Shlwapi.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Winbase.cs" Link="Shared\Native\Winbase.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Windef.cs" Link="Shared\Native\Windef.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Winnt.cs" Link="Shared\Native\Winnt.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\winuser.cs" Link="Shared\Native\winuser.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Services\Models\Playnite.cs" Link="Models\Playnite\Playnite.cs" />
   </ItemGroup>
 
@@ -49,7 +58,7 @@
 
   <ItemGroup>
     <Folder Include="Models\Playnite\" />
-    <Folder Include="Shared\" />
+    <Folder Include="Shared\Native\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -29,7 +29,7 @@ namespace PlayniteServicesTests.Controllers.IGDB
         private async Task<ExpandedGame> GetMetadata(SdkModels.Game game)
         {
             var content = new StringContent(Serialization.ToJson(game), Encoding.UTF8, MediaTypeNames.Application.Json);
-            var response = await client.PostAsync(@"/igdb/metadata_v2", content);
+            var response = await client.PostAsync(@"/igdb/metadata_v3", content);
             return Serialization.FromJson<ServicesResponse<ExpandedGame>>(await response.Content.ReadAsStringAsync()).Data;
         }
 
@@ -42,7 +42,7 @@ namespace PlayniteServicesTests.Controllers.IGDB
         public async Task AlternateNameUseTest()
         {
             var metadata = await GetMetadata(new SdkModels.Game("pubg"));
-            Assert.Equal("PLAYERUNKNOWN'S BATTLEGROUNDS", metadata.name);
+            Assert.Equal("PUBG: BATTLEGROUNDS", metadata.name);
 
             metadata = await GetMetadata(new SdkModels.Game("unreal 2"));
             Assert.Equal("Unreal II: The Awakening", metadata.name);
@@ -65,14 +65,14 @@ namespace PlayniteServicesTests.Controllers.IGDB
         {
             var game = new SdkModels.Game("Tomb Raider")
             {
-                ReleaseDate = new DateTime(1996, 1, 1)
+                ReleaseDate = new SdkModels.ReleaseDate(1996, 1, 1)
             };
 
             var metadata = await GetMetadata(game);
             Assert.Equal(1996, GetYearFromUnix(metadata.first_release_date));
             Assert.Equal("Core Design", metadata.involved_companies.Where(a => a.developer).First().company.name);
 
-            game.ReleaseDate = new DateTime(2013, 1, 1);
+            game.ReleaseDate = new SdkModels.ReleaseDate(2013, 1, 1);
             metadata = await GetMetadata(game);
             Assert.Equal(2013, GetYearFromUnix(metadata.first_release_date));
             Assert.Equal("Crystal Dynamics", metadata.involved_companies.Where(a => a.developer).First().company.name);
@@ -83,7 +83,7 @@ namespace PlayniteServicesTests.Controllers.IGDB
         {
             // No-Intro naming
             var metadata = await GetMetadata(new SdkModels.Game("Bug's Life, A"));
-            Assert.Equal((ulong)2847, metadata.id);
+            Assert.Equal((ulong)49841, metadata.id);
 
             metadata = await GetMetadata(new SdkModels.Game("Warhammer 40,000: Space Marine"));
             Assert.Equal((ulong)578, metadata.id);

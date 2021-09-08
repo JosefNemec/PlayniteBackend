@@ -30,7 +30,27 @@ namespace PlayniteServicesTests.Controllers.IGDB
             client = fixture.Client;
         }
 
-        [Fact]
+        //[Fact]
+        public void Random()
+        {
+            ulong testnum = 9856914317583057114;
+            //Database.Instance.SteamIgdbMatches.ReplaceOne(
+            //    Builders<SteamIdGame>.Filter.Eq(a => a.steamId, testnum),
+            //        new SteamIdGame()
+            //        {
+            //            steamId = testnum,
+            //            igdbId = 5165165
+            //        }, Database.ItemUpsertOptions);
+
+            //var test = Database.Instance.SteamIgdbMatches.Find((a) => a.steamId == testnum).FirstOrDefault();
+
+            var igdb = new IgdbApi(null);
+            //igdb.Games.Collection.InsertOne(new Game { id = testnum, involved_companies = new List<ulong> { testnum } });
+
+            var test = igdb.Games.Collection.Find((a) => a.id == testnum).FirstOrDefault();
+        }
+
+        //[Fact]
         public void ConvertCache()
         {
             //var items1 = Serialization.FromJsonFile<List<GameIdMatch>>(@"e:\Devel\igdb\IGDBGameIdMatches.json");
