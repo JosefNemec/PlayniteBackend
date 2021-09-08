@@ -65,6 +65,7 @@ namespace PlayniteServices.Controllers.IGDB
             parsedGame.screenshots = await igdbApi.Screenshots.Get(game.screenshots);
             parsedGame.age_ratings = await igdbApi.AgeRatings.Get(game.age_ratings);
             parsedGame.collection = await igdbApi.Collections.Get(game.collection);
+            parsedGame.platforms = await igdbApi.Platforms.Get(game.platforms);
             return parsedGame;
         }
     }

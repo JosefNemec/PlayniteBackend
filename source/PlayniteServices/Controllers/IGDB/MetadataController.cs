@@ -40,16 +40,38 @@ namespace PlayniteServices.Controllers.IGDB
             parsedController = new GameParsedController(settings, igdbApi);
         }
 
+        [HttpPost("metadata_v3")]
+        public async Task<ServicesResponse<ExpandedGame>> PostMetadataV3([FromBody] SdkModels.Game game)
+        {
+            return await GetMetadata(game, expandedController.GetExpandedGame);
+        }
+
         [HttpPost("metadata_v2")]
-        public async Task<ServicesResponse<ExpandedGame>> PostMetadataV2([FromBody]SdkModels.Game game)
+        public async Task<ServicesResponse<ExpandedGame>> PostMetadataV2([FromBody]Playnite.Database.OldModels.Ver2_Game game)
         {
             return await GetMetadata(game, expandedController.GetExpandedGame);
         }
 
         [HttpPost("metadata")]
-        public async Task<ServicesResponse<ExpandedGameLegacy>> PostMetadata([FromBody]SdkModels.Game game)
+        public async Task<ServicesResponse<ExpandedGameLegacy>> PostMetadata([FromBody]Playnite.Database.OldModels.Ver2_Game game)
         {
             return await GetMetadata(game, parsedController.GetExpandedGame);
+        }
+
+        private async Task<ServicesResponse<T>> GetMetadata<T>(Playnite.Database.OldModels.Ver2_Game game, Func<ulong, Task<T>> expandFunc) where T : new()
+        {
+            var tempGame = new SdkModels.Game(game.Name)
+            {
+                PluginId = game.PluginId,
+                GameId = game.GameId
+            };
+
+            if (game.ReleaseDate != null)
+            {
+                tempGame.ReleaseDate = new SdkModels.ReleaseDate(game.ReleaseDate.Value);
+            }
+
+            return await GetMetadata(tempGame, expandFunc);
         }
 
         private async Task<ServicesResponse<T>> GetMetadata<T>(SdkModels.Game game, Func<ulong, Task<T>> expandFunc) where T : new()
