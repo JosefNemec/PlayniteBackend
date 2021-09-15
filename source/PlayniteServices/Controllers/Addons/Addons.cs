@@ -160,6 +160,12 @@ namespace PlayniteServices.Controllers.Addons
                             try
                             {
                                 var manifest = Serialization.FromYamlFile<AddonManifestBase>(manifestFile);
+                                if (manifest.AddonId.IsNullOrWhiteSpace())
+                                {
+                                    logger.Error($"Addon {manifestFile} doesn't have addon ID specified!");
+                                    continue;
+                                }
+
                                 col.InsertOne(manifest);
                             }
                             catch (Exception e)
