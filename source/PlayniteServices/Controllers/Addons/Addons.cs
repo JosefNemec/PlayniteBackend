@@ -39,6 +39,12 @@ namespace PlayniteServices.Controllers.Addons
             this.settings = settings;
         }
 
+        [HttpGet("blacklist")]
+        public ServicesResponse<string[]> GetBlackList()
+        {
+            return new ServicesResponse<string[]>(settings.Settings.Addons.Blacklist);
+        }
+
         [HttpGet()]
         public ServicesResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
         {
