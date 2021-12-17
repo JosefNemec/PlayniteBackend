@@ -28,15 +28,17 @@ namespace PlayniteServices.Databases
         private readonly MongoClient client;
         public static Database Instance { get; set; }
         public static readonly ReplaceOptions ItemUpsertOptions = new ReplaceOptions { IsUpsert = true };
+        public static readonly InsertManyOptions InsertManyOptions = new InsertManyOptions();
         public readonly IMongoDatabase MongoDb;
-
         public readonly IMongoCollection<Models.User> Users;
-        public readonly IMongoCollection<SteamIdGame> SteamIgdbMatches;
-        public readonly IMongoCollection<GameIdMatch> IGBDGameIdMatches;
-        public readonly IMongoCollection<SearchIdMatch> IGDBSearchIdMatches;
         public readonly IMongoCollection<AddonManifestBase> Addons;
-        public readonly IMongoCollection<IgdbSearchResult> IgdbStdSearches;
-        public readonly IMongoCollection<IgdbSearchResult> IgdbAltSearches;
+        public readonly IMongoCollection<IgdbGameMatch> IgdbGameMatches;
+
+        [Obsolete] public readonly IMongoCollection<SteamIdGame> SteamIgdbMatches;
+        [Obsolete] public readonly IMongoCollection<GameIdMatch> IGBDGameIdMatches;
+        [Obsolete] public readonly IMongoCollection<SearchIdMatch> IGDBSearchIdMatches;
+        [Obsolete] public readonly IMongoCollection<IgdbSearchResult> IgdbStdSearches;
+        [Obsolete] public readonly IMongoCollection<IgdbSearchResult> IgdbAltSearches;
 
         public Database(string connectionString)
         {
@@ -97,6 +99,13 @@ namespace PlayniteServices.Databases
                 cm.MapIdMember(c => c.Id);
             });
 
+            BsonClassMap.RegisterClassMap<IgdbGameMatch>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.MatchId);
+            });
+
             client = new MongoClient(connectionString);
             MongoDb = client.GetDatabase("playnitebackend");
             Users = MongoDb.GetCollection<Models.User>("Users");
@@ -106,6 +115,7 @@ namespace PlayniteServices.Databases
             Addons = MongoDb.GetCollection<AddonManifestBase>("Addons");
             IgdbStdSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_StdSearches");
             IgdbAltSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_AltSearches");
+            IgdbGameMatches = MongoDb.GetCollection<IgdbGameMatch>("IgdbGameMatches");
         }
 
         public void Dispose()

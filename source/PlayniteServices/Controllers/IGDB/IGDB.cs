@@ -45,6 +45,13 @@ namespace PlayniteServices.Controllers.IGDB
         public Collections Collections;
         public Companies Companies;
         public Platforms Platforms;
+        public Keywords Keywords;
+        public MultiplayerModes MultiplayerModes;
+        public Franchises Franchises;
+        public Themes Themes;
+        public ExternalGames ExternalGames;
+        public Videos Videos;
+        public ReleaseDates ReleaseDates;
 
         public HttpClient HttpClient { get; }
 
@@ -72,6 +79,13 @@ namespace PlayniteServices.Controllers.IGDB
             Collections = new Collections(this);
             Companies = new Companies(this);
             Platforms = new Platforms(this);
+            Keywords = new Keywords(this);
+            MultiplayerModes = new MultiplayerModes(this);
+            Franchises = new Franchises(this);
+            Themes = new Themes(this);
+            ExternalGames = new ExternalGames(this);
+            Videos = new Videos(this);
+            ReleaseDates = new ReleaseDates(this);
 
             if (settings.Settings.IGDB.RegisterWebhooks)
             {
@@ -92,40 +106,48 @@ namespace PlayniteServices.Controllers.IGDB
         {
             return Task.Run(async () =>
             {
+                async Task registerHook(string method, string collection)
+                {
+                    await SendStringRequest(
+                        $"{collection}/webhooks",
+                        new FormUrlEncodedContent(new Dictionary<string, string>
+                        {
+                            { "method", method },
+                            { "secret", settings.Settings.IGDB.WebHookSecret },
+                            { "url", $"http://api.playnite.link/api/igdb/webhooks/{collection}/{method}" }
+                        }),
+                        HttpMethod.Post,
+                        false);
+                }
+
                 try
                 {
                     var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
                     var webhooks = Serialization.FromJson<List<Webhook>>(webhooksString);
-                    if (!webhooks.HasItems() || !webhooks[0].active)
+                    if (!webhooks.HasItems() || webhooks.Any(a => a.active == false))
                     {
-                        logger.Error("IGDB webhook is NOT active.");
+                        logger.Error("IGDB webhooks are NOT active.");
                         logger.Error(webhooksString);
+                        await registerHook("create", "games");
+                        await registerHook("delete", "games");
+                        await registerHook("update", "games");
 
-                        var registeredStr = await SendStringRequest(
-                            "games/webhooks",
-                            new FormUrlEncodedContent(new Dictionary<string, string>
-                            {
-                                { "method", "update" },
-                                { "secret", settings.Settings.IGDB.WebHookSecret },
-                                { "url", "http://api.playnite.link/api/igdb/game" }
-                            }),
-                            HttpMethod.Post,
-                            false);
-                        var registeredHooks = Serialization.FromJson<List<Webhook>>(registeredStr);
-                        if (!registeredHooks.HasItems() || !registeredHooks[0].active)
+                        webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
+                        webhooks = Serialization.FromJson<List<Webhook>>(webhooksString);
+                        if (!webhooks.HasItems() || webhooks.Any(a => a.active == false))
                         {
-                            logger.Error("Failed to register IGDB webhook.");
-                            logger.Error(registeredStr);
+                            logger.Error("Failed to register IGDB webhooks.");
+                            logger.Error(webhooksString);
                         }
                         else
                         {
-                            logger.Info("Registered new IGDB webhook.");
-                            logger.Info(registeredStr);
+                            logger.Info("Registered new IGDB webhooks.");
+                            logger.Info(webhooksString);
                         }
                     }
                     else
                     {
-                        logger.Info("IGDB webhook is active.");
+                        logger.Info("IGDB webhooks are active.");
                     }
                 }
                 catch (Exception e)
@@ -336,5 +358,258 @@ namespace PlayniteServices.Controllers.IGDB
             cacheItems.AddRange(items);
             return cacheItems;
         }
+
+        public void Add<TItem>(IEnumerable<TItem> items, IMongoCollection<TItem> collection) where TItem : IgdbItem
+        {
+            items.ForEach(a => collection.ReplaceOne(
+              Builders<TItem>.Filter.Eq(u => u.id, a.id),
+              a,
+              Database.ItemUpsertOptions));
+        }
+
+        public void Add<TItem>(TItem item, IMongoCollection<TItem> collection) where TItem : IgdbItem
+        {
+            collection.ReplaceOne(
+              Builders<TItem>.Filter.Eq(u => u.id, item.id),
+              item,
+              Database.ItemUpsertOptions);
+        }
+
+        private async Task<ulong> GetCollectionCount(string collectionName)
+        {
+            var stringResult = await SendStringRequest(collectionName + "/count", null, HttpMethod.Post);
+            var response = Serialization.FromJson<Dictionary<string, ulong>>(stringResult);
+            return response["count"];
+        }
+
+        public async Task CloneDatabase()
+        {
+            Games.DropCollection();
+            AlternativeNames.DropCollection();
+            InvolvedCompanies.DropCollection();
+            Genres.DropCollection();
+            Websites.DropCollection();
+            GameModes.DropCollection();
+            PlayerPerspectives.DropCollection();
+            Covers.DropCollection();
+            Artworks.DropCollection();
+            Screenshots.DropCollection();
+            AgeRatings.DropCollection();
+            Collections.DropCollection();
+            Companies.DropCollection();
+            Platforms.DropCollection();
+            Keywords.DropCollection();
+            MultiplayerModes.DropCollection();
+            Franchises.DropCollection();
+            Themes.DropCollection();
+            ExternalGames.DropCollection();
+            Videos.DropCollection();
+            ReleaseDates.DropCollection();
+
+            logger.Debug("DB games clone start " + DateTime.Now.ToString("HH:mm:ss"));
+
+            var gameCount = await GetCollectionCount("games");
+            var gamesQueryBase = $"fields checksum,version_parent,name,slug,url,status,rating,aggregated_rating,total_rating,summary,storyline,first_release_date,version_title,category,age_ratings.*,alternative_names.*,artworks.*,bundles,collection.*,cover.*,dlcs,expanded_games,expansions,external_games.*,forks,franchise.*,franchises.*,game_modes.*,genres.*,involved_companies.*,keywords.*,multiplayer_modes.*,parent_game,platforms.*,player_perspectives.*,ports,release_dates.*,remakes,remasters,screenshots.*,similar_games,standalone_expansions,themes.*,videos.*,websites.*; limit 500;";
+
+            for (ulong i = 0; i < gameCount; i += 500)
+            {
+                var query = $"{gamesQueryBase} offset {i};";
+                var stringData = await SendStringRequest("games", query);
+                var games = Serialization.FromJson<List<DbClonningGame>>(stringData);
+                foreach (var game in games)
+                {
+                    var storeGame = new Game
+                    {
+                        id = game.id,
+                        name = game.name,
+                        slug = game.slug,
+                        url = game.url,
+                        checksum = game.checksum,
+                        summary = game.summary,
+                        storyline = game.storyline,
+                        version_parent = game.version_parent,
+                        category = game.category,
+                        first_release_date = game.first_release_date,
+                        rating = game.rating,
+                        aggregated_rating = game.aggregated_rating,
+                        total_rating = game.total_rating,
+                        similar_games = game.similar_games,
+                        parent_game = game.parent_game,
+                        bundles = game.bundles,
+                        dlcs = game.dlcs,
+                        expanded_games = game.expanded_games,
+                        expansions = game.expansions,
+                        forks = game.forks,
+                        ports = game.ports,
+                        remakes = game.remakes,
+                        remasters = game.remasters,
+                        standalone_expansions = game.standalone_expansions,
+                        status = game.status
+                    };
+
+                    if (game.franchise != null)
+                    {
+                        Franchises.Add(game.franchise);
+                        storeGame.franchise = game.franchise.id;
+                    }
+
+                    if (game.collection != null)
+                    {
+                        Collections.Add(game.collection);
+                        storeGame.collection = game.collection.id;
+                    }
+
+                    if (game.involved_companies.HasItems())
+                    {
+                        InvolvedCompanies.Add(game.involved_companies);
+                        storeGame.involved_companies = game.involved_companies.Select(a => a.id).ToList();
+                    }
+
+                    if (game.genres.HasItems())
+                    {
+                        Genres.Add(game.genres);
+                        storeGame.genres = game.genres.Select(a => a.id).ToList();
+                    }
+
+                    if (game.themes.HasItems())
+                    {
+                        Themes.Add(game.themes);
+                        storeGame.themes = game.themes.Select(a => a.id).ToList();
+                    }
+
+                    if (game.game_modes.HasItems())
+                    {
+                        GameModes.Add(game.game_modes);
+                        storeGame.game_modes = game.game_modes.Select(a => a.id).ToList();
+                    }
+
+                    if (game.cover != null)
+                    {
+                        Covers.Add(game.cover);
+                        storeGame.cover = game.cover.id;
+                    }
+
+                    if (game.websites.HasItems())
+                    {
+                        Websites.Add(game.websites);
+                        storeGame.websites = game.websites.Select(a => a.id).ToList();
+                    }
+
+                    if (game.player_perspectives.HasItems())
+                    {
+                        PlayerPerspectives.Add(game.player_perspectives);
+                        storeGame.player_perspectives = game.player_perspectives.Select(a => a.id).ToList();
+                    }
+
+                    if (game.franchises.HasItems())
+                    {
+                        Franchises.Add(game.franchises);
+                        storeGame.franchises = game.franchises.Select(a => a.id).ToList();
+                    }
+
+                    if (game.keywords.HasItems())
+                    {
+                        Keywords.Add(game.keywords);
+                        storeGame.keywords = game.keywords.Select(a => a.id).ToList();
+                    }
+
+                    if (game.multiplayer_modes.HasItems())
+                    {
+                        MultiplayerModes.Add(game.multiplayer_modes);
+                        storeGame.multiplayer_modes = game.multiplayer_modes.Select(a => a.id).ToList();
+                    }
+
+                    if (game.alternative_names.HasItems())
+                    {
+                        AlternativeNames.Add(game.alternative_names);
+                        storeGame.alternative_names = game.alternative_names.Select(a => a.id).ToList();
+                    }
+
+                    if (game.external_games.HasItems())
+                    {
+                        ExternalGames.Add(game.external_games);
+                        storeGame.external_games = game.external_games.Select(a => a.id).ToList();
+                    }
+
+                    if (game.screenshots.HasItems())
+                    {
+                        Screenshots.Add(game.screenshots);
+                        storeGame.screenshots = game.screenshots.Select(a => a.id).ToList();
+                    }
+
+                    if (game.artworks.HasItems())
+                    {
+                        Artworks.Add(game.artworks);
+                        storeGame.artworks = game.artworks.Select(a => a.id).ToList();
+                    }
+
+                    if (game.videos.HasItems())
+                    {
+                        Videos.Add(game.videos);
+                        storeGame.videos = game.videos.Select(a => a.id).ToList();
+                    }
+
+                    if (game.platforms.HasItems())
+                    {
+                        Platforms.Add(game.platforms);
+                        storeGame.platforms = game.platforms.Select(a => a.id).ToList();
+                    }
+
+                    if (game.release_dates.HasItems())
+                    {
+                        ReleaseDates.Add(game.release_dates);
+                        storeGame.release_dates = game.release_dates.Select(a => a.id).ToList();
+                    }
+
+                    if (game.age_ratings.HasItems())
+                    {
+                        AgeRatings.Add(game.age_ratings);
+                        storeGame.age_ratings = game.age_ratings.Select(a => a.id).ToList();
+                    }
+
+                    Games.Collection.ReplaceOne(
+                        Builders<Game>.Filter.Eq(u => u.id, storeGame.id),
+                        storeGame,
+                        Database.ItemUpsertOptions);
+                }
+            }
+
+            logger.Debug("DB games end " + DateTime.Now.ToString("HH:mm:ss"));
+
+            logger.Debug("DB companies clone start " + DateTime.Now.ToString("HH:mm:ss"));
+            var companiesCount = await GetCollectionCount("companies");
+            var companiesQueryBase = $"fields name,slug,url,checksum,logo,country,description,parent,developed,published; limit 500;";
+            for (ulong i = 0; i < companiesCount; i += 500)
+            {
+                var query = $"{companiesQueryBase} offset {i};";
+                var stringData = await SendStringRequest("companies", query);
+                var companies = Serialization.FromJson<List<Company>>(stringData);
+
+                companies.ForEach(a => Companies.Collection.ReplaceOne(
+                    Builders<Company>.Filter.Eq(u => u.id, a.id),
+                    a,
+                    Database.ItemUpsertOptions));
+            }
+
+            logger.Debug("DB companies end " + DateTime.Now.ToString("HH:mm:ss"));
+        }
+
+        //private async Task CloneCollection<T>(DataGetter<T> collection) where T : IgdbItem
+        //{
+        //    logger.Debug($"DB clone {collection.EndpointPath} start {DateTime.Now:HH:mm:ss}");
+        //    var colCount = await GetCollectionCount(collection.EndpointPath);
+        //    for (ulong i = 0; i < colCount; i += 500)
+        //    {
+        //        var query = $"fields *; limit 500; offset {i};";
+        //        var stringData = await SendStringRequest(collection.EndpointPath, query);
+        //        var items = Serialization.FromJson<List<T>>(stringData);
+        //        items.ForEach(a => collection.Collection.ReplaceOne(
+        //            Builders<T>.Filter.Eq(u => u.id, a.id),
+        //            a,
+        //            Database.ItemUpsertOptions));
+        //    }
+
+        //    logger.Debug($"DB clone {collection.EndpointPath} end {DateTime.Now:HH:mm:ss}");
+        //}
     }
 }

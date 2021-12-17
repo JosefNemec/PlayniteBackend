@@ -43,57 +43,6 @@ namespace PlayniteServices.Controllers.IGDB
         {
             return new ServicesResponse<Game>(await igdbApi.Games.Get(gameId));
         }
-
-        // Only use for IGDB webhook.
-        [HttpPost]
-        public async Task<ActionResult> Post()
-        {
-            if (Request.Headers.TryGetValue("X-Secret", out var secret))
-            {
-                if (secret != settings.Settings.IGDB.WebHookSecret)
-                {
-                    logger.Error($"X-Secret doesn't match: {secret}");
-                    return BadRequest();
-                }
-
-                try
-                {
-                    Game game = null;
-                    string jsonString = null;
-                    using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
-                    {
-                        jsonString = await reader.ReadToEndAsync();
-                        if (!string.IsNullOrEmpty(jsonString))
-                        {
-                            game = Serialization.FromJson<Game>(jsonString);
-                        }
-                    }
-
-                    if (game == null)
-                    {
-                        logger.Error("Failed IGDB content serialization.");
-                        return Ok();
-                    }
-
-                    logger.Info($"Received game webhook from IGDB: {game.id}");
-                    igdbApi.Games.Collection.ReplaceOne(
-                        Builders<Game>.Filter.Eq(a => a.id, game.id),
-                        game,
-                        Database.ItemUpsertOptions);
-                }
-                catch (Exception e)
-                {
-                    logger.Error(e, "Failed to process IGDB webhook.");
-                }
-
-                return Ok();
-            }
-            else
-            {
-                logger.Error("Missing X-Secret from IGDB webhook.");
-                return BadRequest();
-            }
-        }
     }
 
     [ServiceFilter(typeof(PlayniteVersionFilter))]
@@ -131,7 +80,6 @@ namespace PlayniteServices.Controllers.IGDB
                 url = game.url,
                 summary = game.summary,
                 storyline = game.storyline,
-                popularity = game.popularity,
                 version_title = game.version_title,
                 category = game.category,
                 first_release_date = game.first_release_date * 1000,

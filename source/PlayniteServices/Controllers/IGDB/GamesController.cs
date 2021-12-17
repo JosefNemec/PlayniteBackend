@@ -38,6 +38,7 @@ namespace PlayniteServices.Controllers.IGDB
             alternativeNames = new AlternativeNames(igdbApi);
         }
 
+        [Obsolete]
         [HttpGet("{gameName}")]
         public async Task<ServicesResponse<List<ExpandedGameLegacy>>> Get(string gameName)
         {
@@ -58,6 +59,7 @@ namespace PlayniteServices.Controllers.IGDB
             return new ServicesResponse<List<ExpandedGameLegacy>>(search);
         }
 
+        [Obsolete]
         public async Task<List<ExpandedGameLegacy>> GetSearchResults(string searchString, bool alternativeSearch)
         {
             if (searchString.IsNullOrEmpty())

@@ -29,6 +29,7 @@ namespace PlayniteServices.Controllers.IGDB
             return new ServicesResponse<ExpandedGame>(await GetExpandedGame(gameId));
         }
 
+        [Obsolete]
         public async Task<ExpandedGame> GetExpandedGame(ulong gameId)
         {
             var game = await igdbApi.Games.Get(gameId);
@@ -45,7 +46,6 @@ namespace PlayniteServices.Controllers.IGDB
                 url = game.url,
                 summary = game.summary,
                 storyline = game.storyline,
-                popularity = game.popularity,
                 version_title = game.version_title,
                 category = game.category,
                 first_release_date = game.first_release_date * 1000,

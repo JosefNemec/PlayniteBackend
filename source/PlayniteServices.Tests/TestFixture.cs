@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 using PlayniteServices;
 using Playnite.SDK;
+using PlayniteServices.Controllers.IGDB;
+using PlayniteServices.Filters;
 
 namespace PlayniteServicesTests
 {
@@ -23,8 +25,8 @@ namespace PlayniteServicesTests
 
     public class TestFixture<TStartup> : IDisposable
     {
-        private readonly TestServer server;
-        public HttpClient Client { get; }
+        public readonly TestServer Server;
+        public readonly HttpClient Client;
 
         public TestFixture() : this(Path.Combine("source"))
         {
@@ -44,8 +46,8 @@ namespace PlayniteServicesTests
                     config.AddJsonFile("patreonTokens.json", optional: true, reloadOnChange: true);
                 });
 
-            server = new TestServer(builder);
-            Client = server.CreateClient();
+            Server = new TestServer(builder);
+            Client = Server.CreateClient();
             Client.BaseAddress = new Uri("http://localhost");
 
             Database.Instance = new Database(Startup.Configuration.GetSection(nameof(AppSettings.DatabaseConString)).Value);
@@ -56,7 +58,7 @@ namespace PlayniteServicesTests
         public void Dispose()
         {
             Client.Dispose();
-            server.Dispose();
+            Server.Dispose();
         }
 
         protected virtual void InitializeServices(IServiceCollection services)

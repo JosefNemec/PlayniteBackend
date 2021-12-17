@@ -18,7 +18,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 
         public async Task<ExpandedInvolvedCompany> GetExpanded(ulong companyId)
         {
-            var involvedCompany = await igdbApi.GetItem(companyId, endpointPath, Collection);
+            var involvedCompany = await igdbApi.GetItem(companyId, EndpointPath, Collection);
             var expandedCompany = new ExpandedInvolvedCompany();
             involvedCompany.CopyProperties(expandedCompany, false, new List<string>()
             {
@@ -36,7 +36,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
                 return null;
             }
 
-            var involvedCompanies = await igdbApi.GetItem(objectIds, endpointPath, Collection);
+            var involvedCompanies = await igdbApi.GetItem(objectIds, EndpointPath, Collection);
             var expandedCompanies = new List<ExpandedInvolvedCompany>();
             foreach (var company in involvedCompanies)
             {

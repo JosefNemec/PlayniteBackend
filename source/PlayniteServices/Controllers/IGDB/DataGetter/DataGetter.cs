@@ -11,14 +11,14 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
     public class DataGetter<T> where T : IgdbItem
     {
-        internal string endpointPath;
-        internal IgdbApi igdbApi;
-        public readonly IMongoCollection<T> Collection;
+        public readonly string EndpointPath;
+        internal readonly IgdbApi igdbApi;
+        public IMongoCollection<T> Collection { get; private set; }
 
         public DataGetter(IgdbApi igdbApi, string endpointPath)
         {
             this.igdbApi = igdbApi;
-            this.endpointPath = endpointPath;
+            this.EndpointPath = endpointPath;
 
             if (!BsonClassMap.IsClassMapRegistered(typeof(T)))
             {
@@ -34,12 +34,28 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
 
         public virtual async Task<T> Get(ulong objectId)
         {
-            return await igdbApi.GetItem(objectId, endpointPath, Collection);
+            return await igdbApi.GetItem(objectId, EndpointPath, Collection);
         }
 
         public virtual async Task<List<T>> Get(List<ulong> objectIds)
         {
-            return await igdbApi.GetItem(objectIds, endpointPath, Collection);
+            return await igdbApi.GetItem(objectIds, EndpointPath, Collection);
+        }
+
+        public virtual void Add(T item)
+        {
+            igdbApi.Add(item, Collection);
+        }
+
+        public virtual void Add(IEnumerable<T> items)
+        {
+            igdbApi.Add(items, Collection);
+        }
+
+        public virtual void DropCollection()
+        {
+            Database.Instance.MongoDb.DropCollection($"IGDB_col_{EndpointPath}");
+            Collection = Database.Instance.MongoDb.GetCollection<T>($"IGDB_col_{EndpointPath}");
         }
     }
 }

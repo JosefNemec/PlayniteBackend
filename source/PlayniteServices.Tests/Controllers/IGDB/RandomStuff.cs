@@ -24,10 +24,29 @@ namespace PlayniteServicesTests.Controllers.IGDB
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly HttpClient client;
+        private readonly Microsoft.AspNetCore.TestHost.TestServer server;
 
         public RandomStuff(TestFixture<Startup> fixture)
         {
             client = fixture.Client;
+            server = fixture.Server;
+        }
+
+        [Fact]
+        public async Task DatabaseCloneTest()
+        {
+            var igdb = (IgdbApi)server.Services.GetService(typeof(IgdbApi));
+            //await igdb.CloneDatabase();
+            var game = igdb.ExternalGames.GetExternalGame(ExternalGameCategory.Steam, "7200");
+        }
+
+        [Fact]
+        public async Task SearchTest()
+        {
+            var search = new SearchRequest { Name = "quake" };
+            var content = new StringContent(Serialization.ToJson(search), Encoding.UTF8, MediaTypeNames.Application.Json);
+            var response = await client.PostAsync(@"/igdb/search", content);
+            var games = Serialization.FromJson<ServicesResponse<List<Game>>>(await response.Content.ReadAsStringAsync()).Data;
         }
 
         //[Fact]

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 using Newtonsoft.Json;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.IGDB;
@@ -11,11 +10,10 @@ using System.Threading.Tasks;
 
 namespace PlayniteServices.Controllers.IGDB.DataGetter
 {
-    public class AlternativeNames : DataGetter<AlternativeName>
+    public class Keywords : DataGetter<Keyword>
     {
-        public AlternativeNames(IgdbApi igdbApi) : base(igdbApi, "alternative_names")
+        public Keywords(IgdbApi igdbApi) : base(igdbApi, "keywords")
         {
-            Collection.Indexes.CreateOne(new CreateIndexModel<AlternativeName>(Builders<AlternativeName>.IndexKeys.Text(x => x.name)));
         }
     }
 }
