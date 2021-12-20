@@ -4,6 +4,7 @@ using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Playnite;
+using PlayniteServices.Models.Discord;
 using PlayniteServices.Models.IGDB;
 using PlayniteServices.Models.Steam;
 using System;
@@ -25,6 +26,7 @@ namespace PlayniteServices.Databases
             }
         }
 
+        private readonly UpdatableAppSettings settings;
         private readonly MongoClient client;
         public static Database Instance { get; set; }
         public static readonly ReplaceOptions ItemUpsertOptions = new ReplaceOptions { IsUpsert = true };
@@ -35,11 +37,15 @@ namespace PlayniteServices.Databases
         public readonly IMongoCollection<GameIdMatch> IGBDGameIdMatches;
         public readonly IMongoCollection<SearchIdMatch> IGDBSearchIdMatches;
         public readonly IMongoCollection<AddonManifestBase> Addons;
+        public readonly IMongoCollection<AddonInstallerManifestBase> AddonInstallers;
         public readonly IMongoCollection<IgdbSearchResult> IgdbStdSearches;
         public readonly IMongoCollection<IgdbSearchResult> IgdbAltSearches;
+        public readonly IMongoCollection<AddonUpdateNotification> DiscordAddonNotifications;
 
-        public Database(string connectionString)
+        public Database(UpdatableAppSettings settings)
         {
+            this.settings = settings;
+
             ConventionRegistry.Register(
                 "Custom Conventions",
                 new ConventionPack { new IgnoreDefaultPropertiesConvention() },
@@ -90,6 +96,13 @@ namespace PlayniteServices.Databases
                 cm.MapIdMember(c => c.AddonId);
             });
 
+            BsonClassMap.RegisterClassMap<AddonInstallerManifestBase>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.AddonId);
+            });
+
             BsonClassMap.RegisterClassMap<IgdbSearchResult>(cm =>
             {
                 cm.AutoMap();
@@ -97,15 +110,24 @@ namespace PlayniteServices.Databases
                 cm.MapIdMember(c => c.Id);
             });
 
-            client = new MongoClient(connectionString);
+            BsonClassMap.RegisterClassMap<AddonUpdateNotification>(cm =>
+            {
+                cm.AutoMap();
+                cm.SetIgnoreExtraElements(true);
+                cm.MapIdMember(c => c.AddonId);
+            });
+
+            client = new MongoClient(settings.Settings.DatabaseConString);
             MongoDb = client.GetDatabase("playnitebackend");
             Users = MongoDb.GetCollection<Models.User>("Users");
             SteamIgdbMatches = MongoDb.GetCollection<SteamIdGame>("SteamIgdbMatches");
             IGBDGameIdMatches = MongoDb.GetCollection<GameIdMatch>("IGBDGameIdMatches");
             IGDBSearchIdMatches = MongoDb.GetCollection<SearchIdMatch>("IGDBSearchIdMatches");
             Addons = MongoDb.GetCollection<AddonManifestBase>("Addons");
+            AddonInstallers = MongoDb.GetCollection<AddonInstallerManifestBase>("AddonInstallers");
             IgdbStdSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_StdSearches");
             IgdbAltSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_AltSearches");
+            DiscordAddonNotifications = MongoDb.GetCollection<AddonUpdateNotification>("DiscordAddonNotifications");
         }
 
         public void Dispose()

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PlayniteServices.Controllers.IGDB;
+using PlayniteServices.Databases;
 using PlayniteServices.Filters;
 
 namespace PlayniteServices
@@ -66,6 +67,9 @@ namespace PlayniteServices
             services.AddSingleton<IgdbApi>();
             services.AddSingleton<PlayniteVersionFilter>();
             services.AddSingleton<ServiceKeyFilter>();
+            services.AddSingleton<Discord>();
+            services.AddSingleton<Addons>();
+            services.AddSingleton<Database>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

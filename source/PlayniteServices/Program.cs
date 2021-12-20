@@ -30,7 +30,9 @@ namespace PlayniteServices
                 })
                 .Build();
 
-            Database.Instance = new Database(Startup.Configuration.GetSection(nameof(AppSettings.DatabaseConString)).Value);
+            Database.Instance = (Database)host.Services.GetService(typeof(Database));
+            Addons.Instance = (Addons)host.Services.GetService(typeof(Addons));
+            Discord.Instance = (Discord)host.Services.GetService(typeof(Discord));
             return host;
         }
 

@@ -38,11 +38,16 @@ namespace PlayniteServices
         public string GitHubSecret { get; set; }
     }
 
-    public class Addons
+    public class AddonsSettings
     {
         public string AddonRepository { get; set; }
         public string GitHubSecret { get; set; }
         public string[] Blacklist { get; set; }
+    }
+
+    public class DiscordSettings
+    {
+        public string BotToken { get; set; }
     }
 
     public class AppSettings
@@ -56,7 +61,8 @@ namespace PlayniteServices
         public IgdbSettings IGDB { get; set; }
         public PatreonSettings Patreon { get; set; }
         public GitHubSettings GitHub { get; set; }
-        public Addons Addons { get; set; }
+        public AddonsSettings Addons { get; set; }
+        public DiscordSettings Discord { get; set; }
     }
 
     public class UpdatableAppSettings

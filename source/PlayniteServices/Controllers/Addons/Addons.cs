@@ -30,7 +30,6 @@ namespace PlayniteServices.Controllers.Addons
     [Route("addons")]
     public class AddonsController : Controller
     {
-        private readonly static object generatorLock = new object();
         private readonly static ILogger logger = LogManager.GetLogger();
         private UpdatableAppSettings settings;
 
@@ -85,7 +84,7 @@ namespace PlayniteServices.Controllers.Addons
         [HttpPost("build")]
         public async Task<ActionResult> RegenerateDatabase()
         {
-            await RegenerateAddonDatabase();
+            await PlayniteServices.Addons.Instance.RegenerateAddonDatabase();
             return Ok();
         }
 
@@ -119,7 +118,7 @@ namespace PlayniteServices.Controllers.Addons
                     if (payload.@ref?.EndsWith("master") == true)
                     {
 #pragma warning disable CS4014
-                        RegenerateAddonDatabase();
+                        PlayniteServices.Addons.Instance.RegenerateAddonDatabase();
 #pragma warning restore CS4014
                     }
                 }
@@ -129,64 +128,6 @@ namespace PlayniteServices.Controllers.Addons
 
             logger.Error("Addons github webhook not processed correctly.");
             return BadRequest();
-        }
-
-        public Task RegenerateAddonDatabase()
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                logger.Info("Regenerating addons database.");
-                lock (generatorLock)
-                {
-                    try
-                    {
-                        var col = Database.Instance.Addons;
-                        col.DeleteMany(new BsonDocument());
-
-                        var addonDirectory = settings.Settings.Addons.AddonRepository;
-                        if (settings.Settings.Addons.AddonRepository.IsHttpUrl())
-                        {
-                            addonDirectory = Path.Combine(Paths.ExecutingDirectory, "PlayniteAddonDatabase");
-                            FileSystem.DeleteDirectory(addonDirectory, true);
-
-                            var info = new ProcessStartInfo("git")
-                            {
-                                Arguments = $"clone --depth=1 --branch=master {settings.Settings.Addons.AddonRepository}",
-                                WorkingDirectory = Paths.ExecutingDirectory,
-                                CreateNoWindow = true,
-                                UseShellExecute = false,
-                            };
-
-                            using (var proc = Process.Start(info))
-                                proc.WaitForExit();
-                        }
-
-                        foreach (var manifestFile in Directory.GetFiles(addonDirectory, "*.yaml", SearchOption.AllDirectories))
-                        {
-                            try
-                            {
-                                var manifest = Serialization.FromYamlFile<AddonManifestBase>(manifestFile);
-                                if (manifest.AddonId.IsNullOrWhiteSpace())
-                                {
-                                    logger.Error($"Addon {manifestFile} doesn't have addon ID specified!");
-                                    continue;
-                                }
-
-                                col.InsertOne(manifest);
-                            }
-                            catch (Exception e)
-                            {
-                                logger.Error(e, $"Failed to parse addon manifest {manifestFile}");
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        logger.Error(e, "Failed to generate addon database.");
-                        throw;
-                    }
-                }
-            });
         }
     }
 }
