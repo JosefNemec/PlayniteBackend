@@ -85,7 +85,7 @@ namespace PlayniteServices
             }
         }
 
-        private async Task SendNewAddonNotif(AddonManifestBase addon)
+        private async Task<Message> SendNewAddonNotif(AddonManifestBase addon)
         {
             var embed = new EmbedObject
             {
@@ -98,22 +98,32 @@ namespace PlayniteServices
                 color = 0x19d900
             };
 
-            await SendMessage(addonsFeedChannel, string.Empty, new List<EmbedObject> { embed });
+            return await SendMessage(addonsFeedChannel, string.Empty, new List<EmbedObject> { embed });
         }
 
-        private async Task SendAddonUpdateNotif(AddonManifestBase addon, AddonInstallerPackage package)
+        private async Task<Message> SendAddonUpdateNotif(AddonManifestBase addon, AddonInstallerPackage package)
         {
+            var description = $"Updated to {package.Version}:\n\n";
+            if (package.Changelog.HasItems())
+            {
+                description += string.Join("\n", package.Changelog.Select(a => $"- {a}"));
+            }
+            else
+            {
+                description += "Changelog missing!";
+            }
+
             var embed = new EmbedObject
             {
                 author = new EmbedAuthor { name = addon.Author },
-                description = $"Updated to {package.Version}:\n\n" + string.Join("\n", package.Changelog.Select(a => $"- {a}")),
+                description = description,
                 thumbnail = addon.IconUrl.IsNullOrEmpty() ? null : new EmbedThumbnail { url = addon.IconUrl },
                 url = "https://playnite.link/addons.html#{0}".Format(Uri.EscapeDataString(addon.AddonId)),
                 title = addon.Name,
                 color = 0xbf0086
             };
 
-            await SendMessage(addonsFeedChannel, string.Empty, new List<EmbedObject> { embed });
+            return await SendMessage(addonsFeedChannel, string.Empty, new List<EmbedObject> { embed });
         }
 
         private async Task ProcessAddonUpdates(bool sendNotifications)
@@ -133,12 +143,13 @@ namespace PlayniteServices
                     continue;
                 }
 
+                Message sentMessage = null;
                 var lastNotif = db.DiscordAddonNotifications.AsQueryable().FirstOrDefault(a => a.AddonId == addon.AddonId);
                 if (lastNotif == null)
                 {
                     if (sendNotifications)
                     {
-                        await SendNewAddonNotif(addon);
+                        sentMessage = await SendNewAddonNotif(addon);
                     }
                 }
                 else
@@ -150,8 +161,13 @@ namespace PlayniteServices
 
                     if (sendNotifications)
                     {
-                        await SendAddonUpdateNotif(addon, latestPackage);
+                        sentMessage = await SendAddonUpdateNotif(addon, latestPackage);
                     }
+                }
+
+                if (sentMessage != null)
+                {
+                    await Post<Message>($"channels/{addonsFeedChannel}/messages/{sentMessage.id}/crosspost");
                 }
 
                 db.DiscordAddonNotifications.ReplaceOne(
@@ -250,6 +266,12 @@ namespace PlayniteServices
                 Content = new StringContent(Serialization.ToJson(content), Encoding.UTF8, MediaTypeNames.Application.Json)
             };
 
+            return await SendRequest<T>(request);
+        }
+
+        private async Task<T> Post<T>(string url) where T : class
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, apiBaseUrl + url);
             return await SendRequest<T>(request);
         }
     }
