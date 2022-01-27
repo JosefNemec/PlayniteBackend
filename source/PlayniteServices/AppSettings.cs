@@ -48,6 +48,7 @@ namespace PlayniteServices
     public class DiscordSettings
     {
         public string BotToken { get; set; }
+        public bool BotEnabled { get; set; }
     }
 
     public class AppSettings

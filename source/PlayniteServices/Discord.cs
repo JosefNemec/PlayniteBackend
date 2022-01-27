@@ -37,6 +37,11 @@ namespace PlayniteServices
             this.settings = settings;
             this.addons = addons;
             this.db = db;
+            if (!settings.Settings.Discord.BotEnabled)
+            {
+                return;
+            }
+
             httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Accept", MediaTypeNames.Application.Json);
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bot {settings.Settings.Discord.BotToken}");
@@ -45,6 +50,7 @@ namespace PlayniteServices
             var initRes = Init().GetAwaiter().GetResult();
             if (initRes)
             {
+                logger.Info("Discord bot enabled.");
                 addons.InstallerManifestsUpdated += Addons_InstallerManifestsUpdated;
             }
         }
