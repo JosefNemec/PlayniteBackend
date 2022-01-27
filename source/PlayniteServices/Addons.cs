@@ -48,19 +48,41 @@ namespace PlayniteServices
         private async Task UpdateAddonInstallers()
         {
             logger.Info("Updating addon installers cache.");
+            var anyUpdates = false;
             foreach (var addon in db.Addons.AsQueryable())
             {
-                var installer = await GetInstallerManifest(addon);
-                if (installer != null)
+                var newInstaller = await GetInstallerManifest(addon);
+                if (newInstaller?.Packages.HasItems() == true)
                 {
-                    db.AddonInstallers.ReplaceOne(
-                        a => a.AddonId == installer.AddonId,
-                        installer,
-                        Database.ItemUpsertOptions);
+                    var newData = false;
+                    var existing = db.AddonInstallers.AsQueryable().FirstOrDefault(a => a.AddonId == addon.AddonId);
+                    if (existing != null)
+                    {
+                        if (existing.Packages.Max(a => a.Version) != newInstaller.Packages.Max(a => a.Version))
+                        {
+                            newData = true;
+                        }
+                    }
+                    else
+                    {
+                        newData = true;
+                    }
+
+                    if (newData)
+                    {
+                        anyUpdates = true;
+                        db.AddonInstallers.ReplaceOne(
+                            a => a.AddonId == newInstaller.AddonId,
+                            newInstaller,
+                            Database.ItemUpsertOptions);
+                    }
                 }
             }
 
-            InstallerManifestsUpdated?.Invoke(this, null);
+            if (anyUpdates)
+            {
+                InstallerManifestsUpdated?.Invoke(this, null);
+            }
         }
 
         public AddonManifestBase GetAddon(string addonId)
@@ -78,7 +100,7 @@ namespace PlayniteServices
             }
             catch (Exception e)
             {
-                logger.Error(e, $"Failed to download addon installer manifest {addon.InstallerManifestUrl}");
+                logger.Error(e, $"Failed to download addon {addon.AddonId} installer manifest {addon.InstallerManifestUrl}");
                 return null;
             }
         }

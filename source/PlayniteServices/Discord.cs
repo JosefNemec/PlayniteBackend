@@ -42,21 +42,27 @@ namespace PlayniteServices
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bot {settings.Settings.Discord.BotToken}");
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("PlayniteBot/1.0");
             httpClient.Timeout = new TimeSpan(0, 0, 20);
-            Init().Wait();
-            addons.InstallerManifestsUpdated += Addons_InstallerManifestsUpdated;
+            var initRes = Init().GetAwaiter().GetResult();
+            if (initRes)
+            {
+                addons.InstallerManifestsUpdated += Addons_InstallerManifestsUpdated;
+            }
         }
 
-        public async Task Init()
+        public async Task<bool> Init()
         {
             try
             {
                 var guilds = await Get<List<Guild>>(@"users/@me/guilds");
                 var channels = await Get<List<Channel>>($"guilds/{guilds[0].id}/channels");
                 addonsFeedChannel = channels.First(a => a.name == "addons-feed").id;
+                await ProcessAddonUpdates(true);
+                return true;
             }
             catch (Exception e)
             {
                 logger.Error(e, "Failed to init Discord bot.");
+                return false;
             }
         }
 
@@ -165,7 +171,8 @@ namespace PlayniteServices
                     }
                 }
 
-                if (sentMessage != null)
+                // Only publish new addon releases because of crappy Discord notification limit
+                if (sentMessage != null && lastNotif == null)
                 {
                     await Post<Message>($"channels/{addonsFeedChannel}/messages/{sentMessage.id}/crosspost");
                 }
@@ -189,6 +196,7 @@ namespace PlayniteServices
                 return;
             }
 
+            logger.Info("Processing Discord addon notifications.");
             try
             {
                 await ProcessAddonUpdates(true);
@@ -227,7 +235,7 @@ namespace PlayniteServices
                 await Task.Delay(routeLimits.ResetAfter);
             }
 
-            var resp = await httpClient.SendAsync(message);
+            var resp = await ClientSendMessage(message);
             var cnt = await resp.Content.ReadAsStringAsync();
 
             var limitHeaders = new RateLimitHeaders(resp.Headers);
@@ -251,6 +259,19 @@ namespace PlayniteServices
             {
                 return Serialization.FromJson<T>(cnt);
             }
+        }
+
+        private async Task<HttpResponseMessage> ClientSendMessage(HttpRequestMessage message)
+        {
+            // Clone message, for case we are re-sending failed message
+            // httpclient can't send already sent messages again.
+            var request = new HttpRequestMessage(message.Method, message.RequestUri);
+            if (message.Content != null)
+            {
+                request.Content = message.Content;
+            }
+
+            return await httpClient.SendAsync(request);
         }
 
         private async Task<T> Get<T>(string url) where T : class

@@ -48,7 +48,7 @@ namespace PlayniteServicesTests
             Client = server.CreateClient();
             Client.BaseAddress = new Uri("http://localhost");
 
-            Database.Instance = new Database(Startup.Configuration.GetSection(nameof(AppSettings.DatabaseConString)).Value);
+            Database.Instance = (Database)server.Services.GetService(typeof(Database));
             NLogLogger.ConfigureLogger();
             LogManager.Init(new NLogLogProvider());
         }
