@@ -40,6 +40,7 @@ namespace PlayniteServices
 
     public class AddonsSettings
     {
+        public string DefaultExtensionsFile { get; set; }
         public string AddonRepository { get; set; }
         public string GitHubSecret { get; set; }
         public string[] Blacklist { get; set; }

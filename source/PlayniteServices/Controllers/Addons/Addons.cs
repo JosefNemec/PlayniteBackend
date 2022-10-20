@@ -17,6 +17,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using IO = System.IO;
 
 namespace PlayniteServices.Controllers.Addons
 {
@@ -42,6 +43,20 @@ namespace PlayniteServices.Controllers.Addons
         public ServicesResponse<string[]> GetBlackList()
         {
             return new ServicesResponse<string[]>(settings.Settings.Addons.Blacklist);
+        }
+
+        [HttpGet("defaultextensions")]
+        public ServicesResponse<string> GetDefaultExtensions()
+        {
+            var extensionFile = Path.Combine(Paths.ExecutingDirectory, settings.Settings.Addons.DefaultExtensionsFile);
+            if (IO.File.Exists(extensionFile))
+            {
+                return new ServicesResponse<string>(IO.File.ReadAllText(extensionFile));
+            }
+            else
+            {
+                return new ServicesResponse<string>(null);
+            }
         }
 
         [HttpGet()]
