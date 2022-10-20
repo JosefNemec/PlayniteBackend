@@ -75,7 +75,7 @@ namespace PlayniteServices
         public void Dispose()
         {
             addons.InstallerManifestsUpdated -= Addons_InstallerManifestsUpdated;
-            httpClient.Dispose();
+            httpClient?.Dispose();
         }
 
         private static string AddonTypeToFriendlyString(AddonType type)

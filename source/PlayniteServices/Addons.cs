@@ -49,34 +49,42 @@ namespace PlayniteServices
         {
             logger.Info("Updating addon installers cache.");
             var anyUpdates = false;
-            foreach (var addon in db.Addons.AsQueryable())
+            try
             {
-                var newInstaller = await GetInstallerManifest(addon);
-                if (newInstaller?.Packages.HasItems() == true)
+                foreach (var addon in db.Addons.AsQueryable())
                 {
-                    var newData = false;
-                    var existing = db.AddonInstallers.AsQueryable().FirstOrDefault(a => a.AddonId == addon.AddonId);
-                    if (existing != null)
+                    var newInstaller = await GetInstallerManifest(addon);
+                    if (newInstaller?.Packages.HasItems() == true)
                     {
-                        if (existing.Packages.Max(a => a.Version) != newInstaller.Packages.Max(a => a.Version))
+                        var newData = false;
+                        var existing = db.AddonInstallers.AsQueryable().FirstOrDefault(a => a.AddonId == addon.AddonId);
+                        if (existing != null)
+                        {
+                            if (existing.Packages.Max(a => a.Version) != newInstaller.Packages.Max(a => a.Version))
+                            {
+                                newData = true;
+                            }
+                        }
+                        else
                         {
                             newData = true;
                         }
-                    }
-                    else
-                    {
-                        newData = true;
-                    }
 
-                    if (newData)
-                    {
-                        anyUpdates = true;
-                        db.AddonInstallers.ReplaceOne(
-                            a => a.AddonId == newInstaller.AddonId,
-                            newInstaller,
-                            Database.ItemUpsertOptions);
+                        if (newData)
+                        {
+                            anyUpdates = true;
+                            db.AddonInstallers.ReplaceOne(
+                                a => a.AddonId == newInstaller.AddonId,
+                                newInstaller,
+                                Database.ItemUpsertOptions);
+                        }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to update addon installer cache.");
+                return;
             }
 
             if (anyUpdates)

@@ -8,9 +8,18 @@ namespace PlayniteServices
 {
     public class Paths
     {
+        private static string executingDirectory;
         public static string ExecutingDirectory
         {
-            get => Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            get
+            {
+                if (executingDirectory == null)
+                {
+                    executingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                }
+
+                return executingDirectory;
+            }
         }
     }
 }
