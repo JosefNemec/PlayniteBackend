@@ -77,6 +77,11 @@ namespace PlayniteServices.Controllers.PlayniteTools
         [HttpGet]
         public ServicesResponse<List<string>> GetPackages(string serviceKey)
         {
+            if (!Directory.Exists(Playnite.DiagsLocation))
+            {
+                return new ServicesResponse<List<string>>(new List<string>());
+            }
+
             var diagFiles = Directory.
                 GetFiles(Playnite.DiagsLocation, "*.zip", SearchOption.AllDirectories).
                 Select(a => a.Replace(Playnite.DiagsLocation, "").Trim(Path.DirectorySeparatorChar) + $",{new FileInfo(a).CreationTime}").
