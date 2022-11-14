@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <AssemblyName>PlayniteServices</AssemblyName>
     <OutputType>Exe</OutputType>
@@ -48,12 +48,12 @@
 
   <ItemGroup>
     <PackageReference Include="JsonApiSerializer" Version="1.7.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.13" />
-    <PackageReference Include="MongoDB.Driver" Version="2.12.0" />
-    <PackageReference Include="Nett" Version="0.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.11" />
+    <PackageReference Include="MongoDB.Driver" Version="2.18.0" />
+    <PackageReference Include="Nett" Version="0.15.0" />
     <PackageReference Include="NLog" Version="4.7.8" />
-    <PackageReference Include="RateLimiter" Version="2.1.0" />
-    <PackageReference Include="YamlDotNet" Version="5.3.0" />
+    <PackageReference Include="RateLimiter" Version="2.2.0" />
+    <PackageReference Include="YamlDotNet" Version="12.0.2" />
   </ItemGroup>
 
   <ItemGroup>
