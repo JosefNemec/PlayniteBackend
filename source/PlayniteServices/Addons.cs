@@ -164,6 +164,8 @@ namespace PlayniteServices
                                 logger.Error(e, $"Failed to parse addon manifest {manifestFile}");
                             }
                         }
+
+                        logger.Info("Finished regenerating addons database.");
                     }
                     catch (Exception e)
                     {
