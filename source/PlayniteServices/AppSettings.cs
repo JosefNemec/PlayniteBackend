@@ -44,6 +44,7 @@ namespace PlayniteServices
         public string AddonRepository { get; set; }
         public string GitHubSecret { get; set; }
         public string[] Blacklist { get; set; }
+        public bool AutoUpdate { get; set; }
     }
 
     public class DiscordSettings

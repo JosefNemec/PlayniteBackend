@@ -33,11 +33,14 @@ namespace PlayniteServices
             this.db = db;
             httpClient = new HttpClient { Timeout = new TimeSpan(0, 0, 20) };
 
-            addonUpdatesTimer = new System.Threading.Timer(
-                async (_) => await UpdateAddonInstallers(),
-                null,
-                new TimeSpan(0),
-                new TimeSpan(0, 15, 0));
+            if (settings.Settings.Addons.AutoUpdate)
+            {
+                addonUpdatesTimer = new System.Threading.Timer(
+                    async (_) => await UpdateAddonInstallers(),
+                    null,
+                    new TimeSpan(0),
+                    new TimeSpan(0, 15, 0));
+            }
         }
 
         public void Dispose()
