@@ -2,6 +2,7 @@
 using JsonApiSerializer.JsonApi;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Playnite.SDK;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.Patreon;
 using System;
@@ -15,6 +16,8 @@ namespace PlayniteServices.Controllers.Patreon
     [Route("patreon/patrons")]
     public class PatronsController : Controller
     {
+        private static ILogger logger = LogManager.GetLogger();
+
         public class ListCache
         {
             public DateTime Created;
@@ -41,6 +44,13 @@ namespace PlayniteServices.Controllers.Patreon
                 {
                     var stringData = await Patreon.SendStringRequest(nextLink);
                     var document = JsonConvert.DeserializeObject<DocumentRoot<Pledge[]>>(stringData, new JsonApiSerializerSettings());
+                    if (document.Errors.HasItems())
+                    {
+                        logger.Error("Failed to get list of patrons.");
+                        document.Errors.ForEach(a => logger.Error(a.Detail));
+                        return new ServicesResponse<List<string>>(new List<string>());
+                    }
+
                     allPatrons.AddRange(document.Data.Where(a => a.declined_since == null).Select(a => a.patron.full_name));
                     if (document.Links.ContainsKey("next"))
                     {
