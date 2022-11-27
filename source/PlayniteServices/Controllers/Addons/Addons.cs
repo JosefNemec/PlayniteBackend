@@ -5,7 +5,6 @@ using Playnite;
 using Playnite.Common;
 using Playnite.SDK;
 using PlayniteServices.Controllers.Webhooks;
-using PlayniteServices.Databases;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.GitHub;
 using System;
@@ -32,11 +31,15 @@ namespace PlayniteServices.Controllers.Addons
     public class AddonsController : Controller
     {
         private readonly static ILogger logger = LogManager.GetLogger();
-        private UpdatableAppSettings settings;
+        private readonly UpdatableAppSettings settings;
+        private readonly Database db;
+        private readonly PlayniteServices.Addons addons;
 
-        public AddonsController(UpdatableAppSettings settings)
+        public AddonsController(UpdatableAppSettings settings, Database db, PlayniteServices.Addons addons)
         {
             this.settings = settings;
+            this.db = db;
+            this.addons = addons;
         }
 
         [HttpGet("blacklist")]
@@ -48,7 +51,7 @@ namespace PlayniteServices.Controllers.Addons
         [HttpGet("defaultextensions")]
         public ServicesResponse<string> GetDefaultExtensions()
         {
-            var extensionFile = Path.Combine(Paths.ExecutingDirectory, settings.Settings.Addons.DefaultExtensionsFile);
+            var extensionFile = Path.Combine(ServicePaths.ExecutingDirectory, settings.Settings.Addons.DefaultExtensionsFile);
             if (IO.File.Exists(extensionFile))
             {
                 return new ServicesResponse<string>(IO.File.ReadAllText(extensionFile));
@@ -62,7 +65,7 @@ namespace PlayniteServices.Controllers.Addons
         [HttpGet()]
         public ServicesResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
         {
-            var col = Database.Instance.Addons;
+            var col = db.Addons;
             List<AddonManifestBase> addons = new List<AddonManifestBase>();
             if (!request.AddonId.IsNullOrEmpty())
             {
@@ -99,7 +102,7 @@ namespace PlayniteServices.Controllers.Addons
         [HttpPost("build")]
         public async Task<ActionResult> RegenerateDatabase()
         {
-            await PlayniteServices.Addons.Instance.RegenerateAddonDatabase();
+            await addons.RegenerateAddonDatabase();
             return Ok();
         }
 
@@ -129,11 +132,11 @@ namespace PlayniteServices.Controllers.Addons
 
                 if (eventType == WebHookEvents.Push)
                 {
-                    var payload = Serialization.FromJson<PushEvent>(payloadString);
+                    var payload = DataSerialization.FromJson<PushEvent>(payloadString);
                     if (payload.@ref?.EndsWith("master") == true)
                     {
 #pragma warning disable CS4014
-                        PlayniteServices.Addons.Instance.RegenerateAddonDatabase();
+                        addons.RegenerateAddonDatabase();
 #pragma warning restore CS4014
                     }
                 }

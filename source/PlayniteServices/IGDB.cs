@@ -1,10 +1,8 @@
 ﻿using ComposableAsync;
 using MongoDB.Driver;
-using Newtonsoft.Json;
 using Playnite.Common;
 using Playnite.SDK;
 using PlayniteServices.Controllers.IGDB.DataGetter;
-using PlayniteServices.Databases;
 using PlayniteServices.Models.IGDB;
 using RateLimiter;
 using System;
@@ -15,7 +13,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayniteServices.Controllers.IGDB
+namespace PlayniteServices
 {
     public class IgdbApi : IDisposable
     {
@@ -24,12 +22,13 @@ namespace PlayniteServices.Controllers.IGDB
             public string access_token { get; set; }
         }
 
-        private static ILogger logger = LogManager.GetLogger();
+        private static bool instantiated = false;
+        private static readonly ILogger logger = LogManager.GetLogger();
         private static readonly char[] arrayTrim = new char[] { '[', ']' };
-        private static readonly JsonSerializer jsonSerializer = new JsonSerializer();
         private readonly UpdatableAppSettings settings;
+        public readonly Database Database;
         private readonly DelegatingHandler requestLimiterHandler;
-        private System.Threading.Timer webhookTimer;
+        private readonly System.Threading.Timer webhookTimer;
 
         public Games Games;
         public AlternativeNames AlternativeNames;
@@ -48,9 +47,12 @@ namespace PlayniteServices.Controllers.IGDB
 
         public HttpClient HttpClient { get; }
 
-        public IgdbApi(UpdatableAppSettings settings)
+        public IgdbApi(UpdatableAppSettings settings, Database db)
         {
+            TestAssert.IsFalse(instantiated, $"{nameof(IgdbApi)} already instantiated");
+            instantiated = true;
             this.settings = settings;
+            this.Database = db;
             requestLimiterHandler = TimeLimiter
                 .GetFromMaxCountByInterval(4, TimeSpan.FromSeconds(1))
                 .AsDelegatingHandler();
@@ -95,7 +97,7 @@ namespace PlayniteServices.Controllers.IGDB
                 try
                 {
                     var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
-                    var webhooks = Serialization.FromJson<List<Webhook>>(webhooksString);
+                    var webhooks = DataSerialization.FromJson<List<Webhook>>(webhooksString);
                     if (!webhooks.HasItems() || !webhooks[0].active)
                     {
                         logger.Error("IGDB webhook is NOT active.");
@@ -111,7 +113,7 @@ namespace PlayniteServices.Controllers.IGDB
                             }),
                             HttpMethod.Post,
                             false);
-                        var registeredHooks = Serialization.FromJson<List<Webhook>>(registeredStr);
+                        var registeredHooks = DataSerialization.FromJson<List<Webhook>>(registeredStr);
                         if (!registeredHooks.HasItems() || !registeredHooks[0].active)
                         {
                             logger.Error("Failed to register IGDB webhook.");
@@ -138,8 +140,8 @@ namespace PlayniteServices.Controllers.IGDB
         private static async Task SaveTokens(string accessToken)
         {
             await Task.Delay(2000);
-            var path = Path.Combine(Paths.ExecutingDirectory, "twitchTokens.json");
-            var config = new Dictionary<string, object>()
+            var path = Path.Combine(ServicePaths.ExecutingDirectory, "twitchTokens.json");
+            var config = new Dictionary<string, Dictionary<string, string>>
             {
                 { "IGDB", new Dictionary<string, string>()
                     {
@@ -150,7 +152,7 @@ namespace PlayniteServices.Controllers.IGDB
 
             try
             {
-                File.WriteAllText(path, JsonConvert.SerializeObject(config, Formatting.Indented));
+                File.WriteAllText(path, DataSerialization.ToJson(config));
             }
             catch (Exception e)
             {
@@ -164,7 +166,7 @@ namespace PlayniteServices.Controllers.IGDB
             var clientSecret = settings.Settings.IGDB.ClientSecret;
             var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
             var response = await HttpClient.PostAsync(authUrl, null);
-            var auth = Serialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
+            var auth = DataSerialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
             if (auth?.access_token.IsNullOrEmpty() != false)
             {
                 throw new Exception("Failed to authenticate IGDB.");
@@ -248,7 +250,7 @@ namespace PlayniteServices.Controllers.IGDB
         public async Task<ulong> GetSteamIgdbMatch(ulong gameId)
         {
             var filter = Builders<SteamIdGame>.Filter.Eq(a => a.steamId, gameId);
-            var cache = Database.Instance.SteamIgdbMatches.Find(filter).FirstOrDefault();
+            var cache = Database.SteamIgdbMatches.Find(filter).FirstOrDefault();
             if (cache != null)
             {
                 return cache.igdbId;
@@ -256,11 +258,11 @@ namespace PlayniteServices.Controllers.IGDB
 
             var libraryStringResult = await SendStringRequest("games",
                 $"fields id; where external_games.uid = \"{gameId}\" & external_games.category = 1; limit 1;");
-            var games = JsonConvert.DeserializeObject<List<Game>>(libraryStringResult);
+            var games = DataSerialization.FromJson<List<Game>>(libraryStringResult);
             if (games.Any())
             {
                 var game = games.First();
-                Database.Instance.SteamIgdbMatches.ReplaceOne(
+                Database.SteamIgdbMatches.ReplaceOne(
                     Builders<SteamIdGame>.Filter.Eq(a => a.steamId, gameId),
                     new SteamIdGame()
                     {
@@ -292,7 +294,7 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             var stringResult = await SendStringRequest(endpointPath, $"fields *; where id = {itemId};");
-            var items = Serialization.FromJson<List<TItem>>(stringResult);
+            var items = DataSerialization.FromJson<List<TItem>>(stringResult);
 
             TItem item;
             // IGDB resturns empty results if an id is a duplicate of another game
@@ -328,7 +330,7 @@ namespace PlayniteServices.Controllers.IGDB
 
             var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, cacheItems.Select(a => a.id));
             var stringResult = await SendStringRequest(endpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
-            var items = Serialization.FromJson<List<TItem>>(stringResult);
+            var items = DataSerialization.FromJson<List<TItem>>(stringResult);
             items.ForEach(a => collection.ReplaceOne(
                 Builders<TItem>.Filter.Eq(u => u.id, a.id),
                 a,

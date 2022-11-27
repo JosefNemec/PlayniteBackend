@@ -4,11 +4,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System.Threading;
 using PlayniteServices.Models.Steam;
 using PlayniteServices.Filters;
-using PlayniteServices.Databases;
 
 namespace PlayniteServices.Controllers.Steam
 {
@@ -16,14 +14,21 @@ namespace PlayniteServices.Controllers.Steam
     [Route("steam/library")]
     public class LibraryController : Controller
     {
-        private static HttpClient httpClient = new HttpClient();
-        private static double requestDelay = 1500;
+        private static readonly HttpClient httpClient = new HttpClient();
+        private static readonly double requestDelay = 1500;
         private static DateTime lastRequest = DateTime.Now.AddMilliseconds(-requestDelay);
-        private static object dateLock = new object();
+        private static readonly object dateLock = new object();
+
+        private readonly UpdatableAppSettings settings;
+
+        public LibraryController(UpdatableAppSettings settings)
+        {
+            this.settings = settings;
+        }
 
         // Steam API has limit one request per second, so we need to slow requests down
         // TODO: change this to something more sophisticated like proper queue
-        private void WaitRequest()
+        private static void WaitRequest()
         {
             lock (dateLock)
             {
@@ -45,7 +50,7 @@ namespace PlayniteServices.Controllers.Steam
         {
             var libraryUrl = string.Format(
                 @"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={0}&include_appinfo=1&format=json&steamid={1}&include_played_free_games=1&skip_unvetted_apps=0",
-                Steam.ApiKey, steamId);
+                settings.Settings.Steam.ApiKey, steamId);
             if (freeSub)
             {
                 libraryUrl += "&include_free_sub=1";
@@ -54,7 +59,7 @@ namespace PlayniteServices.Controllers.Steam
             WaitRequest();
 
             var libraryStringResult = await httpClient.GetStringAsync(libraryUrl);
-            var libraryResult = JsonConvert.DeserializeObject<GetOwnedGamesResult>(libraryStringResult);
+            var libraryResult = DataSerialization.FromJson<GetOwnedGamesResult>(libraryStringResult);
 
             return new ServicesResponse<List<GetOwnedGamesResult.Game>>(libraryResult.response.games);
         }

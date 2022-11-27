@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using PlayniteServices.Databases;
 using PlayniteServices.Models.IGDB;
 using System;
 using System.Collections.Generic;
@@ -19,7 +18,6 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
         {
             this.igdbApi = igdbApi;
             this.endpointPath = endpointPath;
-
             if (!BsonClassMap.IsClassMapRegistered(typeof(T)))
             {
                 BsonClassMap.RegisterClassMap<T>(cm =>
@@ -29,7 +27,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
                 });
             }
 
-            Collection = Database.Instance.MongoDb.GetCollection<T>($"IGDB_col_{endpointPath}");
+            Collection = igdbApi.Database.MongoDb.GetCollection<T>($"IGDB_col_{endpointPath}");
         }
 
         public virtual async Task<T> Get(ulong objectId)

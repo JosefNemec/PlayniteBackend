@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using PlayniteServices;
+﻿using PlayniteServices;
 using PlayniteServices.Models.Patreon;
 using System;
 using System.Collections.Generic;
@@ -24,7 +23,7 @@ namespace PlayniteServicesTests.Controllers.Patreon
         public async Task CompanyControllerTest()
         {
             var response = await client.GetAsync("patreon/patrons");
-            var validResponse = JsonConvert.DeserializeObject<ServicesResponse<List<string>>>(await response.Content.ReadAsStringAsync());
+            var validResponse = DataSerialization.FromJson<ServicesResponse<List<string>>>(await response.Content.ReadAsStringAsync());
             Assert.NotEmpty(validResponse.Data);
             Assert.True(string.IsNullOrEmpty(validResponse.Error));
         }

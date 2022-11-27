@@ -8,19 +8,25 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Bson;
-using PlayniteServices.Databases;
 
 namespace PlayniteServices.Controllers.Stats
 {
     [ServiceFilter(typeof(ServiceKeyFilter))]
     public class StatsController : Controller
     {
+        private readonly Database db;
+
+        public StatsController(Database db)
+        {
+            this.db = db;
+        }
+
         [HttpGet("stats")]
         public async Task<GenericResponse> GetStarts()
         {
             var now = DateTime.Now;
             var stats = new ServiceStats();
-            await Database.Instance.Users.Find(new BsonDocument()).ForEachAsync(user =>
+            await db.Users.Find(new BsonDocument()).ForEachAsync(user =>
             {
                 stats.UserCount++;
 

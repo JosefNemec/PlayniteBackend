@@ -5,13 +5,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Bson;
-using PlayniteServices.Databases;
 
 namespace PlayniteServices.Controllers.PlayniteTools
 {
     [Route("playnite/users")]
     public class UsersController : Controller
     {
+        private readonly Database db;
+
+        public UsersController(Database db)
+        {
+            this.db = db;
+        }
+
         [HttpPost]
         public IActionResult Create([FromBody]Models.User user)
         {
@@ -21,7 +27,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
             }
 
             user.LastLaunch = DateTime.Today;
-            Database.Instance.Users.ReplaceOne(
+            db.Users.ReplaceOne(
                 Builders<Models.User>.Filter.Eq(u => u.Id, user.Id),
                 user,
                 Database.ItemUpsertOptions);

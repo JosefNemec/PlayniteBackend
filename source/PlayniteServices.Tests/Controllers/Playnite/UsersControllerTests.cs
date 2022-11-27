@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using PlayniteServices;
 using PlayniteServices.Models;
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ namespace PlayniteServicesTests.Controllers.Playnite
                 PlayniteVersion = "1.0"
             };
 
-            var content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
+            var content = new StringContent(DataSerialization.ToJson(user), Encoding.UTF8, "application/json");
             var response = await client.PostAsync(@"/playnite/users", content);
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 

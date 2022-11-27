@@ -28,9 +28,10 @@ namespace PlayniteServicesTests.Controllers.IGDB
 
         private async Task<ExpandedGame> GetMetadata(SdkModels.Game game)
         {
-            var content = new StringContent(Serialization.ToJson(game), Encoding.UTF8, MediaTypeNames.Application.Json);
+            var str = DataSerialization.ToJson(game);
+            var content = new StringContent(str, Encoding.UTF8, MediaTypeNames.Application.Json);
             var response = await client.PostAsync(@"/igdb/metadata_v3", content);
-            return Serialization.FromJson<ServicesResponse<ExpandedGame>>(await response.Content.ReadAsStringAsync()).Data;
+            return DataSerialization.FromJson<ServicesResponse<ExpandedGame>>(await response.Content.ReadAsStringAsync()).Data;
         }
 
         private int GetYearFromUnix(long date)
@@ -65,7 +66,7 @@ namespace PlayniteServicesTests.Controllers.IGDB
         {
             var game = new SdkModels.Game("Tomb Raider")
             {
-                ReleaseDate = new SdkModels.ReleaseDate(1996, 1, 1)
+                ReleaseDate = new SdkModels.ReleaseDate(1996)
             };
 
             var metadata = await GetMetadata(game);
@@ -140,7 +141,7 @@ namespace PlayniteServicesTests.Controllers.IGDB
         public async Task DashSearch()
         {
             var response = await (await client.GetAsync(@"/igdb/games/x-com")).Content.ReadAsStringAsync();
-            var data = Serialization.FromJson<ServicesResponse<List<ExpandedGameLegacy>>>(response);
+            var data = DataSerialization.FromJson<ServicesResponse<List<ExpandedGameLegacy>>>(response);
             Assert.NotNull(data.Data.FirstOrDefault(a => a.name == "X-COM: UFO Defense"));
         }
 

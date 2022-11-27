@@ -8,23 +8,14 @@
     <PackageId>PlayniteServices</PackageId>
     <AssetTargetFallback>$(AssetTargetFallback);dotnet5.6;portable-net45+win8</AssetTargetFallback>
   </PropertyGroup>
-
+  
   <ItemGroup>
-    <Compile Remove="Common\**" />
-    <Content Remove="Common\**" />
-    <EmbeddedResource Remove="Common\**" />
-    <None Remove="Common\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\CloneObject.cs" Link="Shared\CloneObject.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\LongExtensions.cs" Link="Shared\LongExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\ObjectExtensions.cs" Link="Shared\ObjectExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\StringExtensions.cs" Link="Shared\StringExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\FileSystem.cs" Link="Shared\FileSystem.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Paths.cs" Link="Shared\Paths.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Roman.cs" Link="Shared\Roman.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Serialization.cs" Link="Shared\Serialization.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Database\OldModels\Ver2.cs" Link="Models\Playnite\Ver2.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\DiagnosticPackageInfo.cs" Link="Shared\DiagnosticPackageInfo.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Manifests\AddonManifestBase.cs" Link="Models\Playnite\AddonManifestBase.cs" />
@@ -48,9 +39,7 @@
 
   <ItemGroup>
     <PackageReference Include="JsonApiSerializer" Version="1.7.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.11" />
     <PackageReference Include="MongoDB.Driver" Version="2.18.0" />
-    <PackageReference Include="Nett" Version="0.15.0" />
     <PackageReference Include="NLog" Version="4.7.8" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
     <PackageReference Include="YamlDotNet" Version="12.0.2" />

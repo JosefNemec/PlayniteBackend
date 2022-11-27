@@ -6,20 +6,13 @@ using System.Threading.Tasks;
 
 namespace PlayniteServices
 {
-    public class Paths
+    public class ServicePaths
     {
-        private static string executingDirectory;
-        public static string ExecutingDirectory
-        {
-            get
-            {
-                if (executingDirectory == null)
-                {
-                    executingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                }
+        public static string ExecutingDirectory { get; }
 
-                return executingDirectory;
-            }
+        static ServicePaths()
+        {
+            ExecutingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         }
     }
 }

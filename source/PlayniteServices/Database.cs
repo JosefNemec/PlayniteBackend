@@ -13,7 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PlayniteServices.Databases
+namespace PlayniteServices
 {
     public class Database : IDisposable
     {
@@ -26,9 +26,9 @@ namespace PlayniteServices.Databases
             }
         }
 
+        private static bool instantiated = false;
         private readonly UpdatableAppSettings settings;
         private readonly MongoClient client;
-        public static Database Instance { get; set; }
         public static readonly ReplaceOptions ItemUpsertOptions = new ReplaceOptions { IsUpsert = true };
         public readonly IMongoDatabase MongoDb;
 
@@ -44,6 +44,8 @@ namespace PlayniteServices.Databases
 
         public Database(UpdatableAppSettings settings)
         {
+            TestAssert.IsFalse(instantiated, $"{nameof(Patreon)} already instantiated");
+            instantiated = true;
             this.settings = settings;
 
             ConventionRegistry.Register(

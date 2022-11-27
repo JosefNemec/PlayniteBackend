@@ -1,9 +1,7 @@
 ﻿using ComposableAsync;
 using MongoDB.Driver;
 using Playnite;
-using Playnite.Common;
 using Playnite.SDK;
-using PlayniteServices.Databases;
 using PlayniteServices.Models.Discord;
 using System;
 using System.Collections.Concurrent;
@@ -19,6 +17,7 @@ namespace PlayniteServices
 {
     public class Discord : IDisposable
     {
+        private static bool instantiated = false;
         private readonly static ILogger logger = LogManager.GetLogger();
         private const string apiBaseUrl = @"https://discord.com/api/v9/";
         private readonly UpdatableAppSettings settings;
@@ -30,10 +29,10 @@ namespace PlayniteServices
 
         private string addonsFeedChannel;
 
-        public static Discord Instance { get; set; }
-
         public Discord(UpdatableAppSettings settings, Addons addons, Database db)
         {
+            TestAssert.IsFalse(instantiated, $"{nameof(Discord)} already instantiated");
+            instantiated = true;
             this.settings = settings;
             this.addons = addons;
             this.db = db;
@@ -103,7 +102,7 @@ namespace PlayniteServices
             {
                 author = new EmbedAuthor { name = addon.Author },
                 description = addon.Description,
-                thumbnail = addon.IconUrl.IsNullOrEmpty() ? null : new EmbedThumbnail { url = addon.IconUrl },
+                thumbnail = addon.IconUrl.IsNullOrEmpty() ? null : new EmbedImage { url = addon.IconUrl },
                 title = $"{addon.Name} {AddonTypeToFriendlyString(addon.Type)} has been released",
                 url = "https://playnite.link/addons.html#{0}".Format(Uri.EscapeDataString(addon.AddonId)),
                 image = addon.Screenshots.HasItems() ? new EmbedImage { url = addon.Screenshots[0].Image } : null,
@@ -129,7 +128,7 @@ namespace PlayniteServices
             {
                 author = new EmbedAuthor { name = addon.Author },
                 description = description,
-                thumbnail = addon.IconUrl.IsNullOrEmpty() ? null : new EmbedThumbnail { url = addon.IconUrl },
+                thumbnail = addon.IconUrl.IsNullOrEmpty() ? null : new EmbedImage { url = addon.IconUrl },
                 url = "https://playnite.link/addons.html#{0}".Format(Uri.EscapeDataString(addon.AddonId)),
                 title = addon.Name,
                 color = 0xbf0086
@@ -250,7 +249,7 @@ namespace PlayniteServices
 
             if (resp.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                var limitResponse = Serialization.FromJson<RateLimitResponse>(cnt);
+                var limitResponse = DataSerialization.FromJson<RateLimitResponse>(cnt);
                 logger.Warn($"Discord rate limit on '{route}' route, {limitResponse.global}, {limitResponse.retry_after}");
                 await Task.Delay(TimeSpan.FromSeconds(limitResponse.retry_after + 0.1));
                 return await SendRequest<T>(message);
@@ -258,12 +257,12 @@ namespace PlayniteServices
             else if (resp.StatusCode != HttpStatusCode.OK)
             {
                 logger.Error(cnt);
-                var error = Serialization.FromJson<Error>(cnt);
+                var error = DataSerialization.FromJson<Error>(cnt);
                 throw new Exception($"Discord: {error.code}, {error.message}");
             }
             else
             {
-                return Serialization.FromJson<T>(cnt);
+                return DataSerialization.FromJson<T>(cnt);
             }
         }
 
@@ -290,7 +289,7 @@ namespace PlayniteServices
         {
             var request = new HttpRequestMessage(HttpMethod.Post, apiBaseUrl + url)
             {
-                Content = new StringContent(Serialization.ToJson(content), Encoding.UTF8, MediaTypeNames.Application.Json)
+                Content = new StringContent(DataSerialization.ToJson(content), Encoding.UTF8, MediaTypeNames.Application.Json)
             };
 
             return await SendRequest<T>(request);

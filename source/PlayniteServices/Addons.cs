@@ -3,9 +3,9 @@ using MongoDB.Driver;
 using Playnite;
 using Playnite.Common;
 using Playnite.SDK;
-using PlayniteServices.Databases;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -16,6 +16,7 @@ namespace PlayniteServices
 {
     public class Addons : IDisposable
     {
+        private static bool instantiated = false;
         private readonly static object generatorLock = new object();
         private readonly static ILogger logger = LogManager.GetLogger();
         private readonly UpdatableAppSettings settings;
@@ -25,10 +26,10 @@ namespace PlayniteServices
 
         public event EventHandler InstallerManifestsUpdated;
 
-        public static Addons Instance { get; set; }
-
         public Addons(UpdatableAppSettings settings, Database db)
         {
+            TestAssert.IsFalse(instantiated, $"{nameof(Addons)} already instantiated");
+            instantiated = true;
             this.settings = settings;
             this.db = db;
             httpClient = new HttpClient { Timeout = new TimeSpan(0, 0, 20) };
@@ -46,6 +47,7 @@ namespace PlayniteServices
         public void Dispose()
         {
             addonUpdatesTimer?.Dispose();
+            httpClient.Dispose();
         }
 
         private async Task UpdateAddonInstallers()
@@ -107,7 +109,7 @@ namespace PlayniteServices
             try
             {
                 var manifestStr = await httpClient.GetStringAsync(addon.InstallerManifestUrl);
-                return Serialization.FromYaml<AddonInstallerManifestBase>(manifestStr);
+                return DataSerialization.FromYaml<AddonInstallerManifestBase>(manifestStr);
             }
             catch (Exception e)
             {
@@ -125,19 +127,19 @@ namespace PlayniteServices
                 {
                     try
                     {
-                        var col = Database.Instance.Addons;
+                        var col = db.Addons;
                         col.DeleteMany(new BsonDocument());
 
                         var addonDirectory = settings.Settings.Addons.AddonRepository;
                         if (settings.Settings.Addons.AddonRepository.IsHttpUrl())
                         {
-                            addonDirectory = Path.Combine(Paths.ExecutingDirectory, "PlayniteAddonDatabase");
+                            addonDirectory = Path.Combine(ServicePaths.ExecutingDirectory, "PlayniteAddonDatabase");
                             FileSystem.DeleteDirectory(addonDirectory, true);
 
                             var info = new ProcessStartInfo("git")
                             {
                                 Arguments = $"clone --depth=1 --branch=master {settings.Settings.Addons.AddonRepository}",
-                                WorkingDirectory = Paths.ExecutingDirectory,
+                                WorkingDirectory = ServicePaths.ExecutingDirectory,
                                 CreateNoWindow = true,
                                 UseShellExecute = false,
                             };
@@ -150,7 +152,7 @@ namespace PlayniteServices
                         {
                             try
                             {
-                                var manifest = Serialization.FromYamlFile<AddonManifestBase>(manifestFile);
+                                var manifest = DataSerialization.FromYamlFile<AddonManifestBase>(manifestFile);
                                 if (manifest.AddonId.IsNullOrWhiteSpace())
                                 {
                                     logger.Error($"Addon {manifestFile} doesn't have addon ID specified!");

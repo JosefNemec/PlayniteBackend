@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using PlayniteServices.Models.IGDB;
 using System;
 using System.Collections.Generic;
@@ -15,7 +14,6 @@ using PlayniteServices.Filters;
 using System.Text.RegularExpressions;
 using PlayniteServices.Controllers.IGDB.DataGetter;
 using MongoDB.Driver;
-using PlayniteServices.Databases;
 
 namespace PlayniteServices.Controllers.IGDB
 {
@@ -23,13 +21,12 @@ namespace PlayniteServices.Controllers.IGDB
     [Route("igdb/games")]
     public class GamesController : Controller
     {
-        private static readonly JsonSerializer jsonSerializer = new JsonSerializer();
-        private static ILogger logger = LogManager.GetLogger();
+        private static readonly ILogger logger = LogManager.GetLogger();
         private static readonly char[] bracketsMatchList = new char[] { '[', ']', '(', ')', '{', '}' };
 
-        private UpdatableAppSettings settings;
-        private IgdbApi igdbApi;
-        private AlternativeNames alternativeNames;
+        private readonly UpdatableAppSettings settings;
+        private readonly IgdbApi igdbApi;
+        private readonly AlternativeNames alternativeNames;
 
         public GamesController(UpdatableAppSettings settings, IgdbApi igdbApi)
         {
@@ -69,7 +66,7 @@ namespace PlayniteServices.Controllers.IGDB
             searchString = searchString.Replace("\\", "").Replace("/", "").Trim();
             var modifiedSearchString = ModelsUtils.GetIgdbSearchString(searchString);
             var filter = Builders<IgdbSearchResult>.Filter.Eq(a => a.Id, modifiedSearchString);
-            var col = alternativeSearch ? Database.Instance.IgdbAltSearches : Database.Instance.IgdbStdSearches;
+            var col = alternativeSearch ? igdbApi.Database.IgdbAltSearches : igdbApi.Database.IgdbStdSearches;
 
             var cached = col.Find(filter).FirstOrDefault();
             if (cached != null)
@@ -89,7 +86,7 @@ namespace PlayniteServices.Controllers.IGDB
                 var searchQuery = $"search \"{matchString}\"; fields id; limit 50;";
                 var query = alternativeSearch ? whereQuery : searchQuery;
                 var searchStringResult = await igdbApi.SendStringRequest("games", query);
-                var tempRes = JsonConvert.DeserializeObject<List<Game>>(searchStringResult);
+                var tempRes = DataSerialization.FromJson<List<Game>>(searchStringResult);
                 searchResult = tempRes.Select(a => a.id).ToList();
                 col.ReplaceOne(
                     Builders<IgdbSearchResult>.Filter.Eq(u => u.Id, modifiedSearchString),

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Playnite.Common;
 using Playnite.SDK;
-using PlayniteServices.Databases;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.IGDB;
 using System;
@@ -27,9 +26,9 @@ namespace PlayniteServices.Controllers.IGDB
         private static readonly Regex noIntroArticleRegEx = new Regex(@",\s*(the|a|an|der|das|die)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly char[] bracketsMatchList = new char[] { '[', ']', '(', ')', '{', '}' };
         private static readonly char[] whereQueryBlacklist = new char[2] { ':', '-' };
-        private GamesController gamesController;
-        private ExpandedGameController expandedController;
-        private GameParsedController parsedController;
+        private readonly GamesController gamesController;
+        private readonly ExpandedGameController expandedController;
+        private readonly GameParsedController parsedController;
 
         public MetadataController(UpdatableAppSettings settings, IgdbApi igdbApi)
         {
@@ -92,7 +91,7 @@ namespace PlayniteServices.Controllers.IGDB
                 else
                 {
                     var filter = Builders<GameIdMatch>.Filter.Eq(a => a.Id, matchId);
-                    var match = Database.Instance.IGBDGameIdMatches.Find(filter).FirstOrDefault();
+                    var match = igdbApi.Database.IGBDGameIdMatches.Find(filter).FirstOrDefault();
                     if (match != null)
                     {
                         igdbId = match.IgdbId;
@@ -103,7 +102,7 @@ namespace PlayniteServices.Controllers.IGDB
             if (igdbId == 0)
             {
                 var filter = Builders<SearchIdMatch>.Filter.Eq(a => a.Id, searchId);
-                var match = Database.Instance.IGDBSearchIdMatches.Find(filter).FirstOrDefault();
+                var match = igdbApi.Database.IGDBSearchIdMatches.Find(filter).FirstOrDefault();
                 if (match != null)
                 {
                     igdbId = match.IgdbId;
@@ -135,7 +134,7 @@ namespace PlayniteServices.Controllers.IGDB
             {
                 if (isKnownPlugin && !isSteamPlugin)
                 {
-                    Database.Instance.IGBDGameIdMatches.ReplaceOne(
+                    igdbApi.Database.IGBDGameIdMatches.ReplaceOne(
                         Builders<GameIdMatch>.Filter.Eq(a => a.Id, matchId),
                         new GameIdMatch
                         {
@@ -147,7 +146,7 @@ namespace PlayniteServices.Controllers.IGDB
                         Database.ItemUpsertOptions);
                 }
 
-                Database.Instance.IGDBSearchIdMatches.ReplaceOne(
+                igdbApi.Database.IGDBSearchIdMatches.ReplaceOne(
                     Builders<SearchIdMatch>.Filter.Eq(a => a.Id, searchId),
                     new SearchIdMatch
                     {
@@ -185,7 +184,7 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             ulong matchedGame = 0;
-            var copyGame = game.GetClone();
+            var copyGame = game.GetCopy();
             copyGame.Name = StringExtensions.NormalizeGameName(game.Name);
             copyGame.Name = FixNointroNaming(copyGame.Name);
             copyGame.Name = copyGame.Name.Replace(@"\", string.Empty);
@@ -229,7 +228,7 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             // Try removing apostrophes
-            var resCopy = results.GetClone();
+            var resCopy = results.GetCopy();
             resCopy.ForEach(a => a.name = a.name.Replace("'", ""));
             matchedGame = MatchFun(game, name, resCopy);
             if (matchedGame > 0)
@@ -239,7 +238,7 @@ namespace PlayniteServices.Controllers.IGDB
 
             // Try removing all ":" and "-"
             testName = separatorRegex.Replace(name, " ");
-            resCopy = results.GetClone();
+            resCopy = results.GetCopy();
             foreach (var res in resCopy)
             {
                 res.name = separatorRegex.Replace(res.name, " ");

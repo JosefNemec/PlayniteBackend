@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.IGDB;
 using System;

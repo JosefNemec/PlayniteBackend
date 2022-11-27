@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using Newtonsoft.Json;
 using Playnite;
 using Playnite.Common;
 using Playnite.SDK;
-using PlayniteServices.Controllers.IGDB.DataGetter;
-using PlayniteServices.Databases;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.IGDB;
 using System;
@@ -65,7 +62,7 @@ namespace PlayniteServices.Controllers.IGDB
                         jsonString = await reader.ReadToEndAsync();
                         if (!string.IsNullOrEmpty(jsonString))
                         {
-                            game = Serialization.FromJson<Game>(jsonString);
+                            game = DataSerialization.FromJson<Game>(jsonString);
                         }
                     }
 

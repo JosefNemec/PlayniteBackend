@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Playnite;
 using Playnite.Common;
 using PlayniteServices.Filters;
@@ -9,6 +8,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace PlayniteServices.Controllers.PlayniteTools
@@ -16,16 +17,26 @@ namespace PlayniteServices.Controllers.PlayniteTools
     [Route("playnite/diag")]
     public class DiagnosticsController : Controller
     {
-        public DiagnosticsController()
+        private readonly string diagsDir;
+        private readonly string diagsCrashDir;
+
+        public DiagnosticsController(UpdatableAppSettings settings)
         {
+            diagsDir = settings.Settings.DiagsDirectory;
+            if (!Path.IsPathRooted(diagsDir))
+            {
+                diagsDir = Path.Combine(ServicePaths.ExecutingDirectory, diagsDir);
+            }
+
+            diagsCrashDir = Path.Combine(diagsDir, "crashes");
         }
 
         [ServiceFilter(typeof(ServiceKeyFilter))]
         [HttpGet("serverlog")]
-        public IActionResult GetServerLog(Guid packageId, string serviceKey)
+        public IActionResult GetServerLog()
         {
-            var logPath = Path.Combine(Paths.ExecutingDirectory, "playnite.log");
-            var zipLog = Path.Combine(Paths.ExecutingDirectory, "serverlog.zip");
+            var logPath = Path.Combine(ServicePaths.ExecutingDirectory, "playnite.log");
+            var zipLog = Path.Combine(ServicePaths.ExecutingDirectory, "serverlog.zip");
             if (System.IO.File.Exists(zipLog))
             {
                 System.IO.File.Delete(zipLog);
@@ -41,9 +52,9 @@ namespace PlayniteServices.Controllers.PlayniteTools
 
         [ServiceFilter(typeof(ServiceKeyFilter))]
         [HttpGet("{packageId}")]
-        public IActionResult GetPackage(Guid packageId, string serviceKey)
+        public IActionResult GetPackage(Guid packageId)
         {
-            var diagFiles = Directory.GetFiles(Playnite.DiagsLocation, $"{packageId}.zip", SearchOption.AllDirectories);
+            var diagFiles = Directory.GetFiles(diagsDir, $"{packageId}.zip", SearchOption.AllDirectories);
             if (diagFiles.Length == 0)
             {
                 return NotFound();
@@ -55,9 +66,9 @@ namespace PlayniteServices.Controllers.PlayniteTools
 
         [ServiceFilter(typeof(ServiceKeyFilter))]
         [HttpDelete("{packageId}")]
-        public IActionResult DeletePackage(Guid packageId, string serviceKey)
+        public IActionResult DeletePackage(Guid packageId)
         {
-            var diagFiles = Directory.GetFiles(Playnite.DiagsLocation, $"{packageId}.zip", SearchOption.AllDirectories);
+            var diagFiles = Directory.GetFiles(diagsDir, $"{packageId}.zip", SearchOption.AllDirectories);
             if (diagFiles.Length == 0)
             {
                 return NotFound();
@@ -75,16 +86,16 @@ namespace PlayniteServices.Controllers.PlayniteTools
 
         [ServiceFilter(typeof(ServiceKeyFilter))]
         [HttpGet]
-        public ServicesResponse<List<string>> GetPackages(string serviceKey)
+        public ServicesResponse<List<string>> GetPackages()
         {
-            if (!Directory.Exists(Playnite.DiagsLocation))
+            if (!Directory.Exists(diagsDir))
             {
                 return new ServicesResponse<List<string>>(new List<string>());
             }
 
             var diagFiles = Directory.
-                GetFiles(Playnite.DiagsLocation, "*.zip", SearchOption.AllDirectories).
-                Select(a => a.Replace(Playnite.DiagsLocation, "").Trim(Path.DirectorySeparatorChar) + $",{new FileInfo(a).CreationTime}").
+                GetFiles(diagsDir, "*.zip", SearchOption.AllDirectories).
+                Select(a => a.Replace(diagsDir, "").Trim(Path.DirectorySeparatorChar) + $",{new FileInfo(a).CreationTime}").
                 ToList();
             return new ServicesResponse<List<string>>(diagFiles);
         }
@@ -94,15 +105,15 @@ namespace PlayniteServices.Controllers.PlayniteTools
         public ServicesResponse<Guid> UploadPackage()
         {
             var packageId = Guid.NewGuid();
-            var targetPath = Path.Combine(Playnite.DiagsLocation, $"{packageId}.zip");
-            if (!Directory.Exists(Playnite.DiagsLocation))
+            var targetPath = Path.Combine(diagsDir, $"{packageId}.zip");
+            if (!Directory.Exists(diagsDir))
             {
-                Directory.CreateDirectory(Playnite.DiagsLocation);
+                Directory.CreateDirectory(diagsDir);
             }
 
-            if (!Directory.Exists(Playnite.DiagsCrashLocation))
+            if (!Directory.Exists(diagsCrashDir))
             {
-                Directory.CreateDirectory(Playnite.DiagsCrashLocation);
+                Directory.CreateDirectory(diagsCrashDir);
             }
 
             using (var fs = new FileStream(targetPath, FileMode.OpenOrCreate))
@@ -120,7 +131,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
                 {
                     using (var infoStream = diagInfo.Open())
                     {
-                        var info = Serialization.FromJsonStream<DiagnosticPackageInfo>(infoStream);
+                        var info = DataSerialization.FromJson<DiagnosticPackageInfo>(infoStream);
                         version = info.PlayniteVersion;
                         isCrash = info.IsCrashPackage;
                     }
@@ -152,7 +163,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
                     {
                         using (var infoStream = playniteInfo.Open())
                         {
-                            var info = Serialization.FromJsonStream<Dictionary<string, object>>(infoStream);
+                            var info = DataSerialization.FromJson<Dictionary<string, object>>(infoStream);
                             version = info["Version"].ToString();
                         }
                     }
@@ -161,7 +172,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
 
             if (isCrash)
             {
-                var dir = Playnite.DiagsCrashLocation;
+                var dir = diagsCrashDir;
                 if (!string.IsNullOrEmpty(version))
                 {
                     dir = Path.Combine(dir, version);

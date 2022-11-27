@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using PlayniteServices.Databases;
 using Xunit;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -47,8 +46,6 @@ namespace PlayniteServicesTests
             server = new TestServer(builder);
             Client = server.CreateClient();
             Client.BaseAddress = new Uri("http://localhost");
-
-            Database.Instance = (Database)server.Services.GetService(typeof(Database));
             NLogLogger.ConfigureLogger();
             LogManager.Init(new NLogLogProvider());
         }

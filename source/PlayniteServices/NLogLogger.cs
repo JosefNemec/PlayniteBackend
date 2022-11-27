@@ -73,22 +73,20 @@ namespace PlayniteServices
         {
             var config = new LoggingConfiguration();
 #if DEBUG
-            var consoleTarget = new ColoredConsoleTarget()
-            {
-                Layout = @"${message}${onexception:${newline}${exception}}"
-            };
-
+            var consoleTarget = new ColoredConsoleTarget { Layout = @"${level:uppercase=true:padding=-5}|${message}${onexception:${newline}${exception}}" };
             config.AddTarget("console", consoleTarget);
+            config.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, consoleTarget));
 
-            var rule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
-            config.LoggingRules.Add(rule1);
+            var debugTarget = new DebuggerTarget { Layout = @"${level:uppercase=true:padding=-5}|${message}${onexception:${newline}${exception}}" };
+            config.AddTarget("debug", debugTarget);
+            config.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, debugTarget));
 #endif
             var fileTarget = new FileTarget()
             {
-                FileName = Path.Combine(Paths.ExecutingDirectory, "playnite.log"),
+                FileName = Path.Combine(ServicePaths.ExecutingDirectory, "playnite.log"),
                 Layout = "${date:format=dd-MM HH\\:mm\\:ss.fff}|${level:uppercase=true:padding=-5}|${message}${onexception:${newline}${exception:format=toString}}",
                 KeepFileOpen = false,
-                ArchiveFileName = Path.Combine(Paths.ExecutingDirectory, "playnite.{#####}.log"),
+                ArchiveFileName = Path.Combine(ServicePaths.ExecutingDirectory, "playnite.{#####}.log"),
                 ArchiveAboveSize = 4096000,
                 ArchiveNumbering = ArchiveNumberingMode.Sequence,
                 MaxArchiveFiles = 10,

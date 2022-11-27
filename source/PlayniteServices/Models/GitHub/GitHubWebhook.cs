@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace PlayniteServices.Models.GitHub
@@ -51,6 +51,7 @@ namespace PlayniteServices.Models.GitHub
         public string node_id { get; set; }
         public string name { get; set; }
         public string full_name { get; set; }
+        [JsonPropertyName("private")]
         public bool @private { get; set; }
         public Owner owner { get; set; }
         public string html_url { get; set; }
@@ -212,6 +213,7 @@ namespace PlayniteServices.Models.GitHub
 
     public class PushEvent
     {
+        [JsonPropertyName("ref")]
         public string @ref { get; set; }
         public string before { get; set; }
         public string after { get; set; }

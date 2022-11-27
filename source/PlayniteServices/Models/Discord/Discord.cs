@@ -57,7 +57,7 @@ namespace PlayniteServices.Models.Discord
         public string description { get; set; }
         public int color { get; set; }
         public EmbedImage image { get; set; }
-        public EmbedThumbnail thumbnail { get; set; }
+        public EmbedImage thumbnail { get; set; }
         public List<EmbedField> fields { get; set; }
         public EmbedAuthor author { get; set; }
     }
@@ -65,10 +65,6 @@ namespace PlayniteServices.Models.Discord
     public class EmbedImage
     {
         public string url { get; set; }
-    }
-
-    public class EmbedThumbnail : EmbedImage
-    {
     }
 
     public class EmbedField

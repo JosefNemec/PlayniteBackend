@@ -245,6 +245,18 @@ namespace PlayniteServices.Models.IGDB
         public bool porting { get; set; }
         public bool publisher { get; set; }
         public bool supporting { get; set; }
+
+        public ExpandedInvolvedCompany ToExpanded()
+        {
+            return new()
+            {
+                game = game,
+                developer = developer,
+                porting = porting,
+                publisher = publisher,
+                supporting = supporting
+            };
+        }
     }
 
     public class ExpandedInvolvedCompany : InvolvedCompany

@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Playnite.Common;
 using Playnite.SDK;
 using PlayniteServices.Models.GitHub;
 using System;
@@ -64,7 +62,7 @@ namespace PlayniteServices.Controllers.Webhooks
                 var forwardEvent = true;
                 if (eventType == WebHookEvents.Issues)
                 {
-                    var payload = Serialization.FromJson<IssuesEvent>(payloadString);
+                    var payload = DataSerialization.FromJson<IssuesEvent>(payloadString);
 
                     // Only forward opened issues
                     if (payload.action != IssuesEventAction.opened)
@@ -75,7 +73,7 @@ namespace PlayniteServices.Controllers.Webhooks
                 }
                 else if (eventType == WebHookEvents.Push)
                 {
-                    var payload = Serialization.FromJson<PushEvent>(payloadString);
+                    var payload = DataSerialization.FromJson<PushEvent>(payloadString);
 
                     // Ignore localization pushes
                     if (payload.@ref?.EndsWith("l10n_devel") == true)
@@ -91,7 +89,7 @@ namespace PlayniteServices.Controllers.Webhooks
                         if (payload.commits.HasItems())
                         {
                             logger.Debug("Forwarded commits without merge commits.");
-                            await FormardRequest(Request, JsonConvert.SerializeObject(payload));
+                            await ForwardRequest(DataSerialization.ToJson(payload));
                         }
                         else
                         {
@@ -102,7 +100,7 @@ namespace PlayniteServices.Controllers.Webhooks
 
                 if (forwardEvent)
                 {
-                    await FormardRequest(Request, payloadString);
+                    await ForwardRequest(payloadString);
                 }
 
                 return Ok();
@@ -111,7 +109,7 @@ namespace PlayniteServices.Controllers.Webhooks
             return BadRequest();
         }
 
-        private async Task FormardRequest(HttpRequest request, string payload)
+        private async Task ForwardRequest(string payload)
         {
             var cnt = new StringContent(payload, Encoding.UTF8, "application/json");
             cnt.Headers.Add("X-GitHub-Delivery", Request.Headers["X-GitHub-Delivery"].FirstOrDefault());

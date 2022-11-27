@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
-using PlayniteServices.Databases;
 using Microsoft.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using Playnite.SDK;
@@ -23,11 +22,11 @@ namespace PlayniteServices
 {
     public class Startup
     {
-        public static IConfiguration Configuration { get; private set; }
+        private IConfiguration configuration { get; }
 
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            this.configuration = configuration;
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -45,20 +44,21 @@ namespace PlayniteServices
             services.AddControllers(options =>
             {
                 options.Filters.Add(new ApiExceptionFilter());
-            }).AddNewtonsoftJson(options =>
+            }).AddJsonOptions(options =>
             {
-                options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-                options.SerializerSettings.DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore;
+                options.JsonSerializerOptions.IncludeFields = true;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault;
+                options.JsonSerializerOptions.Converters.Add(new ReleaseDateConverter());
             });
 
             services.AddLogging(loggingBuilder =>
             {
-                loggingBuilder.AddConfiguration(Configuration.GetSection("Logging"));
+                loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
                 loggingBuilder.AddConsole();
                 loggingBuilder.AddDebug();
             });
 
-            services.Configure<AppSettings>(Configuration);
+            services.Configure<AppSettings>(configuration);
             services.AddSingleton(s => new UpdatableAppSettings(s.GetService<IOptionsMonitor<AppSettings>>()));
             services.AddSingleton<IgdbApi>();
             services.AddSingleton<PlayniteVersionFilter>();
@@ -66,6 +66,7 @@ namespace PlayniteServices
             services.AddSingleton<Discord>();
             services.AddSingleton<Addons>();
             services.AddSingleton<Database>();
+            services.AddSingleton<Patreon>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -104,10 +105,6 @@ namespace PlayniteServices
             startup.ConfigureServices(builder.Services);
             var app = builder.Build();
             startup.Configure(app, app.Environment);
-
-            Database.Instance = (Database)app.Services.GetService(typeof(Database));
-            Addons.Instance = (Addons)app.Services.GetService(typeof(Addons));
-            Discord.Instance = (Discord)app.Services.GetService(typeof(Discord));
             app.Run();
         }
     }

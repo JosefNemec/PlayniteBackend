@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using PlayniteServices.Filters;
 using PlayniteServices.Models.IGDB;
 using System;
@@ -19,12 +18,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
         public async Task<ExpandedInvolvedCompany> GetExpanded(ulong companyId)
         {
             var involvedCompany = await igdbApi.GetItem(companyId, endpointPath, Collection);
-            var expandedCompany = new ExpandedInvolvedCompany();
-            involvedCompany.CopyProperties(expandedCompany, false, new List<string>()
-            {
-                nameof(InvolvedCompany.company)
-            });
-
+            var expandedCompany = involvedCompany.ToExpanded();
             expandedCompany.company = await igdbApi.Companies.Get(involvedCompany.company);
             return expandedCompany;
         }
@@ -40,12 +34,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
             var expandedCompanies = new List<ExpandedInvolvedCompany>();
             foreach (var company in involvedCompanies)
             {
-                var expandedCompany = new ExpandedInvolvedCompany();
-                company.CopyProperties(expandedCompany, false, new List<string>()
-                {
-                    nameof(InvolvedCompany.company)
-                });
-
+                var expandedCompany = company.ToExpanded();
                 expandedCompanies.Add(expandedCompany);
             }
 
