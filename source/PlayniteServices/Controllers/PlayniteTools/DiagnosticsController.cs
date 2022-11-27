@@ -95,7 +95,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
 
             var diagFiles = Directory.
                 GetFiles(diagsDir, "*.zip", SearchOption.AllDirectories).
-                Select(a => a.Replace(diagsDir, "").Trim(Path.DirectorySeparatorChar) + $",{new FileInfo(a).CreationTime}").
+                Select(a => a.Replace(diagsDir, "", StringComparison.Ordinal).Trim(Path.DirectorySeparatorChar) + $",{new FileInfo(a).CreationTime}").
                 ToList();
             return new ServicesResponse<List<string>>(diagFiles);
         }
@@ -148,7 +148,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
                                 while (!tr.EndOfStream)
                                 {
                                     var line = tr.ReadLine();
-                                    if (line.Contains("Unhandled exception"))
+                                    if (line.Contains("Unhandled exception", StringComparison.OrdinalIgnoreCase))
                                     {
                                         isCrash = true;
                                         break;

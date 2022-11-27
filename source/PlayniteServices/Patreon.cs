@@ -47,7 +47,7 @@ namespace PlayniteServices
         {
             var request = new HttpRequestMessage
             {
-                RequestUri = url.StartsWith("https") ? new Uri(url) : new Uri(settings.Settings.Patreon.ApiEndpoint + url),
+                RequestUri = url.StartsWith("https", StringComparison.OrdinalIgnoreCase) ? new Uri(url) : new Uri(settings.Settings.Patreon.ApiEndpoint + url),
                 Method = HttpMethod.Get
             };
 

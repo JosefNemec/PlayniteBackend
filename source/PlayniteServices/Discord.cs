@@ -224,7 +224,7 @@ namespace PlayniteServices
         private async Task<T> SendRequest<T>(HttpRequestMessage message) where T : class
         {
             var route = message.RequestUri.OriginalString.Substring(apiBaseUrl.Length);
-            route = route.Substring(0, route.IndexOf('/'));
+            route = route.Substring(0, route.IndexOf('/', StringComparison.Ordinal));
 
             var messageQueue = messageQueues.GetOrAdd(route, new ConcurrentQueue<HttpRequestMessage>());
             messageQueue.Enqueue(message);

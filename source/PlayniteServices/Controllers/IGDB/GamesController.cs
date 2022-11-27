@@ -63,7 +63,7 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             List<ulong> searchResult = null;
-            searchString = searchString.Replace("\\", "").Replace("/", "").Trim();
+            searchString = searchString.Replace("\\", "", StringComparison.Ordinal).Replace("/", "", StringComparison.Ordinal).Trim();
             var modifiedSearchString = ModelsUtils.GetIgdbSearchString(searchString);
             var filter = Builders<IgdbSearchResult>.Filter.Eq(a => a.Id, modifiedSearchString);
             var col = alternativeSearch ? igdbApi.Database.IgdbAltSearches : igdbApi.Database.IgdbStdSearches;

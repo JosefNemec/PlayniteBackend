@@ -236,7 +236,7 @@ namespace PlayniteServices
                 var errorMessage = await response.Content.ReadAsStringAsync();
                 logger.Error(errorMessage);
                 // Request sometimes fails on generic error, but then works when sent again...
-                if (errorMessage.Contains("Internal server error") && reTry)
+                if (errorMessage.Contains("Internal server error", StringComparison.OrdinalIgnoreCase) && reTry)
                 {
                     return await SendStringRequest(url, content, method, false);
                 }

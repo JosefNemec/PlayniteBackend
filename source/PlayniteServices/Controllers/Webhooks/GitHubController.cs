@@ -33,7 +33,7 @@ namespace PlayniteServices.Controllers.Webhooks
             var keyBytes = encoding.GetBytes(key);
             using (var hash = new HMACSHA1(keyBytes))
             {
-                return BitConverter.ToString(hash.ComputeHash(textBytes)).Replace("-", "").ToLower();
+                return BitConverter.ToString(hash.ComputeHash(textBytes)).Replace("-", "", StringComparison.Ordinal).ToLower();
             }
         }
 
@@ -76,16 +76,16 @@ namespace PlayniteServices.Controllers.Webhooks
                     var payload = DataSerialization.FromJson<PushEvent>(payloadString);
 
                     // Ignore localization pushes
-                    if (payload.@ref?.EndsWith("l10n_devel") == true)
+                    if (payload.@ref?.EndsWith("l10n_devel", StringComparison.Ordinal) == true)
                     {
                         forwardEvent = false;
                         logger.Debug("Ignored l10n_devel github webhook.");
                     }
                     // Don't forward branch merges
-                    else if (payload.commits?.Any(a => a.message.StartsWith("Merge branch")) == true)
+                    else if (payload.commits?.Any(a => a.message.StartsWith("Merge branch", StringComparison.OrdinalIgnoreCase)) == true)
                     {
                         forwardEvent = false;
-                        payload.commits = payload.commits.Where(a => !a.message.StartsWith("Merge branch")).ToList();
+                        payload.commits = payload.commits.Where(a => !a.message.StartsWith("Merge branch", StringComparison.OrdinalIgnoreCase)).ToList();
                         if (payload.commits.HasItems())
                         {
                             logger.Debug("Forwarded commits without merge commits.");

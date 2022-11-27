@@ -133,7 +133,7 @@ namespace PlayniteServices.Controllers.Addons
                 if (eventType == WebHookEvents.Push)
                 {
                     var payload = DataSerialization.FromJson<PushEvent>(payloadString);
-                    if (payload.@ref?.EndsWith("master") == true)
+                    if (payload.@ref?.EndsWith("master", StringComparison.Ordinal) == true)
                     {
 #pragma warning disable CS4014
                         addons.RegenerateAddonDatabase();

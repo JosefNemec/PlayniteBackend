@@ -51,7 +51,7 @@ namespace PlayniteServices
             ConventionRegistry.Register(
                 "Custom Conventions",
                 new ConventionPack { new IgnoreDefaultPropertiesConvention() },
-                t => t.FullName.StartsWith("Playnite"));
+                t => t.FullName.StartsWith("Playnite", StringComparison.Ordinal));
 
             // BSON doesn't support unsigned numbers so we need to use specific converter for ulong numbers
             BsonSerializer.RegisterSerializer(

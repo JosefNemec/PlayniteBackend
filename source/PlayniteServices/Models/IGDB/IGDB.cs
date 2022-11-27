@@ -373,7 +373,11 @@ namespace PlayniteServices.Models.IGDB
     {
         public static string GetIgdbSearchString(string gameName)
         {
-            var temp = gameName.Replace(":", " ").ToLower().Replace("\"", string.Empty).Trim();
+            var temp =
+                gameName.Replace(":", " ", StringComparison.InvariantCultureIgnoreCase).
+                ToLower().
+                Replace("\"", string.Empty, StringComparison.InvariantCultureIgnoreCase).
+                Trim();
             return Regex.Replace(temp, @"\s+", " ");
         }
     }

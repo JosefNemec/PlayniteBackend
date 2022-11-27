@@ -187,7 +187,7 @@ namespace PlayniteServices.Controllers.IGDB
             var copyGame = game.GetCopy();
             copyGame.Name = StringExtensions.NormalizeGameName(game.Name);
             copyGame.Name = FixNointroNaming(copyGame.Name);
-            copyGame.Name = copyGame.Name.Replace(@"\", string.Empty);
+            copyGame.Name = copyGame.Name.Replace(@"\", string.Empty, StringComparison.Ordinal);
             var name = copyGame.Name;
             name = Regex.Replace(name, @"\s+RHCP$", "", RegexOptions.IgnoreCase);
             name = Regex.Replace(name, @"\s+RU$", "", RegexOptions.IgnoreCase);
@@ -229,7 +229,7 @@ namespace PlayniteServices.Controllers.IGDB
 
             // Try removing apostrophes
             var resCopy = results.GetCopy();
-            resCopy.ForEach(a => a.name = a.name.Replace("'", ""));
+            resCopy.ForEach(a => a.name = a.name.Replace("'", "", StringComparison.Ordinal));
             matchedGame = MatchFun(game, name, resCopy);
             if (matchedGame > 0)
             {
@@ -265,7 +265,7 @@ namespace PlayniteServices.Controllers.IGDB
                         return false;
                     }
 
-                    if (!string.IsNullOrEmpty(a.name) && a.name.Contains(":"))
+                    if (!string.IsNullOrEmpty(a.name) && a.name.Contains(':', StringComparison.InvariantCultureIgnoreCase))
                     {
                         return string.Equals(name, a.name.Split(':')[0], StringComparison.InvariantCultureIgnoreCase);
                     }
