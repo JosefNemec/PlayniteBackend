@@ -8,6 +8,14 @@
     <PackageId>PlayniteServices</PackageId>
     <AssetTargetFallback>$(AssetTargetFallback);dotnet5.6;portable-net45+win8</AssetTargetFallback>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
   
   <ItemGroup>
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\LongExtensions.cs" Link="Shared\LongExtensions.cs" />
@@ -52,5 +60,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\PlayniteRepo\source\PlayniteSDK\Playnite.SDK.csproj" />
   </ItemGroup>
-
 </Project>
