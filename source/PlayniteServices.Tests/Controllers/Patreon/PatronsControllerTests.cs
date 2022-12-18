@@ -24,8 +24,9 @@ namespace PlayniteServicesTests.Controllers.Patreon
         {
             var response = await client.GetAsync("patreon/patrons");
             var validResponse = DataSerialization.FromJson<ServicesResponse<List<string>>>(await response.Content.ReadAsStringAsync());
-            Assert.NotEmpty(validResponse.Data);
-            Assert.True(string.IsNullOrEmpty(validResponse.Error));
+            Assert.NotNull(validResponse);
+            Assert.True(validResponse.Data.HasItems());
+            Assert.True(validResponse.Error.IsNullOrEmpty());
         }
     }
 }

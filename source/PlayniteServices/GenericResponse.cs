@@ -7,12 +7,12 @@ namespace PlayniteServices
 {
     public class GenericResponse
     {
-        public string Error
+        public string? Error
         {
             get; set;
         }
 
-        public object Data
+        public object? Data
         {
             get; set;
         }
@@ -42,12 +42,12 @@ namespace PlayniteServices
 
     public class ServicesResponse<T> : GenericResponse
     {
-        public new T Data
+        public new T? Data
         {
             get; set;
         }
 
-        public ServicesResponse(T data)
+        public ServicesResponse(T? data)
         {
             Data = data;
         }

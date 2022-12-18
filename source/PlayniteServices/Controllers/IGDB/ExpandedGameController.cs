@@ -32,9 +32,9 @@ namespace PlayniteServices.Controllers.IGDB
         public async Task<ExpandedGame> GetExpandedGame(ulong gameId)
         {
             var game = await igdbApi.Games.Get(gameId);
-            if (game.id == 0)
+            if (game== null || game.id == 0)
             {
-                new ExpandedGame();
+                return new ExpandedGame();
             }
 
             var parsedGame = new ExpandedGame()

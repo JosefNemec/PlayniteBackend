@@ -4,6 +4,7 @@ using System.Text;
 
 namespace PlayniteServices.Models.IGDB
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class SteamIdGame
     {
         public ulong steamId { get; set; }
@@ -30,4 +31,5 @@ namespace PlayniteServices.Models.IGDB
         public string Id { get; set; }
         public List<ulong> Games { get; set; }
     }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }

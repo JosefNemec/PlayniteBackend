@@ -1,6 +1,7 @@
 using Playnite.Common;
 using Playnite.SDK;
 using Playnite.SDK.Models;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,7 +13,15 @@ public class ReleaseDateConverter : JsonConverter<ReleaseDate>
 {
     public override ReleaseDate Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return ReleaseDate.Deserialize(reader.GetString());
+        var strDate = reader.GetString();
+        if (strDate.IsNullOrWhiteSpace())
+        {
+            throw new Exception("Can't deserialize ReleaseDate object from empty string.");
+        }
+        else
+        {
+            return ReleaseDate.Deserialize(strDate);
+        }
     }
 
     public override void Write(Utf8JsonWriter writer, ReleaseDate value, JsonSerializerOptions options)
@@ -43,7 +52,7 @@ public static class DataSerialization
         return JsonSerializer.Serialize(obj, defaultOptions);
     }
 
-    public static T FromJson<T>(string input)
+    public static T? FromJson<T>(string input)
     {
         try
         {
@@ -57,7 +66,7 @@ public static class DataSerialization
         }
     }
 
-    public static T FromJson<T>(Stream input)
+    public static T? FromJson<T>(Stream input)
     {
         try
         {
@@ -92,11 +101,6 @@ public static class DataSerialization
 
     public static T GetCopy<T>(this T source) where T : class
     {
-        if (source is null)
-        {
-            return null;
-        }
-
-        return FromJson<T>(ToJson(source));
+        return FromJson<T>(ToJson(source))!;
     }
 }

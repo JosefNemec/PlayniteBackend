@@ -19,7 +19,7 @@ namespace PlayniteServices
     {
         public class AuthResponse
         {
-            public string access_token { get; set; }
+            public string? access_token { get; set; }
         }
 
         private static bool instantiated = false;
@@ -28,7 +28,7 @@ namespace PlayniteServices
         private readonly UpdatableAppSettings settings;
         public readonly Database Database;
         private readonly DelegatingHandler requestLimiterHandler;
-        private readonly System.Threading.Timer webhookTimer;
+        private readonly System.Threading.Timer? webhookTimer;
 
         public Games Games;
         public AlternativeNames AlternativeNames;
@@ -49,6 +49,11 @@ namespace PlayniteServices
 
         public IgdbApi(UpdatableAppSettings settings, Database db)
         {
+            if (settings.Settings.IGDB == null)
+            {
+                throw new Exception("IGDB settings missing");
+            }
+
             TestAssert.IsFalse(instantiated, $"{nameof(IgdbApi)} already instantiated");
             instantiated = true;
             this.settings = settings;
@@ -75,7 +80,7 @@ namespace PlayniteServices
             Companies = new Companies(this);
             Platforms = new Platforms(this);
 
-            if (settings.Settings.IGDB.RegisterWebhooks)
+            if (settings.Settings.IGDB.RegisterWebhooks && !settings.Settings.IGDB.WebHookSecret.IsNullOrEmpty())
             {
                 webhookTimer = new System.Threading.Timer(
                     (_) => RegiserWebhooks(),
@@ -108,7 +113,7 @@ namespace PlayniteServices
                             new FormUrlEncodedContent(new Dictionary<string, string>
                             {
                                 { "method", "update" },
-                                { "secret", settings.Settings.IGDB.WebHookSecret },
+                                { "secret", settings.Settings.IGDB!.WebHookSecret! },
                                 { "url", "http://api.playnite.link/api/igdb/game" }
                             }),
                             HttpMethod.Post,
@@ -162,12 +167,12 @@ namespace PlayniteServices
 
         private async Task Authenticate()
         {
-            var clientId = settings.Settings.IGDB.ClientId;
+            var clientId = settings.Settings.IGDB!.ClientId;
             var clientSecret = settings.Settings.IGDB.ClientSecret;
             var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
             var response = await HttpClient.PostAsync(authUrl, null);
             var auth = DataSerialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
-            if (auth?.access_token.IsNullOrEmpty() != false)
+            if (auth?.access_token == null)
             {
                 throw new Exception("Failed to authenticate IGDB.");
             }
@@ -181,11 +186,11 @@ namespace PlayniteServices
             }
         }
 
-        private HttpRequestMessage CreateRequest(string url, HttpContent content, HttpMethod method)
+        private HttpRequestMessage CreateRequest(string url, HttpContent? content, HttpMethod method)
         {
             var request = new HttpRequestMessage()
             {
-                RequestUri = new Uri(settings.Settings.IGDB.ApiEndpoint + url),
+                RequestUri = new Uri(settings.Settings.IGDB!.ApiEndpoint + url),
                 Method = method,
                 Content = content
             };
@@ -201,7 +206,7 @@ namespace PlayniteServices
             return await SendStringRequest(url, new StringContent(query), HttpMethod.Post, reTry);
         }
 
-        public async Task<string> SendStringRequest(string url, HttpContent content, HttpMethod method, bool reTry = true)
+        public async Task<string> SendStringRequest(string url, HttpContent? content, HttpMethod method, bool reTry = true)
         {
             var sharedRequest = CreateRequest(url, content, method);
             var response = await HttpClient.SendAsync(sharedRequest);
@@ -259,7 +264,7 @@ namespace PlayniteServices
             var libraryStringResult = await SendStringRequest("games",
                 $"fields id; where external_games.uid = \"{gameId}\" & external_games.category = 1; limit 1;");
             var games = DataSerialization.FromJson<List<Game>>(libraryStringResult);
-            if (games.Any())
+            if (games.HasItems())
             {
                 var game = games.First();
                 Database.SteamIgdbMatches.ReplaceOne(
@@ -279,7 +284,7 @@ namespace PlayniteServices
             }
         }
 
-        public async Task<TItem> GetItem<TItem>(ulong itemId, string endpointPath, IMongoCollection<TItem> collection) where TItem : IgdbItem
+        public async Task<TItem?> GetItem<TItem>(ulong itemId, string endpointPath, IMongoCollection<TItem> collection) where TItem : IgdbItem
         {
             if (itemId == 0)
             {
@@ -298,7 +303,7 @@ namespace PlayniteServices
 
             TItem item;
             // IGDB resturns empty results if an id is a duplicate of another game
-            if (items.Count > 0)
+            if (items.HasItems())
             {
                 item = items[0];
             }
@@ -314,7 +319,7 @@ namespace PlayniteServices
             return item;
         }
 
-        public async Task<List<TItem>> GetItem<TItem>(List<ulong> itemIds, string endpointPath, IMongoCollection<TItem> collection) where TItem : IgdbItem
+        public async Task<List<TItem>?> GetItem<TItem>(List<ulong>? itemIds, string endpointPath, IMongoCollection<TItem> collection) where TItem : IgdbItem
         {
             if (!itemIds.HasItems())
             {
@@ -331,12 +336,19 @@ namespace PlayniteServices
             var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, cacheItems.Select(a => a.id));
             var stringResult = await SendStringRequest(endpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
             var items = DataSerialization.FromJson<List<TItem>>(stringResult);
-            items.ForEach(a => collection.ReplaceOne(
-                Builders<TItem>.Filter.Eq(u => u.id, a.id),
-                a,
-                Database.ItemUpsertOptions));
-            cacheItems.AddRange(items);
-            return cacheItems;
+            if (items.HasItems())
+            {
+                items.ForEach(a => collection.ReplaceOne(
+                    Builders<TItem>.Filter.Eq(u => u.id, a.id),
+                    a,
+                    Database.ItemUpsertOptions));
+                cacheItems.AddRange(items);
+                return cacheItems;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

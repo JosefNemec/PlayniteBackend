@@ -19,9 +19,9 @@ namespace PlayniteServices.Controllers.IGDB
     [Route("igdb/game")]
     public class GameController : Controller
     {
-        private static ILogger logger = LogManager.GetLogger();
-        private UpdatableAppSettings settings;
-        private IgdbApi igdbApi;
+        private static readonly ILogger logger = LogManager.GetLogger();
+        private readonly UpdatableAppSettings settings;
+        private readonly IgdbApi igdbApi;
 
         public GameController(UpdatableAppSettings settings, IgdbApi igdbApi)
         {
@@ -45,9 +45,15 @@ namespace PlayniteServices.Controllers.IGDB
         [HttpPost]
         public async Task<ActionResult> Post()
         {
+            if (settings.Settings.IGDB?.WebHookSecret.IsNullOrWhiteSpace() == true)
+            {
+                logger.Error("Can't process IGDB webhook, webhook secret is not configured");
+                return Ok();
+            }
+
             if (Request.Headers.TryGetValue("X-Secret", out var secret))
             {
-                if (secret != settings.Settings.IGDB.WebHookSecret)
+                if (secret != settings.Settings.IGDB!.WebHookSecret!)
                 {
                     logger.Error($"X-Secret doesn't match: {secret}");
                     return BadRequest();
@@ -55,9 +61,9 @@ namespace PlayniteServices.Controllers.IGDB
 
                 try
                 {
-                    Game game = null;
-                    string jsonString = null;
-                    using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+                    Game? game = null;
+                    var jsonString = string.Empty;
+                    using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
                     {
                         jsonString = await reader.ReadToEndAsync();
                         if (!string.IsNullOrEmpty(jsonString))
@@ -97,12 +103,10 @@ namespace PlayniteServices.Controllers.IGDB
     [Route("igdb/game_parsed")]
     public class GameParsedController : Controller
     {
-        private UpdatableAppSettings settings;
-        private IgdbApi igdbApi;
+        private readonly IgdbApi igdbApi;
 
-        public GameParsedController(UpdatableAppSettings settings, IgdbApi igdbApi)
+        public GameParsedController(IgdbApi igdbApi)
         {
-            this.settings = settings;
             this.igdbApi = igdbApi;
         }
 
@@ -115,9 +119,9 @@ namespace PlayniteServices.Controllers.IGDB
         public async Task<ExpandedGameLegacy> GetExpandedGame(ulong gameId)
         {
             var game = await igdbApi.Games.Get(gameId);
-            if (game.id == 0)
+            if (game == null || game.id == 0)
             {
-                new ExpandedGameLegacy();
+                return new ExpandedGameLegacy();
             }
 
             var parsedGame = new ExpandedGameLegacy()
@@ -149,10 +153,10 @@ namespace PlayniteServices.Controllers.IGDB
 
             // fallback properties for 4.x
             parsedGame.cover = parsedGame.cover_v3?.url;
-            parsedGame.publishers = parsedGame.involved_companies?.Where(a => a.publisher == true).Select(a => a.company.name).ToList();
-            parsedGame.developers = parsedGame.involved_companies?.Where(a => a.developer == true).Select(a => a.company.name).ToList();
-            parsedGame.genres = parsedGame.genres_v3?.Select(a => a.name).ToList();
-            parsedGame.game_modes = parsedGame.game_modes_v3?.Select(a => a.name).ToList();
+            parsedGame.publishers = parsedGame.involved_companies?.Where(a => a.publisher == true).Select(a => a.company!.name!).ToList();
+            parsedGame.developers = parsedGame.involved_companies?.Where(a => a.developer == true).Select(a => a.company!.name!).ToList();
+            parsedGame.genres = parsedGame.genres_v3?.Where(a => a != null).Select(a => a.name!).ToList();
+            parsedGame.game_modes = parsedGame.game_modes_v3?.Where(a => a != null).Select(a => a.name!).ToList();
             return parsedGame;
         }
     }

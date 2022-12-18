@@ -39,7 +39,7 @@ namespace PlayniteServices.Controllers.IGDB
         public async Task<ServicesResponse<List<ExpandedGameLegacy>>> Get(string gameName)
         {
             var search = await GetSearchResults(gameName, false);
-            var altSearch = await GetSearchResults(gameName, settings.Settings.IGDB.AlternativeSearch);
+            var altSearch = await GetSearchResults(gameName, settings.Settings.IGDB?.AlternativeSearch ?? false);
             foreach (var alt in altSearch)
             {
                 if (search.Any(a => a.id == alt.id))
@@ -62,7 +62,7 @@ namespace PlayniteServices.Controllers.IGDB
                 return new List<ExpandedGameLegacy>();
             }
 
-            List<ulong> searchResult = null;
+            List<ulong>? searchResult = null;
             searchString = searchString.Replace("\\", "", StringComparison.Ordinal).Replace("/", "", StringComparison.Ordinal).Trim();
             var modifiedSearchString = ModelsUtils.GetIgdbSearchString(searchString);
             var filter = Builders<IgdbSearchResult>.Filter.Eq(a => a.Id, modifiedSearchString);
@@ -87,15 +87,18 @@ namespace PlayniteServices.Controllers.IGDB
                 var query = alternativeSearch ? whereQuery : searchQuery;
                 var searchStringResult = await igdbApi.SendStringRequest("games", query);
                 var tempRes = DataSerialization.FromJson<List<Game>>(searchStringResult);
-                searchResult = tempRes.Select(a => a.id).ToList();
-                col.ReplaceOne(
-                    Builders<IgdbSearchResult>.Filter.Eq(u => u.Id, modifiedSearchString),
-                    new IgdbSearchResult
-                    {
-                        Id = modifiedSearchString,
-                        Games = searchResult
-                    },
-                    Database.ItemUpsertOptions);
+                if (tempRes.HasItems())
+                {
+                    searchResult = tempRes.Select(a => a.id).ToList();
+                    col.ReplaceOne(
+                        Builders<IgdbSearchResult>.Filter.Eq(u => u.Id, modifiedSearchString),
+                        new IgdbSearchResult
+                        {
+                            Id = modifiedSearchString,
+                            Games = searchResult
+                        },
+                        Database.ItemUpsertOptions);
+                }
             }
 
             if (!searchResult.HasItems())
@@ -104,7 +107,7 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             var finalResult = new List<ExpandedGameLegacy>();
-            foreach (var game in await igdbApi.Games.Get(searchResult))
+            foreach (var game in await igdbApi.Games.Get(searchResult) ?? new List<Game>())
             {
                 if (game.id == 0)
                 {

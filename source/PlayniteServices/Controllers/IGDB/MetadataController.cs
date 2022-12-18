@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Playnite.Common;
 using Playnite.SDK;
 using PlayniteServices.Filters;
+using PlayniteServices.Models;
 using PlayniteServices.Models.IGDB;
 using System;
 using System.Collections.Generic;
@@ -17,18 +19,22 @@ namespace PlayniteServices.Controllers.IGDB
 {
     [ServiceFilter(typeof(PlayniteVersionFilter))]
     [Route("igdb")]
-    public class MetadataController : Controller
+    public partial class MetadataController : Controller
     {
         private readonly static ILogger logger = LogManager.GetLogger();
-        private UpdatableAppSettings settings;
-        private IgdbApi igdbApi;
-        private static readonly Regex separatorRegex = new Regex(@"\s*(:|-)\s*", RegexOptions.Compiled);
-        private static readonly Regex noIntroArticleRegEx = new Regex(@",\s*(the|a|an|der|das|die)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private readonly UpdatableAppSettings settings;
+        private readonly IgdbApi igdbApi;
         private static readonly char[] bracketsMatchList = new char[] { '[', ']', '(', ')', '{', '}' };
         private static readonly char[] whereQueryBlacklist = new char[2] { ':', '-' };
         private readonly GamesController gamesController;
         private readonly ExpandedGameController expandedController;
         private readonly GameParsedController parsedController;
+
+        [GeneratedRegex(",\\s*(the|a|an|der|das|die)$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+        private static partial Regex noIntroArticleRegEx();
+
+        [GeneratedRegex("\\s*(:|-)\\s*", RegexOptions.Compiled)]
+        private static partial Regex separatorRegex();
 
         public MetadataController(UpdatableAppSettings settings, IgdbApi igdbApi)
         {
@@ -36,31 +42,32 @@ namespace PlayniteServices.Controllers.IGDB
             this.igdbApi = igdbApi;
             gamesController = new GamesController(settings, igdbApi);
             expandedController = new ExpandedGameController(settings, igdbApi);
-            parsedController = new GameParsedController(settings, igdbApi);
+            parsedController = new GameParsedController(igdbApi);
         }
 
         [HttpPost("metadata_v3")]
-        public async Task<ServicesResponse<ExpandedGame>> PostMetadataV3([FromBody] SdkModels.Game game)
+        public async Task<ServicesResponse<ExpandedGame>> PostMetadataV3([FromBody] PlayniteGame game)
         {
             return await GetMetadata(game, expandedController.GetExpandedGame);
         }
 
         [HttpPost("metadata_v2")]
-        public async Task<ServicesResponse<ExpandedGame>> PostMetadataV2([FromBody]Playnite.Database.OldModels.Ver2_Game game)
+        public async Task<ServicesResponse<ExpandedGame>> PostMetadataV2([FromBody] PlayniteGame_OldV2 game)
         {
             return await GetMetadata(game, expandedController.GetExpandedGame);
         }
 
         [HttpPost("metadata")]
-        public async Task<ServicesResponse<ExpandedGameLegacy>> PostMetadata([FromBody]Playnite.Database.OldModels.Ver2_Game game)
+        public async Task<ServicesResponse<ExpandedGameLegacy>> PostMetadata([FromBody] PlayniteGame_OldV2 game)
         {
             return await GetMetadata(game, parsedController.GetExpandedGame);
         }
 
-        private async Task<ServicesResponse<T>> GetMetadata<T>(Playnite.Database.OldModels.Ver2_Game game, Func<ulong, Task<T>> expandFunc) where T : new()
+        private async Task<ServicesResponse<T>> GetMetadata<T>(PlayniteGame_OldV2 game, Func<ulong, Task<T>> expandFunc) where T : new()
         {
-            var tempGame = new SdkModels.Game(game.Name)
+            var tempGame = new PlayniteGame
             {
+                Name = game.Name,
                 PluginId = game.PluginId,
                 GameId = game.GameId
             };
@@ -73,7 +80,7 @@ namespace PlayniteServices.Controllers.IGDB
             return await GetMetadata(tempGame, expandFunc);
         }
 
-        private async Task<ServicesResponse<T>> GetMetadata<T>(SdkModels.Game game, Func<ulong, Task<T>> expandFunc) where T : new()
+        private async Task<ServicesResponse<T>> GetMetadata<T>(PlayniteGame game, Func<ulong, Task<T>> expandFunc) where T : new()
         {
             var isKnownPlugin = game.PluginId != Guid.Empty;
             var isSteamPlugin = BuiltinExtensions.GetIdFromExtension(BuiltinExtension.SteamLibrary) == game.PluginId;
@@ -84,9 +91,9 @@ namespace PlayniteServices.Controllers.IGDB
             // Check if match was previously found
             if (isKnownPlugin)
             {
-                if (isSteamPlugin)
+                if (isSteamPlugin && ulong.TryParse(game.GameId, out var parsedId))
                 {
-                    igdbId = await igdbApi.GetSteamIgdbMatch(ulong.Parse(game.GameId));
+                    igdbId = await igdbApi.GetSteamIgdbMatch(parsedId);
                 }
                 else
                 {
@@ -117,7 +124,7 @@ namespace PlayniteServices.Controllers.IGDB
             else
             {
                 igdbId = await TryMatchGame(game, false);
-                var useAlt = settings.Settings.IGDB.AlternativeSearch && !game.Name.ContainsAny(whereQueryBlacklist);
+                var useAlt = settings.Settings.IGDB?.AlternativeSearch ?? false && !game.Name.ContainsAny(whereQueryBlacklist);
                 if (useAlt && igdbId == 0)
                 {
                     igdbId = await TryMatchGame(game, true);
@@ -132,7 +139,7 @@ namespace PlayniteServices.Controllers.IGDB
             // Update match database if match was found
             if (igdbId != 0)
             {
-                if (isKnownPlugin && !isSteamPlugin)
+                if (isKnownPlugin && !isSteamPlugin && !game.GameId.IsNullOrWhiteSpace())
                 {
                     igdbApi.Database.IGBDGameIdMatches.ReplaceOne(
                         Builders<GameIdMatch>.Filter.Eq(a => a.Id, matchId),
@@ -150,7 +157,7 @@ namespace PlayniteServices.Controllers.IGDB
                     Builders<SearchIdMatch>.Filter.Eq(a => a.Id, searchId),
                     new SearchIdMatch
                     {
-                        Term = game.Name,
+                        Term = game.Name!,
                         Id = searchId,
                         IgdbId = igdbId
                     },
@@ -160,18 +167,18 @@ namespace PlayniteServices.Controllers.IGDB
             return new ServicesResponse<T>(foundMetadata);
         }
 
-        private string FixNointroNaming(string name)
+        private static string FixNointroNaming(string name)
         {
-            var match = noIntroArticleRegEx.Match(name);
+            var match = noIntroArticleRegEx().Match(name);
             if (match.Success)
             {
-                return match.Groups[1].Value.Trim() + " " + noIntroArticleRegEx.Replace(name, "");
+                return match.Groups[1].Value.Trim() + " " + noIntroArticleRegEx().Replace(name, "");
             }
 
             return name;
         }
 
-        private async Task<ulong> TryMatchGame(SdkModels.Game game, bool alternativeSearch)
+        private async Task<ulong> TryMatchGame(PlayniteGame game, bool alternativeSearch)
         {
             if (game.Name.IsNullOrEmpty())
             {
@@ -193,7 +200,7 @@ namespace PlayniteServices.Controllers.IGDB
             name = Regex.Replace(name, @"\s+RU$", "", RegexOptions.IgnoreCase);
 
             var results = await gamesController.GetSearchResults(name, alternativeSearch);
-            results.ForEach(a => a.name = StringExtensions.NormalizeGameName(a.name));
+            results.ForEach(a => a.name = StringExtensions.NormalizeGameName(a.name!));
             string testName = string.Empty;
 
             // Direct comparison
@@ -229,7 +236,7 @@ namespace PlayniteServices.Controllers.IGDB
 
             // Try removing apostrophes
             var resCopy = results.GetCopy();
-            resCopy.ForEach(a => a.name = a.name.Replace("'", "", StringComparison.Ordinal));
+            resCopy.ForEach(a => a.name = a.name!.Replace("'", "", StringComparison.Ordinal));
             matchedGame = MatchFun(game, name, resCopy);
             if (matchedGame > 0)
             {
@@ -237,15 +244,15 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             // Try removing all ":" and "-"
-            testName = separatorRegex.Replace(name, " ");
+            testName = separatorRegex().Replace(name, " ");
             resCopy = results.GetCopy();
             foreach (var res in resCopy)
             {
-                res.name = separatorRegex.Replace(res.name, " ");
+                res.name = separatorRegex().Replace(res.name!, " ");
                 if (res.alternative_names.HasItems())
                 {
                     res.alternative_names = res.alternative_names.Where(a => !a.name.IsNullOrEmpty()).ToList();
-                    res.alternative_names.ForEach(a => a.name = separatorRegex.Replace(a.name, " "));
+                    res.alternative_names.ForEach(a => a.name = separatorRegex().Replace(a.name!, " "));
                 }
             }
 
@@ -282,14 +289,14 @@ namespace PlayniteServices.Controllers.IGDB
             return 0;
         }
 
-        private ulong MatchFun(SdkModels.Game game, string matchName, List<ExpandedGameLegacy> list)
+        private ulong MatchFun(PlayniteGame game, string matchName, List<ExpandedGameLegacy> list)
         {
             var res = list.Where(a => string.Equals(matchName, a.name, StringComparison.InvariantCultureIgnoreCase));
             if (!res.Any())
             {
                 res = list.Where(a =>
                 a.alternative_names.HasItems() &&
-                a.alternative_names.Select(b => b.name).ContainsString(matchName) == true);
+                a.alternative_names.Select(b => b.name ?? string.Empty).ContainsString(matchName) == true);
             }
 
             if (res.Any())

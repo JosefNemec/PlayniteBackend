@@ -30,12 +30,12 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
             Collection = igdbApi.Database.MongoDb.GetCollection<T>($"IGDB_col_{endpointPath}");
         }
 
-        public virtual async Task<T> Get(ulong objectId)
+        public virtual async Task<T?> Get(ulong objectId)
         {
             return await igdbApi.GetItem(objectId, endpointPath, Collection);
         }
 
-        public virtual async Task<List<T>> Get(List<ulong> objectIds)
+        public virtual async Task<List<T>?> Get(List<ulong>? objectIds)
         {
             return await igdbApi.GetItem(objectIds, endpointPath, Collection);
         }

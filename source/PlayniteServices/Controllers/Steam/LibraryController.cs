@@ -48,9 +48,14 @@ namespace PlayniteServices.Controllers.Steam
         [HttpGet("{steamId}")]
         public async Task<ServicesResponse<List<GetOwnedGamesResult.Game>>> Get(ulong steamId, [FromQuery]bool freeSub)
         {
+            if (settings.Settings.Steam?.ApiKey.IsNullOrEmpty() == true)
+            {
+                return new ServicesResponse<List<GetOwnedGamesResult.Game>>(new List<GetOwnedGamesResult.Game>());
+            }
+
             var libraryUrl = string.Format(
                 @"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={0}&include_appinfo=1&format=json&steamid={1}&include_played_free_games=1&skip_unvetted_apps=0",
-                settings.Settings.Steam.ApiKey, steamId);
+                settings.Settings.Steam!.ApiKey, steamId);
             if (freeSub)
             {
                 libraryUrl += "&include_free_sub=1";
@@ -61,7 +66,7 @@ namespace PlayniteServices.Controllers.Steam
             var libraryStringResult = await httpClient.GetStringAsync(libraryUrl);
             var libraryResult = DataSerialization.FromJson<GetOwnedGamesResult>(libraryStringResult);
 
-            return new ServicesResponse<List<GetOwnedGamesResult.Game>>(libraryResult.response.games);
+            return new ServicesResponse<List<GetOwnedGamesResult.Game>>(libraryResult?.response?.games ?? new List<GetOwnedGamesResult.Game>());
         }
     }
 }

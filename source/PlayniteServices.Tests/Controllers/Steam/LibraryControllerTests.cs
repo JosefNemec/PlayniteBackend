@@ -25,13 +25,14 @@ namespace PlayniteServicesTests.Controllers.Steam
         {
             var response = await client.GetAsync("/steam/library/123456789");
             var errorResponse = DataSerialization.FromJson<GenericResponse>(await response.Content.ReadAsStringAsync());
-            Assert.True(!string.IsNullOrEmpty(errorResponse.Error));
-            Assert.Null(errorResponse.Data);
+            Assert.True(errorResponse?.Error.IsNullOrEmpty() == false);
+            Assert.Null(errorResponse?.Data);
 
             response = await client.GetAsync("/steam/library/76561198358889790");
             var validResponse = DataSerialization.FromJson<ServicesResponse<List<GetOwnedGamesResult.Game>>>(await response.Content.ReadAsStringAsync());
-            Assert.True(string.IsNullOrEmpty(validResponse.Error));
-            Assert.True(validResponse.Data.Count > 0);
+            Assert.NotNull(validResponse);
+            Assert.True(validResponse.Error.IsNullOrEmpty());
+            Assert.True(validResponse.Data?.Count > 0);
         }
     }
 }

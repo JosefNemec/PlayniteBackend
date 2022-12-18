@@ -17,13 +17,12 @@ namespace PlayniteServices.Controllers.Webhooks
     [Route("hooks/github")]
     public class GitHubController : Controller
     {
-        private static HttpClient httpClient { get; } = new HttpClient();
-        private static ILogger logger = LogManager.GetLogger();
-        private AppSettings appSettings;
+        private static readonly ILogger logger = LogManager.GetLogger();
+        private readonly UpdatableAppSettings settings;
 
-        public GitHubController(IOptions<AppSettings> settings)
+        public GitHubController(UpdatableAppSettings settings)
         {
-            appSettings = settings.Value;
+            this.settings = settings;
         }
 
         public static string GetPayloadHash(string payload, string key)
@@ -40,6 +39,12 @@ namespace PlayniteServices.Controllers.Webhooks
         [HttpPost]
         public async Task<ActionResult> GithubWebhook()
         {
+            if (settings.Settings.GitHub?.GitHubSecret.IsNullOrEmpty() == true)
+            {
+                logger.Error("Can't process github webhook, secret not configured.");
+                return Ok();
+            }
+
             if (Request.Headers.TryGetValue("X-Hub-Signature", out var sig))
             {
                 if (!Request.Headers.TryGetValue("X-GitHub-Event", out var eventType))
@@ -47,13 +52,13 @@ namespace PlayniteServices.Controllers.Webhooks
                     return BadRequest("No event.");
                 }
 
-                string payloadString = null;
-                using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+                string payloadString = string.Empty;
+                using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
                 {
                     payloadString = await reader.ReadToEndAsync();
                 }
 
-                var payloadHash = GetPayloadHash(payloadString, appSettings.GitHub.GitHubSecret);
+                var payloadHash = GetPayloadHash(payloadString, settings.Settings.GitHub!.GitHubSecret!);
                 if (sig != $"sha1={payloadHash}")
                 {
                     return BadRequest("Signature check failed.");
@@ -63,6 +68,12 @@ namespace PlayniteServices.Controllers.Webhooks
                 if (eventType == WebHookEvents.Issues)
                 {
                     var payload = DataSerialization.FromJson<IssuesEvent>(payloadString);
+                    if (payload == null)
+                    {
+                        logger.Error("Unregognized github webhook Issues payload.");
+                        logger.Debug(payloadString);
+                        return Ok();
+                    }
 
                     // Only forward opened issues
                     if (payload.action != IssuesEventAction.opened)
@@ -74,6 +85,12 @@ namespace PlayniteServices.Controllers.Webhooks
                 else if (eventType == WebHookEvents.Push)
                 {
                     var payload = DataSerialization.FromJson<PushEvent>(payloadString);
+                    if (payload == null)
+                    {
+                        logger.Error("Unregognized github webhook Push payload.");
+                        logger.Debug(payloadString);
+                        return Ok();
+                    }
 
                     // Ignore localization pushes
                     if (payload.@ref?.EndsWith("l10n_devel", StringComparison.Ordinal) == true)
@@ -82,10 +99,10 @@ namespace PlayniteServices.Controllers.Webhooks
                         logger.Debug("Ignored l10n_devel github webhook.");
                     }
                     // Don't forward branch merges
-                    else if (payload.commits?.Any(a => a.message.StartsWith("Merge branch", StringComparison.OrdinalIgnoreCase)) == true)
+                    else if (payload.commits?.Any(a => a.message?.StartsWith("Merge branch", StringComparison.OrdinalIgnoreCase) == true) == true)
                     {
                         forwardEvent = false;
-                        payload.commits = payload.commits.Where(a => !a.message.StartsWith("Merge branch", StringComparison.OrdinalIgnoreCase)).ToList();
+                        payload.commits = payload.commits.Where(a => !a.message?.StartsWith("Merge branch", StringComparison.OrdinalIgnoreCase) == true).ToList();
                         if (payload.commits.HasItems())
                         {
                             logger.Debug("Forwarded commits without merge commits.");
@@ -111,11 +128,17 @@ namespace PlayniteServices.Controllers.Webhooks
 
         private async Task ForwardRequest(string payload)
         {
+            if (settings.Settings.GitHub?.DiscordWebhookUrl.IsNullOrEmpty() == true)
+            {
+                logger.Error("Can't forward github webhook to discord, dicord url not configured.");
+                return;
+            }
+
             var cnt = new StringContent(payload, Encoding.UTF8, "application/json");
             cnt.Headers.Add("X-GitHub-Delivery", Request.Headers["X-GitHub-Delivery"].FirstOrDefault());
             cnt.Headers.Add("X-GitHub-Event", Request.Headers["X-GitHub-Event"].FirstOrDefault());
-            var discordResp = await httpClient.PostAsync(
-                appSettings.GitHub.DiscordWebhookUrl,
+            var discordResp = await Program.HttpClient.PostAsync(
+                settings.Settings.GitHub!.DiscordWebhookUrl,
                 cnt);
             await discordResp.Content.ReadAsStringAsync();
         }

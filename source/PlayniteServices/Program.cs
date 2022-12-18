@@ -17,12 +17,13 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
 
 namespace PlayniteServices
 {
     public class Startup
     {
-        private IConfiguration configuration { get; }
+        private readonly IConfiguration configuration;
 
         public Startup(IConfiguration configuration)
         {
@@ -59,7 +60,7 @@ namespace PlayniteServices
             });
 
             services.Configure<AppSettings>(configuration);
-            services.AddSingleton(s => new UpdatableAppSettings(s.GetService<IOptionsMonitor<AppSettings>>()));
+            services.AddSingleton(s => new UpdatableAppSettings(s.GetService<IOptionsMonitor<AppSettings>>()!));
             services.AddSingleton<IgdbApi>();
             services.AddSingleton<PlayniteVersionFilter>();
             services.AddSingleton<ServiceKeyFilter>();
@@ -89,8 +90,9 @@ namespace PlayniteServices
     public class Program
     {
         private static readonly Playnite.SDK.ILogger logger = LogManager.GetLogger();
+        public static readonly HttpClient HttpClient = new HttpClient();
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             NLogLogger.ConfigureLogger();
             LogManager.Init(new NLogLogProvider());
@@ -105,6 +107,20 @@ namespace PlayniteServices
             startup.ConfigureServices(builder.Services);
             var app = builder.Build();
             startup.Configure(app, app.Environment);
+
+            var settings = app.Services.GetService<UpdatableAppSettings>()!;
+            if (settings.Settings.Addons?.AutoUpdate == true)
+            {
+                var addons = app.Services.GetService<Addons>()!;
+                addons.StartUpdateChecker();
+            }
+
+            if (settings.Settings.Discord?.BotEnabled == true)
+            {
+                var discord = app.Services.GetService<Discord>()!;
+                await discord.Init();
+            }
+
             app.Run();
         }
     }

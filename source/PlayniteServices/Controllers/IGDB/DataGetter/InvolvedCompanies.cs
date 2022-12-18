@@ -15,15 +15,20 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
         {
         }
 
-        public async Task<ExpandedInvolvedCompany> GetExpanded(ulong companyId)
+        public async Task<ExpandedInvolvedCompany?> GetExpanded(ulong companyId)
         {
             var involvedCompany = await igdbApi.GetItem(companyId, endpointPath, Collection);
+            if (involvedCompany == null)
+            {
+                return null;
+            }
+
             var expandedCompany = involvedCompany.ToExpanded();
             expandedCompany.company = await igdbApi.Companies.Get(involvedCompany.company);
             return expandedCompany;
         }
 
-        public async Task<List<ExpandedInvolvedCompany>> GetExpanded(List<ulong> objectIds)
+        public async Task<List<ExpandedInvolvedCompany>?> GetExpanded(List<ulong>? objectIds)
         {
             if (!objectIds.HasItems())
             {
@@ -31,6 +36,11 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
             }
 
             var involvedCompanies = await igdbApi.GetItem(objectIds, endpointPath, Collection);
+            if (!involvedCompanies.HasItems())
+            {
+                return null;
+            }
+
             var expandedCompanies = new List<ExpandedInvolvedCompany>();
             foreach (var company in involvedCompanies)
             {
@@ -41,7 +51,7 @@ namespace PlayniteServices.Controllers.IGDB.DataGetter
             var realCompanies = await igdbApi.Companies.Get(involvedCompanies.Select(a => a.company).Distinct().ToList());
             for (int i = 0; i < involvedCompanies.Count; i++)
             {
-                expandedCompanies[i].company = realCompanies.FirstOrDefault(a => a.id == involvedCompanies[i].company);
+                expandedCompanies[i].company = realCompanies?.FirstOrDefault(a => a.id == involvedCompanies[i].company);
             }
 
             return expandedCompanies;

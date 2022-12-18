@@ -22,8 +22,8 @@ namespace PlayniteServices.Controllers.Addons
 {
     public class AddonRequest
     {
-        public string AddonId { get; set; }
-        public string SearchTerm { get; set; }
+        public string? AddonId { get; set; }
+        public string? SearchTerm { get; set; }
         public AddonType? Type { get; set; }
     }
 
@@ -45,13 +45,18 @@ namespace PlayniteServices.Controllers.Addons
         [HttpGet("blacklist")]
         public ServicesResponse<string[]> GetBlackList()
         {
-            return new ServicesResponse<string[]>(settings.Settings.Addons.Blacklist);
+            return new ServicesResponse<string[]>(settings.Settings.Addons?.Blacklist ?? Array.Empty<string>());
         }
 
         [HttpGet("defaultextensions")]
         public ServicesResponse<string> GetDefaultExtensions()
         {
-            var extensionFile = Path.Combine(ServicePaths.ExecutingDirectory, settings.Settings.Addons.DefaultExtensionsFile);
+            if (settings.Settings.Addons?.DefaultExtensionsFile.IsNullOrWhiteSpace() == true)
+            {
+                return new ServicesResponse<string>(null);
+            }
+
+            var extensionFile = Path.Combine(ServicePaths.ExecutingDirectory, settings.Settings.Addons!.DefaultExtensionsFile!);
             if (IO.File.Exists(extensionFile))
             {
                 return new ServicesResponse<string>(IO.File.ReadAllText(extensionFile));
@@ -84,8 +89,8 @@ namespace PlayniteServices.Controllers.Addons
 
                     if (!request.SearchTerm.IsNullOrEmpty())
                     {
-                        if (!(addon.Name.Contains(request.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                              addon.Tags.ContainsString(request.SearchTerm, StringComparison.OrdinalIgnoreCase)))
+                        if (!(addon.Name?.Contains(request.SearchTerm, StringComparison.InvariantCultureIgnoreCase) == true ||
+                              addon.Tags?.ContainsStringPartial(request.SearchTerm, StringComparison.InvariantCultureIgnoreCase) == true))
                         {
                             continue;
                         }
@@ -109,6 +114,12 @@ namespace PlayniteServices.Controllers.Addons
         [HttpPost("githubhook")]
         public async Task<ActionResult> GithubWebhook()
         {
+            if (settings.Settings.Addons?.GitHubSecret.IsNullOrWhiteSpace() == true)
+            {
+                logger.Error("Can't process addons github webhook, secret not configured.");
+                return Ok();
+            }
+
             if (Request.Headers.TryGetValue("X-Hub-Signature", out var sig))
             {
                 if (!Request.Headers.TryGetValue("X-GitHub-Event", out var eventType))
@@ -117,13 +128,13 @@ namespace PlayniteServices.Controllers.Addons
                     return BadRequest("No event.");
                 }
 
-                string payloadString = null;
-                using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+                var payloadString = string.Empty;
+                using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
                 {
                     payloadString = await reader.ReadToEndAsync();
                 }
 
-                var payloadHash = GitHubController.GetPayloadHash(payloadString, settings.Settings.Addons.GitHubSecret);
+                var payloadHash = GitHubController.GetPayloadHash(payloadString, settings.Settings.Addons!.GitHubSecret!);
                 if (sig != $"sha1={payloadHash}")
                 {
                     logger.Error("PayloadHash signature check failed.");
@@ -133,7 +144,7 @@ namespace PlayniteServices.Controllers.Addons
                 if (eventType == WebHookEvents.Push)
                 {
                     var payload = DataSerialization.FromJson<PushEvent>(payloadString);
-                    if (payload.@ref?.EndsWith("master", StringComparison.Ordinal) == true)
+                    if (payload?.@ref?.EndsWith("master", StringComparison.Ordinal) == true)
                     {
 #pragma warning disable CS4014
                         addons.RegenerateAddonDatabase();

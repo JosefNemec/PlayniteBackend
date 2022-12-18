@@ -6,6 +6,7 @@ using PlayniteServices.Models.Discord;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -18,40 +19,39 @@ namespace PlayniteServices
     public class Discord : IDisposable
     {
         private static bool instantiated = false;
-        private readonly static ILogger logger = LogManager.GetLogger();
+        private static readonly ILogger logger = LogManager.GetLogger();
         private const string apiBaseUrl = @"https://discord.com/api/v9/";
         private readonly UpdatableAppSettings settings;
         private readonly Addons addons;
         private readonly Database db;
         private readonly HttpClient httpClient;
-        private readonly ConcurrentDictionary<string, ConcurrentQueue<HttpRequestMessage>> messageQueues = new ConcurrentDictionary<string, ConcurrentQueue<HttpRequestMessage>>();
-        private readonly ConcurrentDictionary<string, RateLimitHeaders> rateLimits = new ConcurrentDictionary<string, RateLimitHeaders>();
-
-        private string addonsFeedChannel;
+        private readonly ConcurrentDictionary<string, ConcurrentQueue<HttpRequestMessage>> messageQueues = new();
+        private readonly ConcurrentDictionary<string, RateLimitHeaders> rateLimits = new();
+        private string? addonsFeedChannel;
 
         public Discord(UpdatableAppSettings settings, Addons addons, Database db)
         {
+            if (settings.Settings.Discord == null)
+            {
+                throw new Exception("Discord settings are missing.");
+            }
+
             TestAssert.IsFalse(instantiated, $"{nameof(Discord)} already instantiated");
             instantiated = true;
             this.settings = settings;
             this.addons = addons;
             this.db = db;
-            if (!settings.Settings.Discord.BotEnabled)
-            {
-                return;
-            }
-
             httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Accept", MediaTypeNames.Application.Json);
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bot {settings.Settings.Discord.BotToken}");
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("PlayniteBot/1.0");
             httpClient.Timeout = new TimeSpan(0, 0, 20);
-            var initRes = Init().GetAwaiter().GetResult();
-            if (initRes)
-            {
-                logger.Info("Discord bot enabled.");
-                addons.InstallerManifestsUpdated += Addons_InstallerManifestsUpdated;
-            }
+        }
+
+        public void Dispose()
+        {
+            addons.InstallerManifestsUpdated -= Addons_InstallerManifestsUpdated;
+            httpClient?.Dispose();
         }
 
         public async Task<bool> Init()
@@ -61,7 +61,15 @@ namespace PlayniteServices
                 var guilds = await Get<List<Guild>>(@"users/@me/guilds");
                 var channels = await Get<List<Channel>>($"guilds/{guilds[0].id}/channels");
                 addonsFeedChannel = channels.First(a => a.name == "addons-feed").id;
+                if (addonsFeedChannel.IsNullOrWhiteSpace())
+                {
+                    logger.Error("Failed to initialize Discord bot, addons-feed channel not found.");
+                    return false;
+                }
+
+                addons.InstallerManifestsUpdated += Addons_InstallerManifestsUpdated;
                 await ProcessAddonUpdates(true);
+                logger.Info("Discord bot enabled.");
                 return true;
             }
             catch (Exception e)
@@ -71,29 +79,17 @@ namespace PlayniteServices
             }
         }
 
-        public void Dispose()
-        {
-            addons.InstallerManifestsUpdated -= Addons_InstallerManifestsUpdated;
-            httpClient?.Dispose();
-        }
-
         private static string AddonTypeToFriendlyString(AddonType type)
         {
-            switch (type)
+            return type switch
             {
-                case AddonType.GameLibrary:
-                    return "library plugin";
-                case AddonType.MetadataProvider:
-                    return "metadata plugin";
-                case AddonType.Generic:
-                    return "extension";
-                case AddonType.ThemeDesktop:
-                    return "desktop theme";
-                case AddonType.ThemeFullscreen:
-                    return "fullscreen theme";
-                default:
-                    return "uknown";
-            }
+                AddonType.GameLibrary => "library plugin",
+                AddonType.MetadataProvider => "metadata plugin",
+                AddonType.Generic => "extension",
+                AddonType.ThemeDesktop => "desktop theme",
+                AddonType.ThemeFullscreen => "fullscreen theme",
+                _ => "uknown",
+            };
         }
 
         private async Task<Message> SendNewAddonNotif(AddonManifestBase addon)
@@ -104,12 +100,12 @@ namespace PlayniteServices
                 description = addon.Description,
                 thumbnail = addon.IconUrl.IsNullOrEmpty() ? null : new EmbedImage { url = addon.IconUrl },
                 title = $"{addon.Name} {AddonTypeToFriendlyString(addon.Type)} has been released",
-                url = "https://playnite.link/addons.html#{0}".Format(Uri.EscapeDataString(addon.AddonId)),
+                url = "https://playnite.link/addons.html#{0}".Format(Uri.EscapeDataString(addon.AddonId!)),
                 image = addon.Screenshots.HasItems() ? new EmbedImage { url = addon.Screenshots[0].Image } : null,
                 color = 0x19d900
             };
 
-            return await SendMessage(addonsFeedChannel, string.Empty, new List<EmbedObject> { embed });
+            return await SendMessage(addonsFeedChannel!, string.Empty, new List<EmbedObject> { embed });
         }
 
         private async Task<Message> SendAddonUpdateNotif(AddonManifestBase addon, AddonInstallerPackage package)
@@ -129,12 +125,12 @@ namespace PlayniteServices
                 author = new EmbedAuthor { name = addon.Author },
                 description = description,
                 thumbnail = addon.IconUrl.IsNullOrEmpty() ? null : new EmbedImage { url = addon.IconUrl },
-                url = "https://playnite.link/addons.html#{0}".Format(Uri.EscapeDataString(addon.AddonId)),
+                url = "https://playnite.link/addons.html#{0}".Format(Uri.EscapeDataString(addon.AddonId!)),
                 title = addon.Name,
                 color = 0xbf0086
             };
 
-            return await SendMessage(addonsFeedChannel, string.Empty, new List<EmbedObject> { embed });
+            return await SendMessage(addonsFeedChannel!, string.Empty, new List<EmbedObject> { embed });
         }
 
         private async Task ProcessAddonUpdates(bool sendNotifications)
@@ -154,7 +150,7 @@ namespace PlayniteServices
                     continue;
                 }
 
-                Message sentMessage = null;
+                Message? sentMessage = null;
                 var lastNotif = db.DiscordAddonNotifications.AsQueryable().FirstOrDefault(a => a.AddonId == addon.AddonId);
                 if (lastNotif == null)
                 {
@@ -194,7 +190,7 @@ namespace PlayniteServices
             }
         }
 
-        private async void Addons_InstallerManifestsUpdated(object sender, EventArgs e)
+        private async void Addons_InstallerManifestsUpdated(object? sender, EventArgs e)
         {
             if (addonsFeedChannel.IsNullOrEmpty())
             {
@@ -212,7 +208,7 @@ namespace PlayniteServices
             }
         }
 
-        private async Task<Message> SendMessage(string channelId, string message, List<EmbedObject> embeds = null)
+        private async Task<Message> SendMessage(string channelId, string message, List<EmbedObject>? embeds = null)
         {
             return await PostJson<Message>($"channels/{channelId}/messages", new MessageCreate
             {
@@ -223,7 +219,7 @@ namespace PlayniteServices
 
         private async Task<T> SendRequest<T>(HttpRequestMessage message) where T : class
         {
-            var route = message.RequestUri.OriginalString.Substring(apiBaseUrl.Length);
+            var route = message.RequestUri!.OriginalString.Substring(apiBaseUrl.Length);
             route = route.Substring(0, route.IndexOf('/', StringComparison.Ordinal));
 
             var messageQueue = messageQueues.GetOrAdd(route, new ConcurrentQueue<HttpRequestMessage>());
@@ -237,19 +233,19 @@ namespace PlayniteServices
             if (routeLimits.Remaining <= 0)
             {
                 logger.Warn($"Exhausted Discord rate limit on '{route}', waiting {routeLimits.ResetAfter}");
-                await Task.Delay(routeLimits.ResetAfter);
+                await Task.Delay(routeLimits.ResetAfter ?? TimeSpan.FromSeconds(2));
             }
 
             var resp = await ClientSendMessage(message);
             var cnt = await resp.Content.ReadAsStringAsync();
 
             var limitHeaders = new RateLimitHeaders(resp.Headers);
-            rateLimits.AddOrUpdate(route, limitHeaders, (_, __) => limitHeaders);
+            rateLimits.AddOrUpdate(route, limitHeaders, (_, _) => limitHeaders);
             messageQueue.TryDequeue(out var _);
 
             if (resp.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                var limitResponse = DataSerialization.FromJson<RateLimitResponse>(cnt);
+                var limitResponse = DataSerialization.FromJson<RateLimitResponse>(cnt)!;
                 logger.Warn($"Discord rate limit on '{route}' route, {limitResponse.global}, {limitResponse.retry_after}");
                 await Task.Delay(TimeSpan.FromSeconds(limitResponse.retry_after + 0.1));
                 return await SendRequest<T>(message);
@@ -257,12 +253,12 @@ namespace PlayniteServices
             else if (resp.StatusCode != HttpStatusCode.OK)
             {
                 logger.Error(cnt);
-                var error = DataSerialization.FromJson<Error>(cnt);
+                var error = DataSerialization.FromJson<Error>(cnt)!;
                 throw new Exception($"Discord: {error.code}, {error.message}");
             }
             else
             {
-                return DataSerialization.FromJson<T>(cnt);
+                return DataSerialization.FromJson<T>(cnt)!;
             }
         }
 

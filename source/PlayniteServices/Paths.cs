@@ -12,7 +12,7 @@ namespace PlayniteServices
 
         static ServicePaths()
         {
-            ExecutingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            ExecutingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;
         }
     }
 }

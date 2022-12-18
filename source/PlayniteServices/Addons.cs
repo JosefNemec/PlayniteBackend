@@ -22,32 +22,47 @@ namespace PlayniteServices
         private readonly UpdatableAppSettings settings;
         private readonly Database db;
         private readonly HttpClient httpClient;
-        private readonly System.Threading.Timer addonUpdatesTimer;
+        private System.Threading.Timer? addonUpdatesTimer;
 
-        public event EventHandler InstallerManifestsUpdated;
+        public event EventHandler? InstallerManifestsUpdated;
 
         public Addons(UpdatableAppSettings settings, Database db)
         {
+            if (settings.Settings.Addons == null)
+            {
+                throw new Exception("Addon settings are missing.");
+            }
+
             TestAssert.IsFalse(instantiated, $"{nameof(Addons)} already instantiated");
             instantiated = true;
+            if (settings.Settings.Addons != null)
+            {
+                throw new Exception("Missing addon settings.");
+            }
+
             this.settings = settings;
             this.db = db;
             httpClient = new HttpClient { Timeout = new TimeSpan(0, 0, 20) };
-
-            if (settings.Settings.Addons.AutoUpdate)
-            {
-                addonUpdatesTimer = new System.Threading.Timer(
-                    async (_) => await UpdateAddonInstallers(),
-                    null,
-                    new TimeSpan(0),
-                    new TimeSpan(0, 15, 0));
-            }
         }
 
         public void Dispose()
         {
             addonUpdatesTimer?.Dispose();
             httpClient.Dispose();
+        }
+
+        public void StartUpdateChecker()
+        {
+            if (addonUpdatesTimer != null)
+            {
+                throw new Exception("Addon update checker already started.");
+            }
+
+            addonUpdatesTimer = new System.Threading.Timer(
+                async (_) => await UpdateAddonInstallers(),
+                null,
+                new TimeSpan(0),
+                new TimeSpan(0, 15, 0));
         }
 
         private async Task UpdateAddonInstallers()
@@ -65,7 +80,11 @@ namespace PlayniteServices
                         var existing = db.AddonInstallers.AsQueryable().FirstOrDefault(a => a.AddonId == addon.AddonId);
                         if (existing != null)
                         {
-                            if (existing.Packages.Max(a => a.Version) != newInstaller.Packages.Max(a => a.Version))
+                            if (!existing.Packages.HasItems())
+                            {
+                                newData = true;
+                            }
+                            else if (existing.Packages.Max(a => a.Version) != newInstaller.Packages.Max(a => a.Version))
                             {
                                 newData = true;
                             }
@@ -94,7 +113,7 @@ namespace PlayniteServices
 
             if (anyUpdates)
             {
-                InstallerManifestsUpdated?.Invoke(this, null);
+                InstallerManifestsUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -104,7 +123,7 @@ namespace PlayniteServices
             return db.Addons.Find(filter).FirstOrDefault();
         }
 
-        public async Task<AddonInstallerManifestBase> GetInstallerManifest(AddonManifestBase addon)
+        public async Task<AddonInstallerManifestBase?> GetInstallerManifest(AddonManifestBase addon)
         {
             try
             {
@@ -122,6 +141,12 @@ namespace PlayniteServices
         {
             return Task.Factory.StartNew(() =>
             {
+                if (settings.Settings.Addons!.AddonRepository.IsNullOrEmpty())
+                {
+                    logger.Error("Addons repository path is not specified.");
+                    return;
+                }
+
                 logger.Info("Regenerating addons database.");
                 lock (generatorLock)
                 {
@@ -130,8 +155,8 @@ namespace PlayniteServices
                         var col = db.Addons;
                         col.DeleteMany(new BsonDocument());
 
-                        var addonDirectory = settings.Settings.Addons.AddonRepository;
-                        if (settings.Settings.Addons.AddonRepository.IsHttpUrl())
+                        var addonDirectory = settings.Settings.Addons!.AddonRepository;
+                        if (settings.Settings.Addons!.AddonRepository.IsHttpUrl())
                         {
                             addonDirectory = Path.Combine(ServicePaths.ExecutingDirectory, "PlayniteAddonDatabase");
                             FileSystem.DeleteDirectory(addonDirectory, true);
@@ -145,7 +170,9 @@ namespace PlayniteServices
                             };
 
                             using (var proc = Process.Start(info))
-                                proc.WaitForExit();
+                            {
+                                proc!.WaitForExit();
+                            }
                         }
 
                         foreach (var manifestFile in Directory.GetFiles(addonDirectory, "*.yaml", SearchOption.AllDirectories))

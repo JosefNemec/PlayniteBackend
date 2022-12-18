@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Playnite.SDK;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,12 +11,18 @@ namespace PlayniteServices
 {
     public class Patreon : IDisposable
     {
+        private static readonly ILogger logger = LogManager.GetLogger();
         private static bool instantiated = false;
         private readonly UpdatableAppSettings settings;
         private readonly HttpClient httpClient;
 
         public Patreon(UpdatableAppSettings settings)
         {
+            if (settings.Settings.Patreon == null)
+            {
+                throw new Exception("Patreon settings are missing.");
+            }
+
             TestAssert.IsFalse(instantiated, $"{nameof(Patreon)} already instantiated");
             instantiated = true;
             this.settings = settings;
@@ -47,17 +54,17 @@ namespace PlayniteServices
         {
             var request = new HttpRequestMessage
             {
-                RequestUri = url.StartsWith("https", StringComparison.OrdinalIgnoreCase) ? new Uri(url) : new Uri(settings.Settings.Patreon.ApiEndpoint + url),
+                RequestUri = url.StartsWith("https", StringComparison.OrdinalIgnoreCase) ? new Uri(url) : new Uri(settings.Settings.Patreon!.ApiEndpoint + url),
                 Method = HttpMethod.Get
             };
 
-            request.Headers.Add("Authorization", $"Bearer {settings.Settings.Patreon.AccessToken}");
+            request.Headers.Add("Authorization", $"Bearer {settings.Settings.Patreon!.AccessToken}");
             return request;
         }
 
         private async Task UpdateTokens()
         {
-            var refreshToken = settings.Settings.Patreon.RefreshToken;
+            var refreshToken = settings.Settings.Patreon!.RefreshToken;
             var clientId = settings.Settings.Patreon.Id;
             var clientSecret = settings.Settings.Patreon.Secret;
             var request = new HttpRequestMessage
@@ -71,6 +78,12 @@ namespace PlayniteServices
             var response = await httpClient.SendAsync(request);
             var stringData = await response.Content.ReadAsStringAsync();
             var data = DataSerialization.FromJson<Dictionary<string, string>>(stringData);
+            if (data == null)
+            {
+                logger.Debug(stringData);
+                throw new Exception("Failed to update Patreon tokens.");
+            }
+
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 SaveTokens(data["access_token"], data["refresh_token"]);

@@ -7,6 +7,8 @@
     <OutputType>Exe</OutputType>
     <PackageId>PlayniteServices</PackageId>
     <AssetTargetFallback>$(AssetTargetFallback);dotnet5.6;portable-net45+win8</AssetTargetFallback>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>CS8600;CS8601;CS8602;CS8603;CS8604;CS8613;CS8614;CS8619;CS8620;CS8622;CS8625;CS8629;CS8633,CS8767,CS8618,CS8765</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -18,13 +20,18 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\BuiltInExtensions.cs" Link="Shared\SDK\BuiltInExtensions.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Collections\ObservableObject.cs" Link="Shared\SDK\ObservableObject.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Extensions\ListExtensions.cs" Link="Shared\SDK\ListExtensions.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\ILogger.cs" Link="Shared\SDK\ILogger.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\LogManager.cs" Link="Shared\SDK\LogManager.cs" />
+    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Models\ReleaseDate.cs" Link="Shared\SDK\ReleaseDate.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\LongExtensions.cs" Link="Shared\LongExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\ObjectExtensions.cs" Link="Shared\ObjectExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\StringExtensions.cs" Link="Shared\StringExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\FileSystem.cs" Link="Shared\FileSystem.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Paths.cs" Link="Shared\Paths.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Roman.cs" Link="Shared\Roman.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Database\OldModels\Ver2.cs" Link="Models\Playnite\Ver2.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\DiagnosticPackageInfo.cs" Link="Shared\DiagnosticPackageInfo.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Manifests\AddonManifestBase.cs" Link="Models\Playnite\AddonManifestBase.cs" />
     <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Fileapi.cs" Link="Shared\Native\Fileapi.cs" />
@@ -55,9 +62,6 @@
 
   <ItemGroup>
     <Folder Include="Shared\Native\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\PlayniteRepo\source\PlayniteSDK\Playnite.SDK.csproj" />
+    <Folder Include="Shared\SDK\" />
   </ItemGroup>
 </Project>

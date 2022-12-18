@@ -12,7 +12,7 @@ namespace PlayniteServices
         {
         }
 
-        public AssertException(string? message) : base(message)
+        public AssertException(string message) : base(message)
         {
         }
     }
@@ -27,7 +27,7 @@ namespace PlayniteServices
             }
         }
 
-        public static void IsTrue(bool condition, string? message)
+        public static void IsTrue(bool condition, string message)
         {
             if (!condition)
             {
@@ -43,7 +43,7 @@ namespace PlayniteServices
             }
         }
 
-        public static void IsFalse(bool condition, string? message)
+        public static void IsFalse(bool condition, string message)
         {
             if (condition)
             {

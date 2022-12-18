@@ -19,12 +19,12 @@ namespace PlayniteServices.Filters
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (appSettings.Settings.RestrictPlayniteVersion && appSettings.Settings.RestrictedPlayniteVersions?.Any() == true)
+            if (appSettings.Settings.RestrictPlayniteVersion && appSettings.Settings.RestrictedPlayniteVersions.HasItems())
             {
                 var allowRequest = false;
-                if (context.HttpContext.Request.Headers.TryGetValue("Playnite-Version", out var headerVer))
+                if (context.HttpContext.Request.Headers.TryGetValue("Playnite-Version", out var headerVer) && !headerVer.ToString().IsNullOrWhiteSpace())
                 {
-                    if (appSettings.Settings.RestrictedPlayniteVersions.Contains(headerVer))
+                    if (appSettings.Settings.RestrictedPlayniteVersions.Contains(headerVer!))
                     {
                         allowRequest = true;
                     }

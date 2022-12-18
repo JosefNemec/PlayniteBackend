@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Playnite;
 using Playnite.Common;
+using Playnite.SDK;
 using PlayniteServices.Filters;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,17 @@ namespace PlayniteServices.Controllers.PlayniteTools
     [Route("playnite/diag")]
     public class DiagnosticsController : Controller
     {
+        private static readonly ILogger logger = LogManager.GetLogger();
         private readonly string diagsDir;
         private readonly string diagsCrashDir;
 
         public DiagnosticsController(UpdatableAppSettings settings)
         {
+            if (settings.Settings.DiagsDirectory.IsNullOrEmpty())
+            {
+                throw new Exception("Diags dir is not configured.");
+            }
+
             diagsDir = settings.Settings.DiagsDirectory;
             if (!Path.IsPathRooted(diagsDir))
             {
@@ -132,41 +139,20 @@ namespace PlayniteServices.Controllers.PlayniteTools
                     using (var infoStream = diagInfo.Open())
                     {
                         var info = DataSerialization.FromJson<DiagnosticPackageInfo>(infoStream);
+                        if (info == null)
+                        {
+                            logger.Warn("Received diag. package without package info file, ignoring");
+                            return new ServicesResponse<Guid>(Guid.Empty);
+                        }
+
                         version = info.PlayniteVersion;
                         isCrash = info.IsCrashPackage;
                     }
                 }
                 else
                 {
-                    var log = zip.GetEntry("playnite.log");
-                    if (log != null)
-                    {
-                        using (var logStream = log.Open())
-                        {
-                            using (var tr = new StreamReader(logStream))
-                            {
-                                while (!tr.EndOfStream)
-                                {
-                                    var line = tr.ReadLine();
-                                    if (line.Contains("Unhandled exception", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        isCrash = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    var playniteInfo = zip.GetEntry("playniteInfo.txt");
-                    if (playniteInfo != null)
-                    {
-                        using (var infoStream = playniteInfo.Open())
-                        {
-                            var info = DataSerialization.FromJson<Dictionary<string, object>>(infoStream);
-                            version = info["Version"].ToString();
-                        }
-                    }
+                    logger.Warn("Received diag. package without package info file, ignoring");
+                    return new ServicesResponse<Guid>(Guid.Empty);
                 }
             }
 

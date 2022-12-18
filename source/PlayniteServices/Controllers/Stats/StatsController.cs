@@ -33,23 +33,25 @@ namespace PlayniteServices.Controllers.Stats
                 var activeUser = (now - user.LastLaunch).Days <= 7;
                 if (activeUser)
                 {
+                    var playniteVer = user.PlayniteVersion ?? "uknown";
                     stats.LastWeekUserCount++;
-                    if (stats.UsersByVersion.TryGetValue(user.PlayniteVersion, out var pC))
+                    if (stats.UsersByVersion.TryGetValue(playniteVer, out var pC))
                     {
-                        stats.UsersByVersion[user.PlayniteVersion] = pC + 1;
+                        stats.UsersByVersion[playniteVer] = pC + 1;
                     }
                     else
                     {
-                        stats.UsersByVersion.Add(user.PlayniteVersion, 1);
+                        stats.UsersByVersion.Add(playniteVer, 1);
                     }
 
-                    if (stats.UsersByWinVersion.TryGetValue(user.WinVersion, out var wC))
+                    var winVer = user.WinVersion ?? "uknown";
+                    if (stats.UsersByWinVersion.TryGetValue(winVer, out var wC))
                     {
-                        stats.UsersByWinVersion[user.WinVersion] = wC + 1;
+                        stats.UsersByWinVersion[winVer] = wC + 1;
                     }
                     else
                     {
-                        stats.UsersByWinVersion.Add(user.WinVersion, 1);
+                        stats.UsersByWinVersion.Add(winVer, 1);
                     }
 
                     if (user.Is64Bit)
