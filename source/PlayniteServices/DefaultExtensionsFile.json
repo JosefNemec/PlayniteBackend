@@ -1,0 +1,19 @@
+{
+    "Libraries" :
+    {
+        "Amazon": "AmazonLibrary_Builtin",
+        "Battle.net": "BattlenetLibrary_Builtin",
+        "Epic Games Store": "EpicGamesLibrary_Builtin",
+        "GOG": "GogLibrary_Builtin",
+        "Humble": "HumbleLibrary_Builtin",
+        "itch.io": "ItchioLibrary_Builtin",
+        "EA": "OriginLibrary_Builtin",
+        "Steam": "SteamLibrary_Builtin",
+        "Ubisoft Connect": "UplayLibrary_Builtin",
+        "Xbox GamePass / MS Store": "XboxLibrary_Builtin"
+    },
+    "Generic":
+    {
+        "IGDB": "IGDBMetadata_Builtin"
+    }
+}
