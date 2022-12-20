@@ -35,11 +35,6 @@ namespace PlayniteServices
 
             TestAssert.IsFalse(instantiated, $"{nameof(Addons)} already instantiated");
             instantiated = true;
-            if (settings.Settings.Addons != null)
-            {
-                throw new Exception("Missing addon settings.");
-            }
-
             this.settings = settings;
             this.db = db;
             httpClient = new HttpClient { Timeout = new TimeSpan(0, 0, 20) };
