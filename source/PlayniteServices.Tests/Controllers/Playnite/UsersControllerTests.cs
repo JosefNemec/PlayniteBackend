@@ -7,14 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace PlayniteServicesTests.Controllers.Playnite
+namespace PlayniteServices.Tests.Controllers.Playnite
 {
     [Collection("DefaultCollection")]
     public class UsersControllerTests
     {
         private readonly HttpClient client;
 
-        public UsersControllerTests(TestFixture<PlayniteServices.Startup> fixture)
+        public UsersControllerTests(TestFixture<Startup> fixture)
         {
             client = fixture.Client;
         }

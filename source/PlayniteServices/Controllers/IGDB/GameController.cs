@@ -153,10 +153,10 @@ namespace PlayniteServices.Controllers.IGDB
 
             // fallback properties for 4.x
             parsedGame.cover = parsedGame.cover_v3?.url;
-            parsedGame.publishers = parsedGame.involved_companies?.Where(a => a.publisher == true).Select(a => a.company!.name!).ToList();
-            parsedGame.developers = parsedGame.involved_companies?.Where(a => a.developer == true).Select(a => a.company!.name!).ToList();
-            parsedGame.genres = parsedGame.genres_v3?.Where(a => a != null).Select(a => a.name!).ToList();
-            parsedGame.game_modes = parsedGame.game_modes_v3?.Where(a => a != null).Select(a => a.name!).ToList();
+            parsedGame.publishers = parsedGame.involved_companies?.Where(a => a.publisher).Select(a => a.company!.name!).ToList();
+            parsedGame.developers = parsedGame.involved_companies?.Where(a => a.developer).Select(a => a.company!.name!).ToList();
+            parsedGame.genres = parsedGame.genres_v3?.Select(a => a.name!).ToList();
+            parsedGame.game_modes = parsedGame.game_modes_v3?.Select(a => a.name!).ToList();
             return parsedGame;
         }
     }

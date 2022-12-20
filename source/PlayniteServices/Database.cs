@@ -27,8 +27,7 @@ namespace PlayniteServices
         }
 
         private static bool instantiated = false;
-        private readonly UpdatableAppSettings settings;
-        private readonly MongoClient client;
+        public readonly MongoClient MongoClient;
         public static readonly ReplaceOptions ItemUpsertOptions = new ReplaceOptions { IsUpsert = true };
         public readonly IMongoDatabase MongoDb;
 
@@ -46,7 +45,6 @@ namespace PlayniteServices
         {
             TestAssert.IsFalse(instantiated, $"{nameof(Patreon)} already instantiated");
             instantiated = true;
-            this.settings = settings;
 
             ConventionRegistry.Register(
                 "Custom Conventions",
@@ -119,8 +117,8 @@ namespace PlayniteServices
                 cm.MapIdMember(c => c.AddonId);
             });
 
-            client = new MongoClient(settings.Settings.DatabaseConString);
-            MongoDb = client.GetDatabase("playnitebackend");
+            MongoClient = new MongoClient(settings.Settings.DatabaseConString);
+            MongoDb = MongoClient.GetDatabase("playnitebackend");
             Users = MongoDb.GetCollection<Models.User>("Users");
             SteamIgdbMatches = MongoDb.GetCollection<SteamIdGame>("SteamIgdbMatches");
             IGBDGameIdMatches = MongoDb.GetCollection<GameIdMatch>("IGBDGameIdMatches");

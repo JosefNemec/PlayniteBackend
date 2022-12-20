@@ -24,10 +24,8 @@ namespace PlayniteServices
 
         private static bool instantiated = false;
         private static readonly ILogger logger = LogManager.GetLogger();
-        private static readonly char[] arrayTrim = new char[] { '[', ']' };
         private readonly UpdatableAppSettings settings;
         public readonly Database Database;
-        private readonly DelegatingHandler requestLimiterHandler;
         private readonly System.Threading.Timer? webhookTimer;
 
         public Games Games;
@@ -58,7 +56,7 @@ namespace PlayniteServices
             instantiated = true;
             this.settings = settings;
             this.Database = db;
-            requestLimiterHandler = TimeLimiter
+            var requestLimiterHandler = TimeLimiter
                 .GetFromMaxCountByInterval(4, TimeSpan.FromSeconds(1))
                 .AsDelegatingHandler();
             HttpClient = new HttpClient(requestLimiterHandler);
@@ -83,7 +81,7 @@ namespace PlayniteServices
             if (settings.Settings.IGDB.RegisterWebhooks && !settings.Settings.IGDB.WebHookSecret.IsNullOrEmpty())
             {
                 webhookTimer = new System.Threading.Timer(
-                    (_) => RegiserWebhooks(),
+                    RegiserWebhooksCallback,
                     null,
                     new TimeSpan(0),
                     new TimeSpan(1, 0, 0));
@@ -95,51 +93,48 @@ namespace PlayniteServices
             webhookTimer?.Dispose();
         }
 
-        private Task RegiserWebhooks()
+        private async void RegiserWebhooksCallback(object? _)
         {
-            return Task.Run(async () =>
+            try
             {
-                try
+                var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
+                var webhooks = DataSerialization.FromJson<List<Webhook>>(webhooksString);
+                if (!webhooks.HasItems() || !webhooks[0].active)
                 {
-                    var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
-                    var webhooks = DataSerialization.FromJson<List<Webhook>>(webhooksString);
-                    if (!webhooks.HasItems() || !webhooks[0].active)
-                    {
-                        logger.Error("IGDB webhook is NOT active.");
-                        logger.Error(webhooksString);
+                    logger.Error("IGDB webhook is NOT active.");
+                    logger.Error(webhooksString);
 
-                        var registeredStr = await SendStringRequest(
-                            "games/webhooks",
-                            new FormUrlEncodedContent(new Dictionary<string, string>
-                            {
-                                { "method", "update" },
-                                { "secret", settings.Settings.IGDB!.WebHookSecret! },
-                                { "url", "http://api.playnite.link/api/igdb/game" }
-                            }),
-                            HttpMethod.Post,
-                            false);
-                        var registeredHooks = DataSerialization.FromJson<List<Webhook>>(registeredStr);
-                        if (!registeredHooks.HasItems() || !registeredHooks[0].active)
+                    var registeredStr = await SendStringRequest(
+                        "games/webhooks",
+                        new FormUrlEncodedContent(new Dictionary<string, string>
                         {
-                            logger.Error("Failed to register IGDB webhook.");
-                            logger.Error(registeredStr);
-                        }
-                        else
-                        {
-                            logger.Info("Registered new IGDB webhook.");
-                            logger.Info(registeredStr);
-                        }
+                            { "method", "update" },
+                            { "secret", settings.Settings.IGDB!.WebHookSecret! },
+                            { "url", "http://api.playnite.link/api/igdb/game" }
+                        }),
+                        HttpMethod.Post,
+                        false);
+                    var registeredHooks = DataSerialization.FromJson<List<Webhook>>(registeredStr);
+                    if (!registeredHooks.HasItems() || !registeredHooks[0].active)
+                    {
+                        logger.Error("Failed to register IGDB webhook.");
+                        logger.Error(registeredStr);
                     }
                     else
                     {
-                        logger.Info("IGDB webhook is active.");
+                        logger.Info("Registered new IGDB webhook.");
+                        logger.Info(registeredStr);
                     }
                 }
-                catch (Exception e)
+                else
                 {
-                    logger.Error(e, "Failed to register IGDB webhooks.");
+                    logger.Info("IGDB webhook is active.");
                 }
-            });
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to register IGDB webhooks.");
+            }
         }
 
         private static async Task SaveTokens(string accessToken)
@@ -206,7 +201,7 @@ namespace PlayniteServices
             return await SendStringRequest(url, new StringContent(query), HttpMethod.Post, reTry);
         }
 
-        public async Task<string> SendStringRequest(string url, HttpContent? content, HttpMethod method, bool reTry = true)
+        public async Task<string> SendStringRequest(string url, HttpContent? content, HttpMethod method, bool reTry)
         {
             var sharedRequest = CreateRequest(url, content, method);
             var response = await HttpClient.SendAsync(sharedRequest);

@@ -11,7 +11,7 @@ namespace PlayniteServices.Filters
 {
     public class ApiExceptionFilter : ExceptionFilterAttribute
     {
-        private static ILogger logger = LogManager.GetLogger();
+        private static readonly ILogger logger = LogManager.GetLogger();
 
         public override async Task OnExceptionAsync(ExceptionContext context)
         {

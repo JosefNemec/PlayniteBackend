@@ -10,7 +10,7 @@ namespace PlayniteServices.Filters
 {
     public class PlayniteVersionFilter : ActionFilterAttribute
     {
-        private UpdatableAppSettings appSettings;
+        private readonly UpdatableAppSettings appSettings;
 
         public PlayniteVersionFilter(UpdatableAppSettings settings)
         {

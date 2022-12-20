@@ -19,7 +19,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody]Models.User user)
+        public IActionResult Create([FromBody]Models.User? user)
         {
             if (user == null)
             {

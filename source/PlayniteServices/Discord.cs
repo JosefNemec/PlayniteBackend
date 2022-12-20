@@ -51,7 +51,7 @@ namespace PlayniteServices
         public void Dispose()
         {
             addons.InstallerManifestsUpdated -= Addons_InstallerManifestsUpdated;
-            httpClient?.Dispose();
+            httpClient.Dispose();
         }
 
         public async Task<bool> Init()

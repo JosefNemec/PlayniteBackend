@@ -12,7 +12,7 @@ namespace PlayniteServices
 {
     public class NLogLogger : Playnite.SDK.ILogger
     {
-        private NLog.Logger logger;
+        private readonly NLog.Logger logger;
 
         public NLogLogger(string loggerName)
         {

@@ -42,11 +42,7 @@ namespace PlayniteServices.Controllers.IGDB
             var altSearch = await GetSearchResults(gameName, settings.Settings.IGDB?.AlternativeSearch ?? false);
             foreach (var alt in altSearch)
             {
-                if (search.Any(a => a.id == alt.id))
-                {
-                    continue;
-                }
-                else
+                if (!search.Any(a => a.id == alt.id))
                 {
                     search.Add(alt);
                 }

@@ -14,12 +14,10 @@ namespace PlayniteServices.Controllers.IGDB
     [Route("igdb/game_parsed_v2")]
     public class ExpandedGameController : Controller
     {
-        private UpdatableAppSettings settings;
         private IgdbApi igdbApi;
 
-        public ExpandedGameController(UpdatableAppSettings settings, IgdbApi igdbApi)
+        public ExpandedGameController(IgdbApi igdbApi)
         {
-            this.settings = settings;
             this.igdbApi = igdbApi;
         }
 

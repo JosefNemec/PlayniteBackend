@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace PlayniteServicesTests.Controllers.Patreon
+namespace PlayniteServices.Tests.Controllers.Patreon
 {
     [Collection("DefaultCollection")]
     public class PatronsControllerTests

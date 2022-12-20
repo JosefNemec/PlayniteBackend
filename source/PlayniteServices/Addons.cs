@@ -59,13 +59,13 @@ namespace PlayniteServices
             }
 
             addonUpdatesTimer = new System.Threading.Timer(
-                async (_) => await UpdateAddonInstallers(),
+                UpdateAddonInstallersCallback,
                 null,
                 new TimeSpan(0),
                 new TimeSpan(0, 15, 0));
         }
 
-        private async Task UpdateAddonInstallers()
+        private async void UpdateAddonInstallersCallback(object? _)
         {
             logger.Info("Updating addon installers cache.");
             var anyUpdates = false;
@@ -115,12 +115,6 @@ namespace PlayniteServices
             {
                 InstallerManifestsUpdated?.Invoke(this, EventArgs.Empty);
             }
-        }
-
-        public AddonManifestBase GetAddon(string addonId)
-        {
-            var filter = Builders<AddonManifestBase>.Filter.Eq(u => u.AddonId, addonId);
-            return db.Addons.Find(filter).FirstOrDefault();
         }
 
         public async Task<AddonInstallerManifestBase?> GetInstallerManifest(AddonManifestBase addon)

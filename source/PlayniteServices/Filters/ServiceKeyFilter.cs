@@ -10,7 +10,7 @@ namespace PlayniteServices.Filters
 {
     public class ServiceKeyFilter : ActionFilterAttribute
     {
-        private UpdatableAppSettings appSettings;
+        private readonly UpdatableAppSettings appSettings;
 
         public ServiceKeyFilter(UpdatableAppSettings settings)
         {

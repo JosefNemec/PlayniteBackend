@@ -8,3 +8,6 @@ tab_width = 4
 
 dotnet_diagnostic.CA1310.severity = error
 dotnet_diagnostic.CA1307.severity = error
+
+# Naming Styles
+dotnet_diagnostic.IDE1006.severity = none

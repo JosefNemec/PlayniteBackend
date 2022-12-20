@@ -13,10 +13,10 @@ using Microsoft.AspNetCore.Mvc.ViewComponents;
 using PlayniteServices;
 using Playnite.SDK;
 
-namespace PlayniteServicesTests
+namespace PlayniteServices.Tests
 {
     [CollectionDefinition("DefaultCollection")]
-    public class DefaultTestCollection : ICollectionFixture<TestFixture<PlayniteServices.Startup>>
+    public class DefaultTestCollection : ICollectionFixture<TestFixture<Startup>>
     {
     }
 

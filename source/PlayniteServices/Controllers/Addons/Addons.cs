@@ -71,11 +71,11 @@ namespace PlayniteServices.Controllers.Addons
         public ServicesResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
         {
             var col = db.Addons;
-            List<AddonManifestBase> addons = new List<AddonManifestBase>();
+            var result = new List<AddonManifestBase>();
             if (!request.AddonId.IsNullOrEmpty())
             {
                 var filter = Builders<AddonManifestBase>.Filter.Eq(u => u.AddonId, request.AddonId);
-                addons = col.Find(filter).ToList();
+                result = col.Find(filter).ToList();
             }
             else
             {
@@ -96,11 +96,11 @@ namespace PlayniteServices.Controllers.Addons
                         }
                     }
 
-                    addons.Add(addon);
+                    result.Add(addon);
                 }
             }
 
-            return new ServicesResponse<List<AddonManifestBase>>(addons);
+            return new ServicesResponse<List<AddonManifestBase>>(result);
         }
 
         [ServiceFilter(typeof(ServiceKeyFilter))]

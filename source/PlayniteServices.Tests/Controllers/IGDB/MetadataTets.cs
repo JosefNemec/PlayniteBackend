@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 using Xunit;
 using SdkModels = Playnite.SDK.Models;
 
-namespace PlayniteServicesTests.Controllers.IGDB
+namespace PlayniteServices.Tests.Controllers.IGDB
 {
     [Collection("DefaultCollection")]
     public class MetadataTets

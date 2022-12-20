@@ -25,23 +25,32 @@ namespace PlayniteServices.Controllers.IGDB
         private readonly UpdatableAppSettings settings;
         private readonly IgdbApi igdbApi;
         private static readonly char[] bracketsMatchList = new char[] { '[', ']', '(', ')', '{', '}' };
-        private static readonly char[] whereQueryBlacklist = new char[2] { ':', '-' };
+        private static readonly char[] whereQueryBlacklist = new char[] { ':', '-' };
         private readonly GamesController gamesController;
         private readonly ExpandedGameController expandedController;
         private readonly GameParsedController parsedController;
 
         [GeneratedRegex(",\\s*(the|a|an|der|das|die)$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-        private static partial Regex noIntroArticleRegEx();
+        private static partial Regex noIntroArticleRegex();
 
         [GeneratedRegex("\\s*(:|-)\\s*", RegexOptions.Compiled)]
         private static partial Regex separatorRegex();
+
+        [GeneratedRegex("\\s+(RHCP|RU)$", RegexOptions.IgnoreCase)]
+        private static partial Regex customRegionRegex();
+
+        [GeneratedRegex("\\s+and\\s+", RegexOptions.IgnoreCase)]
+        private static partial Regex andMatchRegex();
+
+        [GeneratedRegex("\\d+")]
+        private static partial Regex digitsRegex();
 
         public MetadataController(UpdatableAppSettings settings, IgdbApi igdbApi)
         {
             this.settings = settings;
             this.igdbApi = igdbApi;
             gamesController = new GamesController(settings, igdbApi);
-            expandedController = new ExpandedGameController(settings, igdbApi);
+            expandedController = new ExpandedGameController(igdbApi);
             parsedController = new GameParsedController(igdbApi);
         }
 
@@ -124,7 +133,7 @@ namespace PlayniteServices.Controllers.IGDB
             else
             {
                 igdbId = await TryMatchGame(game, false);
-                var useAlt = settings.Settings.IGDB?.AlternativeSearch ?? false && !game.Name.ContainsAny(whereQueryBlacklist);
+                var useAlt = (settings.Settings.IGDB?.AlternativeSearch ?? false) && !game.Name.ContainsAny(whereQueryBlacklist);
                 if (useAlt && igdbId == 0)
                 {
                     igdbId = await TryMatchGame(game, true);
@@ -169,10 +178,10 @@ namespace PlayniteServices.Controllers.IGDB
 
         private static string FixNointroNaming(string name)
         {
-            var match = noIntroArticleRegEx().Match(name);
+            var match = noIntroArticleRegex().Match(name);
             if (match.Success)
             {
-                return match.Groups[1].Value.Trim() + " " + noIntroArticleRegEx().Replace(name, "");
+                return match.Groups[1].Value.Trim() + " " + noIntroArticleRegex().Replace(name, "");
             }
 
             return name;
@@ -196,8 +205,7 @@ namespace PlayniteServices.Controllers.IGDB
             copyGame.Name = FixNointroNaming(copyGame.Name);
             copyGame.Name = copyGame.Name.Replace(@"\", string.Empty, StringComparison.Ordinal);
             var name = copyGame.Name;
-            name = Regex.Replace(name, @"\s+RHCP$", "", RegexOptions.IgnoreCase);
-            name = Regex.Replace(name, @"\s+RU$", "", RegexOptions.IgnoreCase);
+            name = customRegionRegex().Replace(name, "");
 
             var results = await gamesController.GetSearchResults(name, alternativeSearch);
             results.ForEach(a => a.name = StringExtensions.NormalizeGameName(a.name!));
@@ -211,7 +219,7 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             // Try replacing roman numerals: 3 => III
-            testName = Regex.Replace(name, @"\d+", ReplaceNumsForRomans);
+            testName = digitsRegex().Replace(name, ReplaceNumsForRomans);
             matchedGame = MatchFun(game, testName, results);
             if (matchedGame > 0)
             {
@@ -227,7 +235,7 @@ namespace PlayniteServices.Controllers.IGDB
             }
 
             // Try chaning & / and
-            testName = Regex.Replace(name, @"\s+and\s+", " & ", RegexOptions.IgnoreCase);
+            testName = andMatchRegex().Replace(name, " & ");
             matchedGame = MatchFun(game, testName, results);
             if (matchedGame > 0)
             {

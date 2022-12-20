@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 using PlayniteServices;
 using PlayniteServices.Models.Steam;
 
-namespace PlayniteServicesTests.Controllers.Steam
+namespace PlayniteServices.Tests.Controllers.Steam
 {
     [Collection("DefaultCollection")]
     public class LibraryControllerTests
     {
         private readonly HttpClient client;
 
-        public LibraryControllerTests(TestFixture<PlayniteServices.Startup> fixture)
+        public LibraryControllerTests(TestFixture<Startup> fixture)
         {
             client = fixture.Client;
         }
