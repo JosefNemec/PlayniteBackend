@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Http;
 using Playnite.Common;
 using Playnite.SDK;
 using Playnite.SDK.Models;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.IO.Pipelines;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using YamlDotNet.Serialization;
@@ -13,15 +15,46 @@ public class ReleaseDateConverter : JsonConverter<ReleaseDate>
 {
     public override ReleaseDate Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var strDate = reader.GetString();
-        if (strDate.IsNullOrWhiteSpace())
+        if (reader.TokenType == JsonTokenType.String)
         {
-            throw new Exception("Can't deserialize ReleaseDate object from empty string.");
+            var strDate = reader.GetString();
+            if (strDate.IsNullOrWhiteSpace())
+            {
+                throw new Exception("Can't deserialize ReleaseDate object from empty string.");
+            }
+            else
+            {
+                return ReleaseDate.Deserialize(strDate);
+            }
         }
-        else
+        // This is to support "wrong" ReleaseDate serialization that current IGDB plugin uses
+        else if (reader.TokenType == JsonTokenType.StartObject)
         {
-            return ReleaseDate.Deserialize(strDate);
+            reader.Read();
+            var propName = reader.GetString();
+            if (propName != "ReleaseDate")
+            {
+                throw new NotSupportedException("Can't deserialize release date, uknown format.");
+            }
+
+            reader.Read();
+            var strDate = reader.GetString();
+            if (strDate.IsNullOrWhiteSpace())
+            {
+                throw new Exception("Can't deserialize ReleaseDate object from empty string.");
+            }
+            else
+            {
+                while (reader.TokenType != JsonTokenType.EndObject)
+                {
+                    reader.Read();
+                }
+
+                return ReleaseDate.Deserialize(strDate);
+            }
         }
+
+        throw new NotSupportedException("Can't deserialize release date, uknown format.");
     }
 
     public override void Write(Utf8JsonWriter writer, ReleaseDate value, JsonSerializerOptions options)

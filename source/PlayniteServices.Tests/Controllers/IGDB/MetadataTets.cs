@@ -51,6 +51,23 @@ namespace PlayniteServices.Tests.Controllers.IGDB
         }
 
         [Fact]
+        public void ReleaseDateLegacyDeserializationTest()
+        {
+            var game = DataSerialization.FromJson<PlayniteGame>("""
+                {"Name":"Chavez II","ReleaseDate":"1993","GameId":"61810"}
+                """);
+            Assert.Equal(1993, game!.ReleaseDate!.Value.Year);
+            Assert.Equal("61810", game!.GameId);
+
+            game = DataSerialization.FromJson<PlayniteGame>("""
+                {"ReleaseDate":{"ReleaseDate":"1993"},"GameId":"61810","Name":"Chavez II"}
+                """);
+            Assert.Equal(1993, game!.ReleaseDate!.Value.Year);
+            Assert.Equal("61810", game!.GameId);
+            Assert.Equal("Chavez II", game!.Name);
+        }
+
+        [Fact]
         public async Task SteamIdUseTest()
         {
             var metadata = await GetMetadata(new PlayniteGame("")
