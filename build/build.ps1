@@ -16,7 +16,7 @@ if ($IISDeploy)
 
 if (Test-Path $OutputPath)
 {
-    Remove-Item $OutputPath -Recurse -Exclude "servicedb.db", "patreon_tokens.json", "customSettings.json"
+    Remove-Item $OutputPath -Recurse
 }
 
 New-Folder $OutputPath
