@@ -21,9 +21,11 @@ namespace PlayniteServices.Controllers.PlayniteTools
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly string diagsDir;
         private readonly string diagsCrashDir;
+        private readonly UpdatableAppSettings settings;
 
         public DiagnosticsController(UpdatableAppSettings settings)
         {
+            this.settings = settings;
             if (settings.Settings.DiagsDirectory.IsNullOrEmpty())
             {
                 throw new Exception("Diags dir is not configured.");
@@ -36,6 +38,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
             }
 
             diagsCrashDir = Path.Combine(diagsDir, "crashes");
+            FileSystem.CreateDirectory(diagsCrashDir);
         }
 
         [ServiceFilter(typeof(ServiceKeyFilter))]
@@ -113,16 +116,6 @@ namespace PlayniteServices.Controllers.PlayniteTools
         {
             var packageId = Guid.NewGuid();
             var targetPath = Path.Combine(diagsDir, $"{packageId}.zip");
-            if (!Directory.Exists(diagsDir))
-            {
-                Directory.CreateDirectory(diagsDir);
-            }
-
-            if (!Directory.Exists(diagsCrashDir))
-            {
-                Directory.CreateDirectory(diagsCrashDir);
-            }
-
             using (var fs = new FileStream(targetPath, FileMode.OpenOrCreate))
             {
                 Request.Body.CopyTo(fs);
@@ -154,6 +147,26 @@ namespace PlayniteServices.Controllers.PlayniteTools
                     logger.Warn("Received diag. package without package info file, ignoring");
                     return new ServicesResponse<Guid>(Guid.Empty);
                 }
+            }
+
+            var ignorePackage = false;
+            if (Version.TryParse(version, out var playniteVer))
+            {
+                if (playniteVer < settings.Settings.MinimumDiagVersion)
+                {
+                    ignorePackage = true;
+                }
+            }
+            else
+            {
+                ignorePackage = true;
+            }
+
+            if (ignorePackage)
+            {
+                logger.Info($"Ignoring diag package from version {version}");
+                System.IO.File.Delete(targetPath);
+                return new ServicesResponse<Guid>(Guid.Empty);
             }
 
             if (isCrash)

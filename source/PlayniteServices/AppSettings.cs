@@ -66,6 +66,7 @@ namespace PlayniteServices
         public GitHubSettings? GitHub { get; set; }
         public AddonsSettings? Addons { get; set; }
         public DiscordSettings? Discord { get; set; }
+        public Version? MinimumDiagVersion { get; set; }
     }
 
     public class UpdatableAppSettings
