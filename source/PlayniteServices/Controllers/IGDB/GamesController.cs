@@ -14,6 +14,7 @@ using PlayniteServices.Filters;
 using System.Text.RegularExpressions;
 using PlayniteServices.Controllers.IGDB.DataGetter;
 using MongoDB.Driver;
+using System.Net;
 
 namespace PlayniteServices.Controllers.IGDB
 {
@@ -38,6 +39,7 @@ namespace PlayniteServices.Controllers.IGDB
         [HttpGet("{gameName}")]
         public async Task<ServicesResponse<List<ExpandedGameLegacy>>> Get(string gameName)
         {
+            gameName = WebUtility.UrlDecode(gameName);
             var search = await GetSearchResults(gameName, false);
             var altSearch = await GetSearchResults(gameName, settings.Settings.IGDB?.AlternativeSearch ?? false);
             foreach (var alt in altSearch)
