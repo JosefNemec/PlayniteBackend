@@ -251,6 +251,7 @@ namespace PlayniteServices.Models.GitHub
 
     public class IssuesEvent
     {
-        public IssuesEventAction action;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public IssuesEventAction action { get; set; }
     }
 }
