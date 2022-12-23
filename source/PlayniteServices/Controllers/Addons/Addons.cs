@@ -134,7 +134,7 @@ namespace PlayniteServices.Controllers.Addons
                     payloadString = await reader.ReadToEndAsync();
                 }
 
-                var payloadHash = GitHubController.GetPayloadHash(payloadString, settings.Settings.Addons!.GitHubSecret!);
+                var payloadHash = GitHubWebHookController.GetPayloadHash(payloadString, settings.Settings.Addons!.GitHubSecret!);
                 if (sig != $"sha1={payloadHash}")
                 {
                     logger.Error("PayloadHash signature check failed.");

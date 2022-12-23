@@ -15,12 +15,12 @@ using System.Threading.Tasks;
 namespace PlayniteServices.Controllers.Webhooks
 {
     [Route("hooks/github")]
-    public class GitHubController : Controller
+    public class GitHubWebHookController : Controller
     {
         private static readonly ILogger logger = LogManager.GetLogger();
         private readonly UpdatableAppSettings settings;
 
-        public GitHubController(UpdatableAppSettings settings)
+        public GitHubWebHookController(UpdatableAppSettings settings)
         {
             this.settings = settings;
         }
