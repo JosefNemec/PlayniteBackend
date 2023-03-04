@@ -34,8 +34,9 @@ namespace PlayniteServices
             httpClient.Dispose();
         }
 
-        private static void SaveTokens(string accessToken, string refreshToken)
+        private static async Task SaveTokens(string accessToken, string refreshToken)
         {
+            await Task.Delay(2000);
             var path = Path.Combine(ServicePaths.ExecutingDirectory, "patreonTokens.json");
             var config = new Dictionary<string, Dictionary<string, string>>
             {
@@ -47,7 +48,14 @@ namespace PlayniteServices
                 }
             };
 
-            File.WriteAllText(path, DataSerialization.ToJson(config));
+            try
+            {
+                File.WriteAllText(path, DataSerialization.ToJson(config));
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to save new Patreon API token.");
+            }
         }
 
         private HttpRequestMessage CreateGetRequest(string url)
@@ -86,7 +94,11 @@ namespace PlayniteServices
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
+                settings.Settings.Patreon.AccessToken = data["access_token"];
+                settings.Settings.Patreon.RefreshToken = data["refresh_token"];
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 SaveTokens(data["access_token"], data["refresh_token"]);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
         }
 
