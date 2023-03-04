@@ -18,9 +18,9 @@ public class GitHubController : Controller
         this.settings = settings;
     }
 
-    [HttpGet("sponsors")]
-    public async Task<ServicesResponse<List<string>>> Get()
-    {
-        return new ServicesResponse<List<string>>(new List<string>());
-    }
+    //[HttpGet("sponsors")]
+    //public async Task<ServicesResponse<List<string>>> Get()
+    //{
+    //    return new ServicesResponse<List<string>>(new List<string>());
+    //}
 }
