@@ -4,14 +4,8 @@ using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Playnite;
+using PlayniteServices.Controllers.IGDB;
 using PlayniteServices.Models.Discord;
-using PlayniteServices.Models.IGDB;
-using PlayniteServices.Models.Steam;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace PlayniteServices
 {
@@ -29,21 +23,17 @@ namespace PlayniteServices
         private static bool instantiated = false;
         public readonly MongoClient MongoClient;
         public static readonly ReplaceOptions ItemUpsertOptions = new ReplaceOptions { IsUpsert = true };
+        public static readonly InsertManyOptions InsertManyOptions = new InsertManyOptions();
         public readonly IMongoDatabase MongoDb;
 
         public readonly IMongoCollection<Models.User> Users;
-        public readonly IMongoCollection<SteamIdGame> SteamIgdbMatches;
-        public readonly IMongoCollection<GameIdMatch> IGBDGameIdMatches;
-        public readonly IMongoCollection<SearchIdMatch> IGDBSearchIdMatches;
         public readonly IMongoCollection<AddonManifestBase> Addons;
         public readonly IMongoCollection<AddonInstallerManifestBase> AddonInstallers;
-        public readonly IMongoCollection<IgdbSearchResult> IgdbStdSearches;
-        public readonly IMongoCollection<IgdbSearchResult> IgdbAltSearches;
         public readonly IMongoCollection<AddonUpdateNotification> DiscordAddonNotifications;
 
         public Database(UpdatableAppSettings settings)
         {
-            TestAssert.IsFalse(instantiated, $"{nameof(Patreon)} already instantiated");
+            TestAssert.IsFalse(instantiated, $"{nameof(Database)} already instantiated");
             instantiated = true;
 
             ConventionRegistry.Register(
@@ -68,27 +58,6 @@ namespace PlayniteServices
                 cm.MapIdMember(c => c.Id);
             });
 
-            BsonClassMap.RegisterClassMap<SteamIdGame>(cm =>
-            {
-                cm.AutoMap();
-                cm.SetIgnoreExtraElements(true);
-                cm.MapIdMember(c => c.steamId);
-            });
-
-            BsonClassMap.RegisterClassMap<GameIdMatch>(cm =>
-            {
-                cm.AutoMap();
-                cm.SetIgnoreExtraElements(true);
-                cm.MapIdMember(c => c.Id);
-            });
-
-            BsonClassMap.RegisterClassMap<SearchIdMatch>(cm =>
-            {
-                cm.AutoMap();
-                cm.SetIgnoreExtraElements(true);
-                cm.MapIdMember(c => c.Id);
-            });
-
             BsonClassMap.RegisterClassMap<AddonManifestBase>(cm =>
             {
                 cm.AutoMap();
@@ -103,13 +72,6 @@ namespace PlayniteServices
                 cm.MapIdMember(c => c.AddonId);
             });
 
-            BsonClassMap.RegisterClassMap<IgdbSearchResult>(cm =>
-            {
-                cm.AutoMap();
-                cm.SetIgnoreExtraElements(true);
-                cm.MapIdMember(c => c.Id);
-            });
-
             BsonClassMap.RegisterClassMap<AddonUpdateNotification>(cm =>
             {
                 cm.AutoMap();
@@ -120,13 +82,8 @@ namespace PlayniteServices
             MongoClient = new MongoClient(settings.Settings.DatabaseConString);
             MongoDb = MongoClient.GetDatabase("playnitebackend");
             Users = MongoDb.GetCollection<Models.User>("Users");
-            SteamIgdbMatches = MongoDb.GetCollection<SteamIdGame>("SteamIgdbMatches");
-            IGBDGameIdMatches = MongoDb.GetCollection<GameIdMatch>("IGBDGameIdMatches");
-            IGDBSearchIdMatches = MongoDb.GetCollection<SearchIdMatch>("IGDBSearchIdMatches");
             Addons = MongoDb.GetCollection<AddonManifestBase>("Addons");
             AddonInstallers = MongoDb.GetCollection<AddonInstallerManifestBase>("AddonInstallers");
-            IgdbStdSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_StdSearches");
-            IgdbAltSearches = MongoDb.GetCollection<IgdbSearchResult>("Igdb_AltSearches");
             DiscordAddonNotifications = MongoDb.GetCollection<AddonUpdateNotification>("DiscordAddonNotifications");
         }
 
