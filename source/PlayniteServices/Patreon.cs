@@ -1,4 +1,5 @@
 ﻿using Playnite.SDK;
+using PlayniteServices.Models.Patreon;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,7 +86,7 @@ namespace PlayniteServices
 
             var response = await httpClient.SendAsync(request);
             var stringData = await response.Content.ReadAsStringAsync();
-            var data = DataSerialization.FromJson<Dictionary<string, string>>(stringData);
+            var data = DataSerialization.FromJson<TokenRefreshResponse>(stringData);
             if (data == null)
             {
                 logger.Debug(stringData);
@@ -94,10 +95,10 @@ namespace PlayniteServices
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                settings.Settings.Patreon.AccessToken = data["access_token"];
-                settings.Settings.Patreon.RefreshToken = data["refresh_token"];
+                settings.Settings.Patreon.AccessToken = data.access_token;
+                settings.Settings.Patreon.RefreshToken = data.refresh_token;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                SaveTokens(data["access_token"], data["refresh_token"]);
+                SaveTokens(data.access_token!, data.refresh_token!);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
         }
@@ -110,7 +111,16 @@ namespace PlayniteServices
             // Access token probably expired (once every month)
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                await UpdateTokens();
+                try
+                {
+                    await UpdateTokens();
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e, "Failed to update Patreon tokens.");
+                    throw;
+                }
+
                 request = CreateGetRequest(url);
                 response = await httpClient.SendAsync(request);
             }

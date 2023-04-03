@@ -38,4 +38,10 @@ namespace PlayniteServices.Models.Patreon
         public bool has_shipping_address { get; set; }
         public int outstanding_payment_amount_cents { get; set; }
     }
+
+    public class TokenRefreshResponse
+    {
+        public string? access_token { get; set; }
+        public string? refresh_token { get; set; }
+    }
 }
