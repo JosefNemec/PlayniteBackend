@@ -38,7 +38,7 @@ namespace PlayniteServices.Controllers.Patreon
         }
 
         [HttpGet]
-        public async Task<ServicesResponse<List<string>>> Get()
+        public async Task<DataResponse<List<string>>> Get()
         {
             if (cache == null || (DateTime.Now - cache.Created).TotalSeconds > 60)
             {
@@ -52,14 +52,14 @@ namespace PlayniteServices.Controllers.Patreon
                     if (document == null)
                     {
                         logger.Error("Failed to get list of patrons, no data from API.");
-                        return new ServicesResponse<List<string>>(new List<string>());
+                        return new DataResponse<List<string>>(new List<string>());
                     }
 
                     if (document.Errors.HasItems())
                     {
                         logger.Error("Failed to get list of patrons.");
                         document.Errors.ForEach(a => logger.Error(a.Detail));
-                        return new ServicesResponse<List<string>>(new List<string>());
+                        return new DataResponse<List<string>>(new List<string>());
                     }
 
                     allPatrons.AddRange(document.Data.Where(a => a.declined_since == null).Select(a => a.patron?.full_name ?? string.Empty));
@@ -77,7 +77,7 @@ namespace PlayniteServices.Controllers.Patreon
                 cache = new ListCache(allPatrons.OrderBy(a => a).ToList());
             }
 
-            return new ServicesResponse<List<string>>(cache.Names);
+            return new DataResponse<List<string>>(cache.Names);
         }
     }
 }

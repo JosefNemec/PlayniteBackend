@@ -19,6 +19,19 @@ public class Webhook
     public int updated_at { get; set; }
 }
 
+public class SearchRequest
+{
+    public string? SearchTerm { get; set; }
+}
+
+public class MetadataRequest
+{
+    public Guid? LibraryId { get; set; }
+    public string? GameId { get; set; }
+    public string? Name { get; set; }
+    public ulong PlatformId { get; set; }
+}
+
 //public static class ModelsUtils
 //{
 //    public static string GetIgdbSearchString(string gameName)

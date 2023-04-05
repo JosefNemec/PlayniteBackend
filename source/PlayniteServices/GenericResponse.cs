@@ -5,29 +5,15 @@ using System.Threading.Tasks;
 
 namespace PlayniteServices
 {
-    public class GenericResponse
+    public abstract class ResponseBase
     {
         public string? Error
         {
             get; set;
         }
-
-        public object? Data
-        {
-            get; set;
-        }
-
-        public GenericResponse()
-        {
-        }
-
-        public GenericResponse(object data)
-        {
-            Data = data;
-        }
     }
 
-    public class ErrorResponse : GenericResponse
+    public class ErrorResponse : ResponseBase
     {
         public ErrorResponse(string error)
         {
@@ -40,14 +26,14 @@ namespace PlayniteServices
         }
     }
 
-    public class ServicesResponse<T> : GenericResponse
+    public class DataResponse<T> : ResponseBase
     {
-        public new T? Data
+        public T? Data
         {
             get; set;
         }
 
-        public ServicesResponse(T? data)
+        public DataResponse(T? data)
         {
             Data = data;
         }

@@ -179,5 +179,16 @@ namespace PlayniteServices.Tests.Controllers.IGDB
         //        File.AppendAllText(resultPath, $"{game}#{metadata.id}#{metadata.name}" + Environment.NewLine);
         //    }
         //}
+
+        [Fact]
+        public async Task SearchTest()
+        {
+            var search = new SearchRequest { SearchTerm = "quake" };
+            var content = new StringContent(DataSerialization.ToJson(search), Encoding.UTF8, MediaTypeNames.Application.Json);
+            var response = await client.PostAsync(@"/igdb/search", content);
+            var games = DataSerialization.FromJson<DataResponse<List<Game>>>(await response.Content.ReadAsStringAsync())!.Data;
+            Assert.NotNull(games);
+            Assert.NotNull(games.FirstOrDefault(a => a.id == 333));
+        }
     }
 }

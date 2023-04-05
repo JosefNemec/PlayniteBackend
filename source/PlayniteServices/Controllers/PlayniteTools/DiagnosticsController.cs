@@ -96,23 +96,23 @@ namespace PlayniteServices.Controllers.PlayniteTools
 
         [ServiceFilter(typeof(ServiceKeyFilter))]
         [HttpGet]
-        public ServicesResponse<List<string>> GetPackages()
+        public DataResponse<List<string>> GetPackages()
         {
             if (!Directory.Exists(diagsDir))
             {
-                return new ServicesResponse<List<string>>(new List<string>());
+                return new DataResponse<List<string>>(new List<string>());
             }
 
             var diagFiles = Directory.
                 GetFiles(diagsDir, "*.zip", SearchOption.AllDirectories).
                 Select(a => a.Replace(diagsDir, "", StringComparison.Ordinal).Trim(Path.DirectorySeparatorChar) + $",{new FileInfo(a).CreationTime}").
                 ToList();
-            return new ServicesResponse<List<string>>(diagFiles);
+            return new DataResponse<List<string>>(diagFiles);
         }
 
         [ServiceFilter(typeof(PlayniteVersionFilter))]
         [HttpPost]
-        public ServicesResponse<Guid> UploadPackage()
+        public DataResponse<Guid> UploadPackage()
         {
             var packageId = Guid.NewGuid();
             var targetPath = Path.Combine(diagsDir, $"{packageId}.zip");
@@ -135,7 +135,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
                         if (info == null)
                         {
                             logger.Warn("Received diag. package without package info file, ignoring");
-                            return new ServicesResponse<Guid>(Guid.Empty);
+                            return new DataResponse<Guid>(Guid.Empty);
                         }
 
                         version = info.PlayniteVersion;
@@ -145,7 +145,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
                 else
                 {
                     logger.Warn("Received diag. package without package info file, ignoring");
-                    return new ServicesResponse<Guid>(Guid.Empty);
+                    return new DataResponse<Guid>(Guid.Empty);
                 }
             }
 
@@ -166,7 +166,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
             {
                 logger.Info($"Ignoring diag package from version {version}");
                 System.IO.File.Delete(targetPath);
-                return new ServicesResponse<Guid>(Guid.Empty);
+                return new DataResponse<Guid>(Guid.Empty);
             }
 
             if (isCrash)
@@ -185,7 +185,7 @@ namespace PlayniteServices.Controllers.PlayniteTools
                 System.IO.File.Move(targetPath, newPath);
             }
 
-            return new ServicesResponse<Guid>(packageId);
+            return new DataResponse<Guid>(packageId);
         }
     }
 }

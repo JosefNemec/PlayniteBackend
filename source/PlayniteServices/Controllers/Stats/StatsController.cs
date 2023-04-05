@@ -22,7 +22,7 @@ namespace PlayniteServices.Controllers.Stats
         }
 
         [HttpGet("stats")]
-        public async Task<GenericResponse> GetStarts()
+        public async Task<DataResponse<ServiceStats>> GetStarts()
         {
             var now = DateTime.Now;
             var stats = new ServiceStats();
@@ -65,7 +65,7 @@ namespace PlayniteServices.Controllers.Stats
                 }
             });
 
-            return new ServicesResponse<ServiceStats>(stats);
+            return new DataResponse<ServiceStats>(stats);
         }
     }
 }
