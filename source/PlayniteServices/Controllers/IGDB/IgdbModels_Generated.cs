@@ -301,9 +301,9 @@ public enum RegionRegionEnum
 
 public class AgeRating : IgdbItem
 {
-    public ulong category { get; set; }
+    public AgeRatingCategoryEnum category { get; set; }
     public List<ulong>? content_descriptions { get; set; }
-    public ulong rating { get; set; }
+    public AgeRatingRatingEnum rating { get; set; }
     public string? rating_cover_url { get; set; }
     public string? synopsis { get; set; }
     public string? checksum { get; set; }
@@ -318,7 +318,7 @@ public class AgeRating : IgdbItem
 
 public class AgeRatingContentDescription : IgdbItem
 {
-    public ulong category { get; set; }
+    public AgeRatingContentDescriptionCategoryEnum category { get; set; }
     public string? description { get; set; }
     public string? checksum { get; set; }
 
@@ -370,11 +370,11 @@ public class Character : IgdbItem
     public long created_at { get; set; }
     public string? description { get; set; }
     public List<ulong>? games { get; set; }
-    public ulong gender { get; set; }
+    public GenderGenderEnum gender { get; set; }
     public ulong mug_shot { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
-    public ulong species { get; set; }
+    public CharacterSpeciesEnum species { get; set; }
     public long updated_at { get; set; }
     public string? url { get; set; }
     public string? checksum { get; set; }
@@ -426,7 +426,7 @@ public class Collection : IgdbItem
 public class Company : IgdbItem
 {
     public long change_date { get; set; }
-    public ulong change_date_category { get; set; }
+    public DateFormatChangeDateCategoryEnum change_date_category { get; set; }
     public ulong changed_company_id { get; set; }
     public int country { get; set; }
     public long created_at { get; set; }
@@ -438,7 +438,7 @@ public class Company : IgdbItem
     public List<ulong>? published { get; set; }
     public string? slug { get; set; }
     public long start_date { get; set; }
-    public ulong start_date_category { get; set; }
+    public DateFormatChangeDateCategoryEnum start_date_category { get; set; }
     public long updated_at { get; set; }
     public string? url { get; set; }
     public List<ulong>? websites { get; set; }
@@ -476,7 +476,7 @@ public class CompanyLogo : IgdbItem
 
 public class CompanyWebsite : IgdbItem
 {
-    public ulong category { get; set; }
+    public WebsiteCategoryEnum category { get; set; }
     public bool trusted { get; set; }
     public string? url { get; set; }
     public string? checksum { get; set; }
@@ -511,7 +511,7 @@ public class Cover : IgdbItem
 
 public class ExternalGame : IgdbItem
 {
-    public ulong category { get; set; }
+    public ExternalGameCategoryEnum category { get; set; }
     public long created_at { get; set; }
     public ulong game { get; set; }
     public string? name { get; set; }
@@ -519,7 +519,7 @@ public class ExternalGame : IgdbItem
     public long updated_at { get; set; }
     public string? url { get; set; }
     public int year { get; set; }
-    public ulong media { get; set; }
+    public ExternalGameMediaEnum media { get; set; }
     public ulong platform { get; set; }
     public List<int>? countries { get; set; }
     public string? checksum { get; set; }
@@ -559,7 +559,7 @@ public class Game : IgdbItem
     public List<ulong>? alternative_names { get; set; }
     public List<ulong>? artworks { get; set; }
     public List<ulong>? bundles { get; set; }
-    public ulong category { get; set; }
+    public GameCategoryEnum category { get; set; }
     public ulong collection { get; set; }
     public ulong cover { get; set; }
     public long created_at { get; set; }
@@ -588,7 +588,7 @@ public class Game : IgdbItem
     public List<ulong>? similar_games { get; set; }
     public string? slug { get; set; }
     public List<ulong>? standalone_expansions { get; set; }
-    public ulong status { get; set; }
+    public GameStatusEnum status { get; set; }
     public string? storyline { get; set; }
     public string? summary { get; set; }
     public List<int>? tags { get; set; }
@@ -750,7 +750,7 @@ public class GameVersion : IgdbItem
 
 public class GameVersionFeature : IgdbItem
 {
-    public ulong category { get; set; }
+    public GameVersionFeatureCategoryEnum category { get; set; }
     public string? description { get; set; }
     public int position { get; set; }
     public string? title { get; set; }
@@ -769,7 +769,7 @@ public class GameVersionFeatureValue : IgdbItem
 {
     public ulong game { get; set; }
     public ulong game_feature { get; set; }
-    public ulong included_feature { get; set; }
+    public GameVersionFeatureValueIncludedFeatureEnum included_feature { get; set; }
     public string? note { get; set; }
     public string? checksum { get; set; }
 
@@ -929,7 +929,7 @@ public class Platform : IgdbItem
 {
     public string? abbreviation { get; set; }
     public string? alternative_name { get; set; }
-    public ulong category { get; set; }
+    public PlatformCategoryEnum category { get; set; }
     public long created_at { get; set; }
     public int generation { get; set; }
     public string? name { get; set; }
@@ -1036,13 +1036,13 @@ public class PlatformVersionCompany : IgdbItem
 
 public class PlatformVersionReleaseDate : IgdbItem
 {
-    public ulong category { get; set; }
+    public DateFormatChangeDateCategoryEnum category { get; set; }
     public long created_at { get; set; }
     public long date { get; set; }
     public string? human { get; set; }
     public int m { get; set; }
     public ulong platform_version { get; set; }
-    public ulong region { get; set; }
+    public RegionRegionEnum region { get; set; }
     public long updated_at { get; set; }
     public int y { get; set; }
     public string? checksum { get; set; }
@@ -1057,7 +1057,7 @@ public class PlatformVersionReleaseDate : IgdbItem
 
 public class PlatformWebsite : IgdbItem
 {
-    public ulong category { get; set; }
+    public WebsiteCategoryEnum category { get; set; }
     public bool trusted { get; set; }
     public string? url { get; set; }
     public string? checksum { get; set; }
@@ -1103,14 +1103,14 @@ public class Region : IgdbItem
 
 public class ReleaseDate : IgdbItem
 {
-    public ulong category { get; set; }
+    public DateFormatChangeDateCategoryEnum category { get; set; }
     public long created_at { get; set; }
     public long date { get; set; }
     public ulong game { get; set; }
     public string? human { get; set; }
     public int m { get; set; }
     public ulong platform { get; set; }
-    public ulong region { get; set; }
+    public RegionRegionEnum region { get; set; }
     public long updated_at { get; set; }
     public int y { get; set; }
     public string? checksum { get; set; }
@@ -1161,7 +1161,7 @@ public class Theme : IgdbItem
 
 public class Website : IgdbItem
 {
-    public ulong category { get; set; }
+    public WebsiteCategoryEnum category { get; set; }
     public ulong game { get; set; }
     public bool trusted { get; set; }
     public string? url { get; set; }

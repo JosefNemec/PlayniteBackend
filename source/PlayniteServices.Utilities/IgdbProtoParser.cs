@@ -292,7 +292,7 @@ public class IgdbProtoParser
                     type = newType;
                 }
 
-                var isEnum = enums.FirstOrDefault(a => a.Name == type);
+                var isEnum = enums.FirstOrDefault(a => a.Name == prop.Type);
                 if (isEnum != null)
                 {
                     type = isEnum.Name;

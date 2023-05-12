@@ -31,16 +31,3 @@ public class MetadataRequest
     public string? Name { get; set; }
     public ulong PlatformId { get; set; }
 }
-
-//public static class ModelsUtils
-//{
-//    public static string GetIgdbSearchString(string gameName)
-//    {
-//        var temp =
-//            gameName.Replace(":", " ", StringComparison.InvariantCultureIgnoreCase).
-//            ToLower().
-//            Replace("\"", string.Empty, StringComparison.InvariantCultureIgnoreCase).
-//            Trim();
-//        return Regex.Replace(temp, @"\s+", " ");
-//    }
-//}

@@ -49,8 +49,9 @@ public class IgdbController : Controller
             return new ErrorResponse("No search term");
         }
 
+        var searchName = GetSearchString(searchRequest!.SearchTerm!);
         var games = await igdbApi.Games.collection.
-                Find(Builders<Game>.Filter.Text(searchRequest!.SearchTerm!, gameSearchOptons)).
+                Find(Builders<Game>.Filter.Text(searchName, gameSearchOptons)).
                 Project<Game>(Builders<Game>.Projection.MetaTextScore("textScore")).
                 Sort(Builders<Game>.Sort.MetaTextScore("textScore")).
                 Limit(50).
@@ -68,5 +69,13 @@ public class IgdbController : Controller
         }
 
         return new DataResponse<Game>(default);
+    }
+
+    private static string GetSearchString(string gameName)
+    {
+        return gameName.
+            Replace(":", " ", StringComparison.InvariantCultureIgnoreCase).
+            Replace("\"", string.Empty, StringComparison.InvariantCultureIgnoreCase).
+            Trim();
     }
 }
