@@ -75,7 +75,8 @@ public class IgdbProtoParser
         {  "ReleaseDate", "release_dates" },
         {  "Screenshot", "screenshots" },
         {  "Theme", "themes" },
-        {  "Website", "websites" }
+        {  "Website", "websites" },
+        {  "ReleaseDateStatus", "release_date_statuses" },
     };
 
     private Dictionary<string, string> typeConversions = new Dictionary<string, string>
@@ -263,7 +264,10 @@ public class IgdbProtoParser
         }
 
         var result = new StringBuilder();
-        result.AppendLine("namespace PlayniteServices.Controllers.IGDB;\r\n");
+        result.AppendLine("""            
+            using MongoDB.Bson.Serialization;
+            namespace PlayniteServices.Controllers.IGDB;
+            """);
 
         foreach (var pEnum in enums)
         {
@@ -278,14 +282,10 @@ public class IgdbProtoParser
 
         foreach (var message in messages)
         {
-            result.AppendLine($"public class {message.Name} : IgdbItem\r\n{{");
+            // Original properties
+            result.AppendLine($"public partial class {message.Name} : IIgdbItem\r\n{{");
             foreach (var prop in message.Properties)
             {
-                if (prop.Name == "id")
-                {
-                    continue;
-                }
-
                 var type = "ulong";
                 if (typeConversions.TryGetValue(prop.Type, out var newType))
                 {
@@ -314,6 +314,8 @@ public class IgdbProtoParser
 
             result.AppendLine("");
 
+            // Expanded properties
+            var expandedMembers = new List<string>();
             foreach (var prop in message.Properties)
             {
                 if (prop.Name == "id")
@@ -330,10 +332,12 @@ public class IgdbProtoParser
                 if (prop.Modified == "repeated")
                 {
                     result.AppendLine($"    public List<{type.Name.TrimEnd('?')}>? {prop.Name}_expanded {{ get; set; }}");
+                    expandedMembers.Add($"{prop.Name}_expanded");
                 }
                 else if (string.IsNullOrEmpty(prop.Modified))
                 {
                     result.AppendLine($"    public {type}? {prop.Name}_expanded {{ get; set; }}");
+                    expandedMembers.Add($"{prop.Name}_expanded");
                 }
                 else
                 {
@@ -342,6 +346,20 @@ public class IgdbProtoParser
             }
 
             result.AppendLine("");
+
+            // Class mapp
+            result.AppendLine($$"""
+                    public static void RegisterClassMap()
+                    {
+                        BsonClassMap.RegisterClassMap<{{message.Name}}>(cm => {
+                            cm.AutoMap();
+                            cm.MapIdMember(p => p.id);
+                            cm.SetIgnoreExtraElements(true);
+                {{string.Join("\r\n", expandedMembers.Select(a => $"            cm.UnmapProperty(p => p.{a});"))}}
+                        });
+                    }
+                """);
+
             result.AppendLine("    public override string ToString()\r\n    {");
             if (message.Properties.Any(a => a.Name == "name"))
             {
@@ -363,7 +381,7 @@ public class IgdbProtoParser
             using PlayniteServices.Controllers.IGDB;
             using MongoDB.Driver;
             using System.Diagnostics.CodeAnalysis;
-            namespace PlayniteServices;
+            namespace PlayniteServices.Controllers.IGDB;
             public partial class IgdbApi : IDisposable
             {
             """);
@@ -383,51 +401,28 @@ public class IgdbProtoParser
         }
         result.AppendLine("    }");
 
+        // Collection class maps
+        result.AppendLine($$"""
+            public static void RegisterClassMaps()
+            {
+            {{string.Join("\r\n", messages.Select(a => $"{a.Name}.RegisterClassMap();"))}}
+            }
+            """);
+
+        result.AppendLine("}");
+
         // Collection classes
         foreach (var message in messages)
         {
             result.AppendLine($$"""
-            public class {{message.Name}}Collection : IgdbCollection<{{message.Name}}>
+            public partial class {{message.Name}}Collection : IgdbCollection<{{message.Name}}>
             {
-                public {{message.Name}}Collection(IgdbApi igdb, Database database) : base(igdb, "{{typeToEndpoint[message.Name]}}", database)
+                public {{message.Name}}Collection(IgdbApi igdb, Database database) : base("{{typeToEndpoint[message.Name]}}", igdb, database)
                 {
                 }
+            }
             """);
-
-            result.AppendLine($$"""
-                public override void CreateIndexes()
-                {
-                """);
-
-            if (message.Name == "Game")
-            {
-                result.AppendLine($$"""
-                    collection.Indexes.CreateOne(new CreateIndexModel<{{message.Name}}>(Builders<{{message.Name}}>.IndexKeys.Text(x => x.name)));
-                    """);
-            }
-            else if (message.Name == "ExternalGame")
-            {
-                result.AppendLine($$"""
-                    collection.Indexes.CreateOne(new CreateIndexModel<{{message.Name}}>(Builders<{{message.Name}}>.IndexKeys.Ascending(x => x.uid)));
-                    """);
-            }
-            else if (message.Name == "AlternativeName")
-            {
-                result.AppendLine($$"""
-                    collection.Indexes.CreateOne(new CreateIndexModel<{{message.Name}}>(Builders<{{message.Name}}>.IndexKeys.Text(x => x.name)));
-                    """);
-            }
-            else if (message.Name == "GameLocalization")
-            {
-                result.AppendLine($$"""
-                    collection.Indexes.CreateOne(new CreateIndexModel<{{message.Name}}>(Builders<{{message.Name}}>.IndexKeys.Text(x => x.name)));
-                    """);
-            }
-
-            result.AppendLine("}\r\n}");
         }
-
-        result.AppendLine("}");
 
         File.WriteAllText(Path.Combine(outputDir, "IgdbApi_Generated.cs"), result.ToString(), Encoding.UTF8);
 

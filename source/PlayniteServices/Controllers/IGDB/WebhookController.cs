@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PlayniteServices.Controllers.IGDB;
 
-public abstract class WebhookController<T> : Controller where T : IgdbItem
+public abstract class WebhookController<T> : Controller where T : class, IIgdbItem
 {
     private static readonly ILogger logger = LogManager.GetLogger();
 

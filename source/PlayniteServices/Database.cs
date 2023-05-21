@@ -9,17 +9,8 @@ using PlayniteServices.Models.Discord;
 
 namespace PlayniteServices
 {
-    public class Database : IDisposable
+    public class Database
     {
-        public class IgnoreDefaultPropertiesConvention : IMemberMapConvention
-        {
-            public string Name => "Ignore default properties.";
-            public void Apply(BsonMemberMap mm)
-            {
-                mm.SetIgnoreIfDefault(true);
-            }
-        }
-
         private static bool instantiated = false;
         public readonly MongoClient MongoClient;
         public static readonly ReplaceOptions ItemUpsertOptions = new ReplaceOptions { IsUpsert = true };
@@ -36,20 +27,11 @@ namespace PlayniteServices
             TestAssert.IsFalse(instantiated, $"{nameof(Database)} already instantiated");
             instantiated = true;
 
-            ConventionRegistry.Register(
-                "Custom Conventions",
-                new ConventionPack { new IgnoreDefaultPropertiesConvention() },
-                t => t.FullName?.StartsWith("Playnite", StringComparison.Ordinal) == true);
-
             // BSON doesn't support unsigned numbers so we need to use specific converter for ulong numbers
             BsonSerializer.RegisterSerializer(
                 new UInt64Serializer(MongoDB.Bson.BsonType.Int64, new RepresentationConverter(true, true)));
 
-            BsonClassMap.RegisterClassMap<IgdbItem>(cm => {
-                cm.AutoMap();
-                cm.MapIdMember(p => p.id);
-                cm.SetIsRootClass(true);
-            });
+            IgdbApi.RegisterClassMaps();
 
             BsonClassMap.RegisterClassMap<Models.User>(cm =>
             {
@@ -79,16 +61,14 @@ namespace PlayniteServices
                 cm.MapIdMember(c => c.AddonId);
             });
 
-            MongoClient = new MongoClient(settings.Settings.DatabaseConString);
+            var clientSettings = MongoClientSettings.FromConnectionString(settings.Settings.DatabaseConString);
+            clientSettings.LinqProvider = MongoDB.Driver.Linq.LinqProvider.V3;
+            MongoClient = new MongoClient(clientSettings);
             MongoDb = MongoClient.GetDatabase("playnitebackend");
             Users = MongoDb.GetCollection<Models.User>("Users");
             Addons = MongoDb.GetCollection<AddonManifestBase>("Addons");
             AddonInstallers = MongoDb.GetCollection<AddonInstallerManifestBase>("AddonInstallers");
             DiscordAddonNotifications = MongoDb.GetCollection<AddonUpdateNotification>("DiscordAddonNotifications");
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

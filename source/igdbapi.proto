@@ -972,6 +972,20 @@ message ReleaseDate {
     google.protobuf.Timestamp updated_at = 10; 
     int32 y = 11; 
     string checksum = 12; 
+    ReleaseDateStatus status = 13; 
+}
+
+message ReleaseDateStatusResult {
+    repeated ReleaseDateStatus releasedatestatuses = 1;
+}
+
+message ReleaseDateStatus {
+    uint64 id = 1;
+    string name = 2; 
+    string description = 3; 
+    google.protobuf.Timestamp created_at = 4; 
+    google.protobuf.Timestamp updated_at = 5; 
+    string checksum = 6; 
 }
 
 message ScreenshotResult {

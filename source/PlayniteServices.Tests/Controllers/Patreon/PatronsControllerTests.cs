@@ -14,7 +14,7 @@ namespace PlayniteServices.Tests.Controllers.Patreon
     {
         private readonly HttpClient client;
 
-        public PatronsControllerTests(TestFixture<Startup> fixture)
+        public PatronsControllerTests(TestFixture fixture)
         {
             client = fixture.Client;
         }

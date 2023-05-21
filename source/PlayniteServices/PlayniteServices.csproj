@@ -20,7 +20,6 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\BuiltInExtensions.cs" Link="Shared\SDK\BuiltInExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Collections\ObservableObject.cs" Link="Shared\SDK\ObservableObject.cs" />
     <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Extensions\ListExtensions.cs" Link="Shared\SDK\ListExtensions.cs" />
     <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\ILogger.cs" Link="Shared\SDK\ILogger.cs" />
@@ -63,7 +62,8 @@
 
   <ItemGroup>
     <PackageReference Include="JsonApiSerializer" Version="1.7.4" />
-    <PackageReference Include="MongoDB.Driver" Version="2.18.0" />
+    <PackageReference Include="MongoDB.Analyzer" Version="1.2.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.19.1" />
     <PackageReference Include="NLog" Version="4.7.8" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
     <PackageReference Include="YamlDotNet" Version="12.0.2" />

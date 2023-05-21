@@ -12,7 +12,7 @@ public interface IIgdbCollection
     Task ConfigureWebhooks(List<Webhook> webhooksStatus);
 }
 
-public class IgdbCollection<T> : IIgdbCollection where T : IgdbItem
+public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
 {
     private static readonly ILogger logger = LogManager.GetLogger();
     private readonly Database database;
@@ -22,20 +22,11 @@ public class IgdbCollection<T> : IIgdbCollection where T : IgdbItem
 
     public string EndpointPath { get; }
 
-    public IgdbCollection(IgdbApi igdb, string endpointPath, Database database)
+    public IgdbCollection(string endpointPath, IgdbApi igdb, Database database)
     {
         this.igdb = igdb;
         this.database = database;
         EndpointPath = endpointPath;
-        if (!BsonClassMap.IsClassMapRegistered(typeof(T)))
-        {
-            BsonClassMap.RegisterClassMap<T>(cm =>
-            {
-                cm.AutoMap();
-                cm.SetIgnoreExtraElements(true);
-            });
-        }
-
         dbCollectionName = $"IGDB_col_{endpointPath}";
         collection = database.MongoDb.GetCollection<T>(dbCollectionName);
         CreateIndexes();
@@ -161,20 +152,21 @@ public class IgdbCollection<T> : IIgdbCollection where T : IgdbItem
         }
 
         var item = await collection.Find(a => a.id == itemId).FirstOrDefaultAsync();
-        if (item != null)
-        {
-            return item;
-        }
+        return item;
+        //if (item != null)
+        //{
+        //    return item;
+        //}
 
-        var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = {itemId};");
-        var items = DataSerialization.FromJson<List<T>>(stringResult);
-        if (items.HasItems())
-        {
-            await Add(items[0]);
-            return items[0];
-        }
+        //var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = {itemId};");
+        //var items = DataSerialization.FromJson<List<T>>(stringResult);
+        //if (items.HasItems())
+        //{
+        //    await Add(items[0]);
+        //    return items[0];
+        //}
 
-        return null;
+        //return null;
     }
 
     public async Task<List<T>?> GetItem(List<ulong>? itemIds)
@@ -184,21 +176,21 @@ public class IgdbCollection<T> : IIgdbCollection where T : IgdbItem
             return null;
         }
 
-        var filter = Builders<T>.Filter.In(nameof(IgdbItem.id), itemIds);
+        var filter = Builders<T>.Filter.In(nameof(IIgdbItem.id), itemIds);
         var items = await collection.Find(filter).ToListAsync();
-        if (items.Count == itemIds.Count)
-        {
-            return items;
-        }
+        //if (items.Count == itemIds.Count)
+        //{
+        //    return items;
+        //}
 
-        var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, items.Select(a => a.id));
-        var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
-        var newItems = DataSerialization.FromJson<List<T>>(stringResult);
-        if (newItems.HasItems())
-        {
-            await Add(newItems);
-            items.AddRange(newItems);
-        }
+        //var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, items.Select(a => a.id));
+        //var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
+        //var newItems = DataSerialization.FromJson<List<T>>(stringResult);
+        //if (newItems.HasItems())
+        //{
+        //    await Add(newItems);
+        //    items.AddRange(newItems);
+        //}
 
         return items;
     }
@@ -227,5 +219,40 @@ public class IgdbCollection<T> : IIgdbCollection where T : IgdbItem
     public async Task Delete(T item)
     {
         await collection.DeleteOneAsync(a => a.id == item.id);
+    }
+}
+
+public partial class AlternativeNameCollection : IgdbCollection<AlternativeName>
+{
+    public override void CreateIndexes()
+    {
+        collection.Indexes.CreateOne(new CreateIndexModel<AlternativeName>(Builders<AlternativeName>.IndexKeys.Text(x => x.name)));
+        collection.Indexes.CreateOne(new CreateIndexModel<AlternativeName>(Builders<AlternativeName>.IndexKeys.Ascending(x => x.game)));
+    }
+}
+
+public partial class ExternalGameCollection : IgdbCollection<ExternalGame>
+{
+    public override void CreateIndexes()
+    {
+        collection.Indexes.CreateOne(new CreateIndexModel<ExternalGame>(Builders<ExternalGame>.IndexKeys.Ascending(x => x.uid).Ascending(x => x.category)));
+    }
+}
+
+public partial class GameCollection : IgdbCollection<Game>
+{
+    public override void CreateIndexes()
+    {
+        collection.Indexes.CreateOne(new CreateIndexModel<Game>(Builders<Game>.IndexKeys.Text(x => x.name)));
+        collection.Indexes.CreateOne(new CreateIndexModel<Game>(Builders<Game>.IndexKeys.Ascending(x => x.category)));
+    }
+}
+
+public partial class GameLocalizationCollection : IgdbCollection<GameLocalization>
+{
+    public override void CreateIndexes()
+    {
+        collection.Indexes.CreateOne(new CreateIndexModel<GameLocalization>(Builders<GameLocalization>.IndexKeys.Text(x => x.name)));
+        collection.Indexes.CreateOne(new CreateIndexModel<GameLocalization>(Builders<GameLocalization>.IndexKeys.Ascending(x => x.game)));
     }
 }

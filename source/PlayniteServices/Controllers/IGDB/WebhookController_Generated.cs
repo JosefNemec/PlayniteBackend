@@ -274,6 +274,13 @@ public class ReleaseDateWebhookController : WebhookController<ReleaseDate>
     {
     }
 }
+[Route("igdb/webhooks/release_date_statuses")]
+public class ReleaseDateStatusWebhookController : WebhookController<ReleaseDateStatus>
+{
+    public ReleaseDateStatusWebhookController(IgdbApi igdb, UpdatableAppSettings settings) : base("release_date_statuses", igdb, settings)
+    {
+    }
+}
 [Route("igdb/webhooks/screenshots")]
 public class ScreenshotWebhookController : WebhookController<Screenshot>
 {

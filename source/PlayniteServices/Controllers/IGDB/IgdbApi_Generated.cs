@@ -1,7 +1,7 @@
 ﻿using PlayniteServices.Controllers.IGDB;
 using MongoDB.Driver;
 using System.Diagnostics.CodeAnalysis;
-namespace PlayniteServices;
+namespace PlayniteServices.Controllers.IGDB;
 public partial class IgdbApi : IDisposable
 {
     [AllowNull] public AgeRatingCollection AgeRatings { get; private set; }
@@ -43,6 +43,7 @@ public partial class IgdbApi : IDisposable
     [AllowNull] public PlayerPerspectiveCollection PlayerPerspectives { get; private set; }
     [AllowNull] public RegionCollection Regions { get; private set; }
     [AllowNull] public ReleaseDateCollection ReleaseDates { get; private set; }
+    [AllowNull] public ReleaseDateStatusCollection ReleaseDateStatuss { get; private set; }
     [AllowNull] public ScreenshotCollection Screenshots { get; private set; }
     [AllowNull] public ThemeCollection Themes { get; private set; }
     [AllowNull] public WebsiteCollection Websites { get; private set; }
@@ -126,6 +127,8 @@ public partial class IgdbApi : IDisposable
        DataCollections.Add(Regions);
        ReleaseDates = new ReleaseDateCollection(this, Database);
        DataCollections.Add(ReleaseDates);
+       ReleaseDateStatuss = new ReleaseDateStatusCollection(this, Database);
+       DataCollections.Add(ReleaseDateStatuss);
        Screenshots = new ScreenshotCollection(this, Database);
        DataCollections.Add(Screenshots);
        Themes = new ThemeCollection(this, Database);
@@ -133,386 +136,308 @@ public partial class IgdbApi : IDisposable
        Websites = new WebsiteCollection(this, Database);
        DataCollections.Add(Websites);
     }
-public class AgeRatingCollection : IgdbCollection<AgeRating>
+public static void RegisterClassMaps()
 {
-    public AgeRatingCollection(IgdbApi igdb, Database database) : base(igdb, "age_ratings", database)
+AgeRating.RegisterClassMap();
+AgeRatingContentDescription.RegisterClassMap();
+AlternativeName.RegisterClassMap();
+Artwork.RegisterClassMap();
+Character.RegisterClassMap();
+CharacterMugShot.RegisterClassMap();
+Collection.RegisterClassMap();
+Company.RegisterClassMap();
+CompanyLogo.RegisterClassMap();
+CompanyWebsite.RegisterClassMap();
+Cover.RegisterClassMap();
+ExternalGame.RegisterClassMap();
+Franchise.RegisterClassMap();
+Game.RegisterClassMap();
+GameEngine.RegisterClassMap();
+GameEngineLogo.RegisterClassMap();
+GameLocalization.RegisterClassMap();
+GameMode.RegisterClassMap();
+GameVersion.RegisterClassMap();
+GameVersionFeature.RegisterClassMap();
+GameVersionFeatureValue.RegisterClassMap();
+GameVideo.RegisterClassMap();
+Genre.RegisterClassMap();
+InvolvedCompany.RegisterClassMap();
+Keyword.RegisterClassMap();
+Language.RegisterClassMap();
+LanguageSupport.RegisterClassMap();
+LanguageSupportType.RegisterClassMap();
+MultiplayerMode.RegisterClassMap();
+Platform.RegisterClassMap();
+PlatformFamily.RegisterClassMap();
+PlatformLogo.RegisterClassMap();
+PlatformVersion.RegisterClassMap();
+PlatformVersionCompany.RegisterClassMap();
+PlatformVersionReleaseDate.RegisterClassMap();
+PlatformWebsite.RegisterClassMap();
+PlayerPerspective.RegisterClassMap();
+Region.RegisterClassMap();
+ReleaseDate.RegisterClassMap();
+ReleaseDateStatus.RegisterClassMap();
+Screenshot.RegisterClassMap();
+Theme.RegisterClassMap();
+Website.RegisterClassMap();
+}
+}
+public partial class AgeRatingCollection : IgdbCollection<AgeRating>
+{
+    public AgeRatingCollection(IgdbApi igdb, Database database) : base("age_ratings", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class AgeRatingContentDescriptionCollection : IgdbCollection<AgeRatingContentDescription>
+public partial class AgeRatingContentDescriptionCollection : IgdbCollection<AgeRatingContentDescription>
 {
-    public AgeRatingContentDescriptionCollection(IgdbApi igdb, Database database) : base(igdb, "age_rating_content_descriptions", database)
+    public AgeRatingContentDescriptionCollection(IgdbApi igdb, Database database) : base("age_rating_content_descriptions", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class AlternativeNameCollection : IgdbCollection<AlternativeName>
+public partial class AlternativeNameCollection : IgdbCollection<AlternativeName>
 {
-    public AlternativeNameCollection(IgdbApi igdb, Database database) : base(igdb, "alternative_names", database)
+    public AlternativeNameCollection(IgdbApi igdb, Database database) : base("alternative_names", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
-collection.Indexes.CreateOne(new CreateIndexModel<AlternativeName>(Builders<AlternativeName>.IndexKeys.Text(x => x.name)));
 }
-}
-public class ArtworkCollection : IgdbCollection<Artwork>
+public partial class ArtworkCollection : IgdbCollection<Artwork>
 {
-    public ArtworkCollection(IgdbApi igdb, Database database) : base(igdb, "artworks", database)
+    public ArtworkCollection(IgdbApi igdb, Database database) : base("artworks", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class CharacterCollection : IgdbCollection<Character>
+public partial class CharacterCollection : IgdbCollection<Character>
 {
-    public CharacterCollection(IgdbApi igdb, Database database) : base(igdb, "characters", database)
+    public CharacterCollection(IgdbApi igdb, Database database) : base("characters", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class CharacterMugShotCollection : IgdbCollection<CharacterMugShot>
+public partial class CharacterMugShotCollection : IgdbCollection<CharacterMugShot>
 {
-    public CharacterMugShotCollection(IgdbApi igdb, Database database) : base(igdb, "character_mug_shots", database)
+    public CharacterMugShotCollection(IgdbApi igdb, Database database) : base("character_mug_shots", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class CollectionCollection : IgdbCollection<Collection>
+public partial class CollectionCollection : IgdbCollection<Collection>
 {
-    public CollectionCollection(IgdbApi igdb, Database database) : base(igdb, "collections", database)
+    public CollectionCollection(IgdbApi igdb, Database database) : base("collections", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class CompanyCollection : IgdbCollection<Company>
+public partial class CompanyCollection : IgdbCollection<Company>
 {
-    public CompanyCollection(IgdbApi igdb, Database database) : base(igdb, "companies", database)
+    public CompanyCollection(IgdbApi igdb, Database database) : base("companies", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class CompanyLogoCollection : IgdbCollection<CompanyLogo>
+public partial class CompanyLogoCollection : IgdbCollection<CompanyLogo>
 {
-    public CompanyLogoCollection(IgdbApi igdb, Database database) : base(igdb, "company_logos", database)
+    public CompanyLogoCollection(IgdbApi igdb, Database database) : base("company_logos", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class CompanyWebsiteCollection : IgdbCollection<CompanyWebsite>
+public partial class CompanyWebsiteCollection : IgdbCollection<CompanyWebsite>
 {
-    public CompanyWebsiteCollection(IgdbApi igdb, Database database) : base(igdb, "company_websites", database)
+    public CompanyWebsiteCollection(IgdbApi igdb, Database database) : base("company_websites", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class CoverCollection : IgdbCollection<Cover>
+public partial class CoverCollection : IgdbCollection<Cover>
 {
-    public CoverCollection(IgdbApi igdb, Database database) : base(igdb, "covers", database)
+    public CoverCollection(IgdbApi igdb, Database database) : base("covers", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class ExternalGameCollection : IgdbCollection<ExternalGame>
+public partial class ExternalGameCollection : IgdbCollection<ExternalGame>
 {
-    public ExternalGameCollection(IgdbApi igdb, Database database) : base(igdb, "external_games", database)
+    public ExternalGameCollection(IgdbApi igdb, Database database) : base("external_games", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
-collection.Indexes.CreateOne(new CreateIndexModel<ExternalGame>(Builders<ExternalGame>.IndexKeys.Ascending(x => x.uid)));
 }
-}
-public class FranchiseCollection : IgdbCollection<Franchise>
+public partial class FranchiseCollection : IgdbCollection<Franchise>
 {
-    public FranchiseCollection(IgdbApi igdb, Database database) : base(igdb, "franchises", database)
+    public FranchiseCollection(IgdbApi igdb, Database database) : base("franchises", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GameCollection : IgdbCollection<Game>
+public partial class GameCollection : IgdbCollection<Game>
 {
-    public GameCollection(IgdbApi igdb, Database database) : base(igdb, "games", database)
+    public GameCollection(IgdbApi igdb, Database database) : base("games", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
-collection.Indexes.CreateOne(new CreateIndexModel<Game>(Builders<Game>.IndexKeys.Text(x => x.name)));
 }
-}
-public class GameEngineCollection : IgdbCollection<GameEngine>
+public partial class GameEngineCollection : IgdbCollection<GameEngine>
 {
-    public GameEngineCollection(IgdbApi igdb, Database database) : base(igdb, "game_engines", database)
+    public GameEngineCollection(IgdbApi igdb, Database database) : base("game_engines", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GameEngineLogoCollection : IgdbCollection<GameEngineLogo>
+public partial class GameEngineLogoCollection : IgdbCollection<GameEngineLogo>
 {
-    public GameEngineLogoCollection(IgdbApi igdb, Database database) : base(igdb, "game_engine_logos", database)
+    public GameEngineLogoCollection(IgdbApi igdb, Database database) : base("game_engine_logos", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GameLocalizationCollection : IgdbCollection<GameLocalization>
+public partial class GameLocalizationCollection : IgdbCollection<GameLocalization>
 {
-    public GameLocalizationCollection(IgdbApi igdb, Database database) : base(igdb, "game_localizations", database)
+    public GameLocalizationCollection(IgdbApi igdb, Database database) : base("game_localizations", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
-collection.Indexes.CreateOne(new CreateIndexModel<GameLocalization>(Builders<GameLocalization>.IndexKeys.Text(x => x.name)));
 }
-}
-public class GameModeCollection : IgdbCollection<GameMode>
+public partial class GameModeCollection : IgdbCollection<GameMode>
 {
-    public GameModeCollection(IgdbApi igdb, Database database) : base(igdb, "game_modes", database)
+    public GameModeCollection(IgdbApi igdb, Database database) : base("game_modes", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GameVersionCollection : IgdbCollection<GameVersion>
+public partial class GameVersionCollection : IgdbCollection<GameVersion>
 {
-    public GameVersionCollection(IgdbApi igdb, Database database) : base(igdb, "game_versions", database)
+    public GameVersionCollection(IgdbApi igdb, Database database) : base("game_versions", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GameVersionFeatureCollection : IgdbCollection<GameVersionFeature>
+public partial class GameVersionFeatureCollection : IgdbCollection<GameVersionFeature>
 {
-    public GameVersionFeatureCollection(IgdbApi igdb, Database database) : base(igdb, "game_version_features", database)
+    public GameVersionFeatureCollection(IgdbApi igdb, Database database) : base("game_version_features", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GameVersionFeatureValueCollection : IgdbCollection<GameVersionFeatureValue>
+public partial class GameVersionFeatureValueCollection : IgdbCollection<GameVersionFeatureValue>
 {
-    public GameVersionFeatureValueCollection(IgdbApi igdb, Database database) : base(igdb, "game_version_feature_values", database)
+    public GameVersionFeatureValueCollection(IgdbApi igdb, Database database) : base("game_version_feature_values", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GameVideoCollection : IgdbCollection<GameVideo>
+public partial class GameVideoCollection : IgdbCollection<GameVideo>
 {
-    public GameVideoCollection(IgdbApi igdb, Database database) : base(igdb, "game_videos", database)
+    public GameVideoCollection(IgdbApi igdb, Database database) : base("game_videos", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class GenreCollection : IgdbCollection<Genre>
+public partial class GenreCollection : IgdbCollection<Genre>
 {
-    public GenreCollection(IgdbApi igdb, Database database) : base(igdb, "genres", database)
+    public GenreCollection(IgdbApi igdb, Database database) : base("genres", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class InvolvedCompanyCollection : IgdbCollection<InvolvedCompany>
+public partial class InvolvedCompanyCollection : IgdbCollection<InvolvedCompany>
 {
-    public InvolvedCompanyCollection(IgdbApi igdb, Database database) : base(igdb, "involved_companies", database)
+    public InvolvedCompanyCollection(IgdbApi igdb, Database database) : base("involved_companies", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class KeywordCollection : IgdbCollection<Keyword>
+public partial class KeywordCollection : IgdbCollection<Keyword>
 {
-    public KeywordCollection(IgdbApi igdb, Database database) : base(igdb, "keywords", database)
+    public KeywordCollection(IgdbApi igdb, Database database) : base("keywords", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class LanguageCollection : IgdbCollection<Language>
+public partial class LanguageCollection : IgdbCollection<Language>
 {
-    public LanguageCollection(IgdbApi igdb, Database database) : base(igdb, "languages", database)
+    public LanguageCollection(IgdbApi igdb, Database database) : base("languages", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class LanguageSupportCollection : IgdbCollection<LanguageSupport>
+public partial class LanguageSupportCollection : IgdbCollection<LanguageSupport>
 {
-    public LanguageSupportCollection(IgdbApi igdb, Database database) : base(igdb, "language_supports", database)
+    public LanguageSupportCollection(IgdbApi igdb, Database database) : base("language_supports", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class LanguageSupportTypeCollection : IgdbCollection<LanguageSupportType>
+public partial class LanguageSupportTypeCollection : IgdbCollection<LanguageSupportType>
 {
-    public LanguageSupportTypeCollection(IgdbApi igdb, Database database) : base(igdb, "language_support_types", database)
+    public LanguageSupportTypeCollection(IgdbApi igdb, Database database) : base("language_support_types", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class MultiplayerModeCollection : IgdbCollection<MultiplayerMode>
+public partial class MultiplayerModeCollection : IgdbCollection<MultiplayerMode>
 {
-    public MultiplayerModeCollection(IgdbApi igdb, Database database) : base(igdb, "multiplayer_modes", database)
+    public MultiplayerModeCollection(IgdbApi igdb, Database database) : base("multiplayer_modes", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlatformCollection : IgdbCollection<Platform>
+public partial class PlatformCollection : IgdbCollection<Platform>
 {
-    public PlatformCollection(IgdbApi igdb, Database database) : base(igdb, "platforms", database)
+    public PlatformCollection(IgdbApi igdb, Database database) : base("platforms", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlatformFamilyCollection : IgdbCollection<PlatformFamily>
+public partial class PlatformFamilyCollection : IgdbCollection<PlatformFamily>
 {
-    public PlatformFamilyCollection(IgdbApi igdb, Database database) : base(igdb, "platform_families", database)
+    public PlatformFamilyCollection(IgdbApi igdb, Database database) : base("platform_families", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlatformLogoCollection : IgdbCollection<PlatformLogo>
+public partial class PlatformLogoCollection : IgdbCollection<PlatformLogo>
 {
-    public PlatformLogoCollection(IgdbApi igdb, Database database) : base(igdb, "platform_logos", database)
+    public PlatformLogoCollection(IgdbApi igdb, Database database) : base("platform_logos", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlatformVersionCollection : IgdbCollection<PlatformVersion>
+public partial class PlatformVersionCollection : IgdbCollection<PlatformVersion>
 {
-    public PlatformVersionCollection(IgdbApi igdb, Database database) : base(igdb, "platform_versions", database)
+    public PlatformVersionCollection(IgdbApi igdb, Database database) : base("platform_versions", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlatformVersionCompanyCollection : IgdbCollection<PlatformVersionCompany>
+public partial class PlatformVersionCompanyCollection : IgdbCollection<PlatformVersionCompany>
 {
-    public PlatformVersionCompanyCollection(IgdbApi igdb, Database database) : base(igdb, "platform_version_companies", database)
+    public PlatformVersionCompanyCollection(IgdbApi igdb, Database database) : base("platform_version_companies", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlatformVersionReleaseDateCollection : IgdbCollection<PlatformVersionReleaseDate>
+public partial class PlatformVersionReleaseDateCollection : IgdbCollection<PlatformVersionReleaseDate>
 {
-    public PlatformVersionReleaseDateCollection(IgdbApi igdb, Database database) : base(igdb, "platform_version_release_dates", database)
+    public PlatformVersionReleaseDateCollection(IgdbApi igdb, Database database) : base("platform_version_release_dates", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlatformWebsiteCollection : IgdbCollection<PlatformWebsite>
+public partial class PlatformWebsiteCollection : IgdbCollection<PlatformWebsite>
 {
-    public PlatformWebsiteCollection(IgdbApi igdb, Database database) : base(igdb, "platform_websites", database)
+    public PlatformWebsiteCollection(IgdbApi igdb, Database database) : base("platform_websites", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class PlayerPerspectiveCollection : IgdbCollection<PlayerPerspective>
+public partial class PlayerPerspectiveCollection : IgdbCollection<PlayerPerspective>
 {
-    public PlayerPerspectiveCollection(IgdbApi igdb, Database database) : base(igdb, "player_perspectives", database)
+    public PlayerPerspectiveCollection(IgdbApi igdb, Database database) : base("player_perspectives", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class RegionCollection : IgdbCollection<Region>
+public partial class RegionCollection : IgdbCollection<Region>
 {
-    public RegionCollection(IgdbApi igdb, Database database) : base(igdb, "regions", database)
+    public RegionCollection(IgdbApi igdb, Database database) : base("regions", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class ReleaseDateCollection : IgdbCollection<ReleaseDate>
+public partial class ReleaseDateCollection : IgdbCollection<ReleaseDate>
 {
-    public ReleaseDateCollection(IgdbApi igdb, Database database) : base(igdb, "release_dates", database)
+    public ReleaseDateCollection(IgdbApi igdb, Database database) : base("release_dates", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class ScreenshotCollection : IgdbCollection<Screenshot>
+public partial class ReleaseDateStatusCollection : IgdbCollection<ReleaseDateStatus>
 {
-    public ScreenshotCollection(IgdbApi igdb, Database database) : base(igdb, "screenshots", database)
+    public ReleaseDateStatusCollection(IgdbApi igdb, Database database) : base("release_date_statuses", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class ThemeCollection : IgdbCollection<Theme>
+public partial class ScreenshotCollection : IgdbCollection<Screenshot>
 {
-    public ThemeCollection(IgdbApi igdb, Database database) : base(igdb, "themes", database)
+    public ScreenshotCollection(IgdbApi igdb, Database database) : base("screenshots", igdb, database)
     {
     }
-public override void CreateIndexes()
-{
 }
-}
-public class WebsiteCollection : IgdbCollection<Website>
+public partial class ThemeCollection : IgdbCollection<Theme>
 {
-    public WebsiteCollection(IgdbApi igdb, Database database) : base(igdb, "websites", database)
+    public ThemeCollection(IgdbApi igdb, Database database) : base("themes", igdb, database)
     {
     }
-public override void CreateIndexes()
+}
+public partial class WebsiteCollection : IgdbCollection<Website>
 {
-}
-}
+    public WebsiteCollection(IgdbApi igdb, Database database) : base("websites", igdb, database)
+    {
+    }
 }

@@ -1,8 +1,10 @@
-﻿namespace PlayniteServices.Controllers.IGDB;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
-public class IgdbItem
+namespace PlayniteServices.Controllers.IGDB;
+
+public interface IIgdbItem
 {
-    public ulong id { get; set; }
+    ulong id { get; set; }
 }
 
 public class Webhook
@@ -26,8 +28,29 @@ public class SearchRequest
 
 public class MetadataRequest
 {
-    public Guid? LibraryId { get; set; }
+    public Guid LibraryId { get; set; }
     public string? GameId { get; set; }
     public string? Name { get; set; }
     public ulong PlatformId { get; set; }
+    public int ReleaseYear { get; set; }
+
+    public MetadataRequest()
+    { 
+    }
+
+    public MetadataRequest(string name)
+    {
+        Name = name;
+    }
+
 }
+
+//public partial class AlternativeName
+//{
+//    public double textScore { get; set; }
+//}
+
+//public partial class Game
+//{
+//    public double textScore { get; set; }
+//}

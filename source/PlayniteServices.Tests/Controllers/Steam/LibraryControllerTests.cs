@@ -15,7 +15,7 @@ namespace PlayniteServices.Tests.Controllers.Steam
     {
         private readonly HttpClient client;
 
-        public LibraryControllerTests(TestFixture<Startup> fixture)
+        public LibraryControllerTests(TestFixture fixture)
         {
             client = fixture.Client;
         }

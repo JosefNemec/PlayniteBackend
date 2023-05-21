@@ -1,5 +1,5 @@
-﻿namespace PlayniteServices.Controllers.IGDB;
-
+﻿using MongoDB.Bson.Serialization;
+namespace PlayniteServices.Controllers.IGDB;
 public enum AgeRatingCategoryEnum
 {
     AGERATING_CATEGORY_NULL = 0,
@@ -299,8 +299,9 @@ public enum RegionRegionEnum
     BRAZIL = 10,
 }
 
-public class AgeRating : IgdbItem
+public partial class AgeRating : IIgdbItem
 {
+    public ulong id { get; set; }
     public AgeRatingCategoryEnum category { get; set; }
     public List<ulong>? content_descriptions { get; set; }
     public AgeRatingRatingEnum rating { get; set; }
@@ -310,27 +311,47 @@ public class AgeRating : IgdbItem
 
     public List<AgeRatingContentDescription>? content_descriptions_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<AgeRating>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.content_descriptions_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class AgeRatingContentDescription : IgdbItem
+public partial class AgeRatingContentDescription : IIgdbItem
 {
+    public ulong id { get; set; }
     public AgeRatingContentDescriptionCategoryEnum category { get; set; }
     public string? description { get; set; }
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<AgeRatingContentDescription>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class AlternativeName : IgdbItem
+public partial class AlternativeName : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? comment { get; set; }
     public ulong game { get; set; }
     public string? name { get; set; }
@@ -338,14 +359,24 @@ public class AlternativeName : IgdbItem
 
     public Game? game_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<AlternativeName>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Artwork : IgdbItem
+public partial class Artwork : IIgdbItem
 {
+    public ulong id { get; set; }
     public bool alpha_channel { get; set; }
     public bool animated { get; set; }
     public ulong game { get; set; }
@@ -357,14 +388,24 @@ public class Artwork : IgdbItem
 
     public Game? game_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Artwork>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class Character : IgdbItem
+public partial class Character : IIgdbItem
 {
+    public ulong id { get; set; }
     public List<string>? akas { get; set; }
     public string? country_name { get; set; }
     public long created_at { get; set; }
@@ -382,14 +423,25 @@ public class Character : IgdbItem
     public List<Game>? games_expanded { get; set; }
     public CharacterMugShot? mug_shot_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Character>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.games_expanded);
+            cm.UnmapProperty(p => p.mug_shot_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class CharacterMugShot : IgdbItem
+public partial class CharacterMugShot : IIgdbItem
 {
+    public ulong id { get; set; }
     public bool alpha_channel { get; set; }
     public bool animated { get; set; }
     public int height { get; set; }
@@ -399,14 +451,24 @@ public class CharacterMugShot : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CharacterMugShot>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class Collection : IgdbItem
+public partial class Collection : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public List<ulong>? games { get; set; }
     public string? name { get; set; }
@@ -417,14 +479,24 @@ public class Collection : IgdbItem
 
     public List<Game>? games_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Collection>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.games_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Company : IgdbItem
+public partial class Company : IIgdbItem
 {
+    public ulong id { get; set; }
     public long change_date { get; set; }
     public DateFormatChangeDateCategoryEnum change_date_category { get; set; }
     public ulong changed_company_id { get; set; }
@@ -451,14 +523,29 @@ public class Company : IgdbItem
     public List<Game>? published_expanded { get; set; }
     public List<CompanyWebsite>? websites_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Company>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.changed_company_id_expanded);
+            cm.UnmapProperty(p => p.developed_expanded);
+            cm.UnmapProperty(p => p.logo_expanded);
+            cm.UnmapProperty(p => p.parent_expanded);
+            cm.UnmapProperty(p => p.published_expanded);
+            cm.UnmapProperty(p => p.websites_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class CompanyLogo : IgdbItem
+public partial class CompanyLogo : IIgdbItem
 {
+    public ulong id { get; set; }
     public bool alpha_channel { get; set; }
     public bool animated { get; set; }
     public int height { get; set; }
@@ -468,28 +555,48 @@ public class CompanyLogo : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CompanyLogo>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class CompanyWebsite : IgdbItem
+public partial class CompanyWebsite : IIgdbItem
 {
+    public ulong id { get; set; }
     public WebsiteCategoryEnum category { get; set; }
     public bool trusted { get; set; }
     public string? url { get; set; }
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CompanyWebsite>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class Cover : IgdbItem
+public partial class Cover : IIgdbItem
 {
+    public ulong id { get; set; }
     public bool alpha_channel { get; set; }
     public bool animated { get; set; }
     public ulong game { get; set; }
@@ -503,14 +610,25 @@ public class Cover : IgdbItem
     public Game? game_expanded { get; set; }
     public GameLocalization? game_localization_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Cover>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.game_localization_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class ExternalGame : IgdbItem
+public partial class ExternalGame : IIgdbItem
 {
+    public ulong id { get; set; }
     public ExternalGameCategoryEnum category { get; set; }
     public long created_at { get; set; }
     public ulong game { get; set; }
@@ -527,14 +645,25 @@ public class ExternalGame : IgdbItem
     public Game? game_expanded { get; set; }
     public Platform? platform_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<ExternalGame>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.platform_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Franchise : IgdbItem
+public partial class Franchise : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public List<ulong>? games { get; set; }
     public string? name { get; set; }
@@ -545,14 +674,24 @@ public class Franchise : IgdbItem
 
     public List<Game>? games_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Franchise>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.games_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Game : IgdbItem
+public partial class Game : IIgdbItem
 {
+    public ulong id { get; set; }
     public List<ulong>? age_ratings { get; set; }
     public double aggregated_rating { get; set; }
     public int aggregated_rating_count { get; set; }
@@ -646,14 +785,58 @@ public class Game : IgdbItem
     public List<LanguageSupport>? language_supports_expanded { get; set; }
     public List<GameLocalization>? game_localizations_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Game>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.age_ratings_expanded);
+            cm.UnmapProperty(p => p.alternative_names_expanded);
+            cm.UnmapProperty(p => p.artworks_expanded);
+            cm.UnmapProperty(p => p.bundles_expanded);
+            cm.UnmapProperty(p => p.collection_expanded);
+            cm.UnmapProperty(p => p.cover_expanded);
+            cm.UnmapProperty(p => p.dlcs_expanded);
+            cm.UnmapProperty(p => p.expansions_expanded);
+            cm.UnmapProperty(p => p.external_games_expanded);
+            cm.UnmapProperty(p => p.franchise_expanded);
+            cm.UnmapProperty(p => p.franchises_expanded);
+            cm.UnmapProperty(p => p.game_engines_expanded);
+            cm.UnmapProperty(p => p.game_modes_expanded);
+            cm.UnmapProperty(p => p.genres_expanded);
+            cm.UnmapProperty(p => p.involved_companies_expanded);
+            cm.UnmapProperty(p => p.keywords_expanded);
+            cm.UnmapProperty(p => p.multiplayer_modes_expanded);
+            cm.UnmapProperty(p => p.parent_game_expanded);
+            cm.UnmapProperty(p => p.platforms_expanded);
+            cm.UnmapProperty(p => p.player_perspectives_expanded);
+            cm.UnmapProperty(p => p.release_dates_expanded);
+            cm.UnmapProperty(p => p.screenshots_expanded);
+            cm.UnmapProperty(p => p.similar_games_expanded);
+            cm.UnmapProperty(p => p.standalone_expansions_expanded);
+            cm.UnmapProperty(p => p.themes_expanded);
+            cm.UnmapProperty(p => p.version_parent_expanded);
+            cm.UnmapProperty(p => p.videos_expanded);
+            cm.UnmapProperty(p => p.websites_expanded);
+            cm.UnmapProperty(p => p.remakes_expanded);
+            cm.UnmapProperty(p => p.remasters_expanded);
+            cm.UnmapProperty(p => p.expanded_games_expanded);
+            cm.UnmapProperty(p => p.ports_expanded);
+            cm.UnmapProperty(p => p.forks_expanded);
+            cm.UnmapProperty(p => p.language_supports_expanded);
+            cm.UnmapProperty(p => p.game_localizations_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class GameEngine : IgdbItem
+public partial class GameEngine : IIgdbItem
 {
+    public ulong id { get; set; }
     public List<ulong>? companies { get; set; }
     public long created_at { get; set; }
     public string? description { get; set; }
@@ -669,14 +852,26 @@ public class GameEngine : IgdbItem
     public GameEngineLogo? logo_expanded { get; set; }
     public List<Platform>? platforms_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameEngine>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.companies_expanded);
+            cm.UnmapProperty(p => p.logo_expanded);
+            cm.UnmapProperty(p => p.platforms_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class GameEngineLogo : IgdbItem
+public partial class GameEngineLogo : IIgdbItem
 {
+    public ulong id { get; set; }
     public bool alpha_channel { get; set; }
     public bool animated { get; set; }
     public int height { get; set; }
@@ -686,14 +881,24 @@ public class GameEngineLogo : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameEngineLogo>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class GameLocalization : IgdbItem
+public partial class GameLocalization : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? name { get; set; }
     public ulong cover { get; set; }
     public ulong game { get; set; }
@@ -706,14 +911,26 @@ public class GameLocalization : IgdbItem
     public Game? game_expanded { get; set; }
     public Region? region_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameLocalization>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.cover_expanded);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.region_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class GameMode : IgdbItem
+public partial class GameMode : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
@@ -722,14 +939,24 @@ public class GameMode : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameMode>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class GameVersion : IgdbItem
+public partial class GameVersion : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public List<ulong>? features { get; set; }
     public ulong game { get; set; }
@@ -742,14 +969,26 @@ public class GameVersion : IgdbItem
     public Game? game_expanded { get; set; }
     public List<Game>? games_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameVersion>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.features_expanded);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.games_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class GameVersionFeature : IgdbItem
+public partial class GameVersionFeature : IIgdbItem
 {
+    public ulong id { get; set; }
     public GameVersionFeatureCategoryEnum category { get; set; }
     public string? description { get; set; }
     public int position { get; set; }
@@ -759,14 +998,24 @@ public class GameVersionFeature : IgdbItem
 
     public List<GameVersionFeatureValue>? values_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameVersionFeature>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.values_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class GameVersionFeatureValue : IgdbItem
+public partial class GameVersionFeatureValue : IIgdbItem
 {
+    public ulong id { get; set; }
     public ulong game { get; set; }
     public ulong game_feature { get; set; }
     public GameVersionFeatureValueIncludedFeatureEnum included_feature { get; set; }
@@ -776,14 +1025,25 @@ public class GameVersionFeatureValue : IgdbItem
     public Game? game_expanded { get; set; }
     public GameVersionFeature? game_feature_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameVersionFeatureValue>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.game_feature_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class GameVideo : IgdbItem
+public partial class GameVideo : IIgdbItem
 {
+    public ulong id { get; set; }
     public ulong game { get; set; }
     public string? name { get; set; }
     public string? video_id { get; set; }
@@ -791,14 +1051,24 @@ public class GameVideo : IgdbItem
 
     public Game? game_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameVideo>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Genre : IgdbItem
+public partial class Genre : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
@@ -807,14 +1077,24 @@ public class Genre : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Genre>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class InvolvedCompany : IgdbItem
+public partial class InvolvedCompany : IIgdbItem
 {
+    public ulong id { get; set; }
     public ulong company { get; set; }
     public long created_at { get; set; }
     public bool developer { get; set; }
@@ -828,14 +1108,25 @@ public class InvolvedCompany : IgdbItem
     public Company? company_expanded { get; set; }
     public Game? game_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<InvolvedCompany>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.company_expanded);
+            cm.UnmapProperty(p => p.game_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class Keyword : IgdbItem
+public partial class Keyword : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
@@ -844,14 +1135,24 @@ public class Keyword : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Keyword>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Language : IgdbItem
+public partial class Language : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? name { get; set; }
     public string? native_name { get; set; }
     public string? locale { get; set; }
@@ -860,14 +1161,24 @@ public class Language : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Language>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class LanguageSupport : IgdbItem
+public partial class LanguageSupport : IIgdbItem
 {
+    public ulong id { get; set; }
     public ulong game { get; set; }
     public ulong language { get; set; }
     public ulong language_support_type { get; set; }
@@ -879,28 +1190,50 @@ public class LanguageSupport : IgdbItem
     public Language? language_expanded { get; set; }
     public LanguageSupportType? language_support_type_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<LanguageSupport>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.language_expanded);
+            cm.UnmapProperty(p => p.language_support_type_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class LanguageSupportType : IgdbItem
+public partial class LanguageSupportType : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? name { get; set; }
     public long created_at { get; set; }
     public long updated_at { get; set; }
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<LanguageSupportType>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class MultiplayerMode : IgdbItem
+public partial class MultiplayerMode : IIgdbItem
 {
+    public ulong id { get; set; }
     public bool campaigncoop { get; set; }
     public bool dropin { get; set; }
     public ulong game { get; set; }
@@ -919,14 +1252,25 @@ public class MultiplayerMode : IgdbItem
     public Game? game_expanded { get; set; }
     public Platform? platform_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<MultiplayerMode>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.platform_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class Platform : IgdbItem
+public partial class Platform : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? abbreviation { get; set; }
     public string? alternative_name { get; set; }
     public PlatformCategoryEnum category { get; set; }
@@ -948,27 +1292,50 @@ public class Platform : IgdbItem
     public List<PlatformVersion>? versions_expanded { get; set; }
     public List<PlatformWebsite>? websites_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Platform>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.platform_logo_expanded);
+            cm.UnmapProperty(p => p.platform_family_expanded);
+            cm.UnmapProperty(p => p.versions_expanded);
+            cm.UnmapProperty(p => p.websites_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class PlatformFamily : IgdbItem
+public partial class PlatformFamily : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<PlatformFamily>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class PlatformLogo : IgdbItem
+public partial class PlatformLogo : IIgdbItem
 {
+    public ulong id { get; set; }
     public bool alpha_channel { get; set; }
     public bool animated { get; set; }
     public int height { get; set; }
@@ -978,14 +1345,24 @@ public class PlatformLogo : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<PlatformLogo>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class PlatformVersion : IgdbItem
+public partial class PlatformVersion : IIgdbItem
 {
+    public ulong id { get; set; }
     public List<ulong>? companies { get; set; }
     public string? connectivity { get; set; }
     public string? cpu { get; set; }
@@ -1012,14 +1389,27 @@ public class PlatformVersion : IgdbItem
     public PlatformLogo? platform_logo_expanded { get; set; }
     public List<PlatformVersionReleaseDate>? platform_version_release_dates_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<PlatformVersion>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.companies_expanded);
+            cm.UnmapProperty(p => p.main_manufacturer_expanded);
+            cm.UnmapProperty(p => p.platform_logo_expanded);
+            cm.UnmapProperty(p => p.platform_version_release_dates_expanded);
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class PlatformVersionCompany : IgdbItem
+public partial class PlatformVersionCompany : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? comment { get; set; }
     public ulong company { get; set; }
     public bool developer { get; set; }
@@ -1028,14 +1418,24 @@ public class PlatformVersionCompany : IgdbItem
 
     public Company? company_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<PlatformVersionCompany>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.company_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class PlatformVersionReleaseDate : IgdbItem
+public partial class PlatformVersionReleaseDate : IIgdbItem
 {
+    public ulong id { get; set; }
     public DateFormatChangeDateCategoryEnum category { get; set; }
     public long created_at { get; set; }
     public long date { get; set; }
@@ -1049,28 +1449,48 @@ public class PlatformVersionReleaseDate : IgdbItem
 
     public PlatformVersion? platform_version_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<PlatformVersionReleaseDate>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.platform_version_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class PlatformWebsite : IgdbItem
+public partial class PlatformWebsite : IIgdbItem
 {
+    public ulong id { get; set; }
     public WebsiteCategoryEnum category { get; set; }
     public bool trusted { get; set; }
     public string? url { get; set; }
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<PlatformWebsite>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class PlayerPerspective : IgdbItem
+public partial class PlayerPerspective : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
@@ -1079,14 +1499,24 @@ public class PlayerPerspective : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<PlayerPerspective>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Region : IgdbItem
+public partial class Region : IIgdbItem
 {
+    public ulong id { get; set; }
     public string? name { get; set; }
     public string? category { get; set; }
     public string? identifier { get; set; }
@@ -1095,14 +1525,24 @@ public class Region : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Region>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class ReleaseDate : IgdbItem
+public partial class ReleaseDate : IIgdbItem
 {
+    public ulong id { get; set; }
     public DateFormatChangeDateCategoryEnum category { get; set; }
     public long created_at { get; set; }
     public long date { get; set; }
@@ -1114,18 +1554,57 @@ public class ReleaseDate : IgdbItem
     public long updated_at { get; set; }
     public int y { get; set; }
     public string? checksum { get; set; }
+    public ulong status { get; set; }
 
     public Game? game_expanded { get; set; }
     public Platform? platform_expanded { get; set; }
+    public ReleaseDateStatus? status_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<ReleaseDate>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.platform_expanded);
+            cm.UnmapProperty(p => p.status_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class Screenshot : IgdbItem
+public partial class ReleaseDateStatus : IIgdbItem
 {
+    public ulong id { get; set; }
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public long created_at { get; set; }
+    public long updated_at { get; set; }
+    public string? checksum { get; set; }
+
+
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<ReleaseDateStatus>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
+    public override string ToString()
+    {
+        return $"{id}: {name}";
+    }
+}
+
+public partial class Screenshot : IIgdbItem
+{
+    public ulong id { get; set; }
     public bool alpha_channel { get; set; }
     public bool animated { get; set; }
     public ulong game { get; set; }
@@ -1137,14 +1616,24 @@ public class Screenshot : IgdbItem
 
     public Game? game_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Screenshot>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();
     }
 }
 
-public class Theme : IgdbItem
+public partial class Theme : IIgdbItem
 {
+    public ulong id { get; set; }
     public long created_at { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
@@ -1153,14 +1642,24 @@ public class Theme : IgdbItem
     public string? checksum { get; set; }
 
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Theme>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
     public override string ToString()
     {
         return $"{id}: {name}";
     }
 }
 
-public class Website : IgdbItem
+public partial class Website : IIgdbItem
 {
+    public ulong id { get; set; }
     public WebsiteCategoryEnum category { get; set; }
     public ulong game { get; set; }
     public bool trusted { get; set; }
@@ -1169,6 +1668,15 @@ public class Website : IgdbItem
 
     public Game? game_expanded { get; set; }
 
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<Website>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+        });
+    }
     public override string ToString()
     {
         return id.ToString();

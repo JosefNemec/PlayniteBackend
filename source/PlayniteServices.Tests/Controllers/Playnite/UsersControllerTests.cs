@@ -14,7 +14,7 @@ namespace PlayniteServices.Tests.Controllers.Playnite
     {
         private readonly HttpClient client;
 
-        public UsersControllerTests(TestFixture<Startup> fixture)
+        public UsersControllerTests(TestFixture fixture)
         {
             client = fixture.Client;
         }

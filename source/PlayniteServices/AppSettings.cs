@@ -17,10 +17,8 @@ namespace PlayniteServices
         public string? ClientId { get; set; }
         public string? AccessToken { get; set; }
         public string? ClientSecret { get; set; }
-        public int SearchCacheTimeout { get; set; }
         public string? WebHookSecret { get; set; }
         public string? WebHookRootAddress { get; set; }
-        public bool AlternativeSearch { get; set; }
         public bool RegisterWebhooks { get; set; }
     }
 
