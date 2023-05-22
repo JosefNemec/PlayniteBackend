@@ -57,7 +57,6 @@ public class IgdbController : Controller
         return new ErrorResponse("Game not found.");
     }
 
-
     [HttpPost("search")]
     public async Task<ResponseBase> SearchGames([FromBody] SearchRequest? searchRequest)
     {
@@ -71,8 +70,8 @@ public class IgdbController : Controller
             return new ErrorResponse("No search term");
         }
 
-        var games = await SearchGame(searchRequest.SearchTerm);
-        return new DataResponse<List<Game>>(games);
+        var games = await SearchGame(searchRequest.SearchTerm, true);
+        return new DataResponse<List<Game>>(games.Select(a => a.Game).ToList());
     }
 
     [HttpPost("metadata")]
@@ -98,93 +97,115 @@ public class IgdbController : Controller
         }
 
         var match = await TryMatchGame(metadataRequest);
-        if (match == 0)
+        if (match == null)
         {
             return new DataResponse<Game>(default);
         }
         else
         {
-            return new DataResponse<Game>(await igdbApi.Games.GetItem(match));
+            return new DataResponse<Game>(match);
         }
     }
 
-    private async Task<List<Game>> SearchGame(string searchTerm)
+    private async Task<List<TextSearchResult>> SearchGameByName(string searchTerm)
     {
         var filter = Builders<Game>.Filter;
         var catFilter = filter.In(a => a.category, defaultSearchCategories);
         var nameFilter = filter.Text(searchTerm, gameSearchOptons);
-        return await igdbApi.Games.collection.
-                Find(catFilter & nameFilter).
-                //Project<Game>(Builders<Game>.Projection.MetaTextScore("textScore")).
-                Sort(Builders<Game>.Sort.MetaTextScore("textScore")).
-                Limit(50).
-                ToListAsync();
+        return (await igdbApi.Games.collection.
+            Find(catFilter & nameFilter).
+            Project<Game>(Builders<Game>.Projection.MetaTextScore("textScore")).
+            Sort(Builders<Game>.Sort.MetaTextScore("textScore")).                
+            Limit(30).
+            ToListAsync()).
+                Select(a => new TextSearchResult(a.textScore, a.name!, a)).ToList();
     }
 
-    private async Task<List<AlternativeName>> SearchGameAlternativeNames(string searchTerm)
+    private async Task<List<TextSearchResult>> SearchGameByAlternativeNames(string searchTerm)
     {
-        var filter = Builders<AlternativeName>.Filter;
-        return await igdbApi.AlternativeNames.collection.
-                Find(filter.Text(searchTerm, gameSearchOptons)).
-                //Project<AlternativeName>(Builders<AlternativeName>.Projection.MetaTextScore("textScore")).
-                Sort(Builders<AlternativeName>.Sort.MetaTextScore("textScore")).
-                Limit(50).
-                ToListAsync();
+        var searchRes = await igdbApi.AlternativeNames.collection.
+            Find(Builders<AlternativeName>.Filter.Text(searchTerm, gameSearchOptons)).
+            Project<AlternativeName>(Builders<AlternativeName>.Projection.MetaTextScore("textScore")).
+            Sort(Builders<AlternativeName>.Sort.MetaTextScore("textScore")).
+            Limit(30).
+            ToListAsync();
+        var res = new List<TextSearchResult>(30);
+        foreach (var item in searchRes)
+        {
+            await item.expand_game(igdbApi);
+            if (item.game_expanded != null)
+            {
+                res.Add(new TextSearchResult(item.textScore, item.name!, item.game_expanded));
+            }
+        }
+
+        return res;
     }
 
-    private async Task<ulong> TryMatchGame(MetadataRequest metadataRequest)
+    private async Task<List<TextSearchResult>> SearchGame(string searchTerm, bool removeDuplicates)
+    {
+        var nameResults = await SearchGameByName(searchTerm);
+        var altResults = await SearchGameByAlternativeNames(searchTerm);
+        var res = new List<TextSearchResult>(60);
+        res.AddRange(nameResults);
+        res.AddRange(altResults);
+        res.Sort((a, b) => a.TextScore.CompareTo(b.TextScore) * -1);
+        if (removeDuplicates)
+        {
+            res = res.DistinctBy(a => a.Game.id).ToList();
+        }
+
+        return res;
+    }
+
+    private async Task<Game?> TryMatchGame(MetadataRequest metadataRequest)
     {
         if (metadataRequest.Name.IsNullOrWhiteSpace())
         {
-            return 0;
+            return null;
         }
 
         var name = SanitizeName(metadataRequest.Name);
 
-        var results = await SearchGame(name);
-        results.ForEach(a => a.name = SanitizeName(a.name ?? string.Empty));
-
-        var altResults = await SearchGameAlternativeNames(name);
-        altResults.ForEach(a => a.name = SanitizeName(a.name ?? string.Empty));
-
-        // TODO: All these below should return game objects not IDs
+        var results = await SearchGame(name, false);
+        results.ForEach(a => a.Name = SanitizeName(a.Name));
 
         // Direct comparison
-        var matchedGame = MatchFun(metadataRequest, name, results, altResults);
-        if (matchedGame > 0)
+        var matchedGame = TryMatchGames(metadataRequest, name, results);
+        if (matchedGame != null)
         {
             return matchedGame;
         }
 
         // Try replacing roman numerals: 3 => III
         var testName = Regex.Replace(name, @"\d+", ReplaceNumsForRomans);
-        matchedGame = MatchFun(metadataRequest, testName, results, altResults);
-        if (matchedGame > 0)
+        matchedGame = TryMatchGames(metadataRequest, testName, results);
+        if (matchedGame != null)
         {
             return matchedGame;
         }
 
         // Try adding The
         testName = "The " + name;
-        matchedGame = MatchFun(metadataRequest, testName, results, altResults);
-        if (matchedGame > 0)
+        matchedGame = TryMatchGames(metadataRequest, testName, results);
+        if (matchedGame != null)
         {
             return matchedGame;
         }
 
         // Try chaning & / and
         testName = Regex.Replace(name, @"\s+and\s+", " & ");
-        matchedGame = MatchFun(metadataRequest, testName, results, altResults);
-        if (matchedGame > 0)
+        matchedGame = TryMatchGames(metadataRequest, testName, results);
+        if (matchedGame != null)
         {
             return matchedGame;
         }
 
         // Try removing apostrophes
         var resCopy = results.GetCopy();
-        resCopy.ForEach(a => a.name = a.name!.Replace("'", "", StringComparison.Ordinal));
-        matchedGame = MatchFun(metadataRequest, name, resCopy, altResults);
-        if (matchedGame > 0)
+        resCopy.ForEach(a => a.Name = a.Name!.Replace("'", "", StringComparison.Ordinal));
+        matchedGame = TryMatchGames(metadataRequest, name, resCopy);
+        if (matchedGame != null)
         {
             return matchedGame;
         }
@@ -192,9 +213,9 @@ public class IgdbController : Controller
         // Try removing all ":" and "-"
         testName = Regex.Replace(name, @"\s*(:|-)\s*", " ");
         resCopy = results.GetCopy();
-        resCopy.ForEach(a => a.name = Regex.Replace(a.name!, @"\s*(:|-)\s*", " "));
-        matchedGame = MatchFun(metadataRequest, testName, resCopy, altResults);
-        if (matchedGame > 0)
+        resCopy.ForEach(a => a.Name = Regex.Replace(a.Name!, @"\s*(:|-)\s*", " "));
+        matchedGame = TryMatchGames(metadataRequest, testName, resCopy);
+        if (matchedGame != null)
         {
             return matchedGame;
         }
@@ -202,9 +223,9 @@ public class IgdbController : Controller
         // Try without subtitle
         var testResult = results.FirstOrDefault(a =>
         {
-            if (!string.IsNullOrEmpty(a.name) && a.name.Contains(':', StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrEmpty(a.Name) && a.Name.Contains(':', StringComparison.InvariantCultureIgnoreCase))
             {
-                return string.Equals(name, a.name.Split(':')[0], StringComparison.InvariantCultureIgnoreCase);
+                return string.Equals(name, a.Name.Split(':')[0], StringComparison.InvariantCultureIgnoreCase);
             }
 
             return false;
@@ -212,58 +233,58 @@ public class IgdbController : Controller
 
         if (testResult != null)
         {
-            return testResult.id;
+            return testResult.Game;
         }
 
-        return 0;
+        return null;
     }
 
-    private ulong MatchFun(MetadataRequest metadataRequest, string matchName, List<Game> list, List<AlternativeName> altList)
+    private Game? TryMatchGames(MetadataRequest metadataRequest, string matchName, List<TextSearchResult> list)
     {
-        var res = list.Where(a => string.Equals(matchName, a.name, StringComparison.InvariantCultureIgnoreCase)).ToList();
+        var res = list.Where(a => string.Equals(matchName, a.Name, StringComparison.InvariantCultureIgnoreCase)).ToList();
+        if (res.Count == 0)
+        {
+            return null;
+        }
+
         if (res.Count == 1)
         {
-            return res[0].id;
+            return res[0].Game;
         }
-        else if (res.Count > 1)
+        
+        if (res.Count > 1)
         {
             if (metadataRequest.ReleaseYear > 0)
             {
-                var game = res.FirstOrDefault(a => a.first_release_date.ToDateFromUnixSeconds().Year == metadataRequest.ReleaseYear);
+                var game = res.FirstOrDefault(a => a.Game.first_release_date.ToDateFromUnixSeconds().Year == metadataRequest.ReleaseYear);
                 if (game != null)
                 {
-                    return game.id;
+                    return game.Game;
                 }
             }
             else
             {
                 // If multiple matches are found and we don't have release date then prioritize older game
-                if (res.All(a => a.first_release_date == 0))
+                if (res.All(a => a.Game.first_release_date == 0))
                 {
-                    return res[0].id;
+                    return res[0].Game;
                 }
                 else
                 {
-                    var game = res.OrderBy(a => a.first_release_date).FirstOrDefault(a => a.first_release_date > 0);
+                    var game = res.OrderBy(a => a.Game.first_release_date).FirstOrDefault(a => a.Game.first_release_date > 0);
                     if (game == null)
                     {
-                        return res[0].id;
+                        return res[0].Game;
                     }
                     else
                     {
-                        return game.id;
+                        return game.Game;
                     }
                 }
             }
         }
 
-        var altRes = altList.Where(a => string.Equals(matchName, a.name, StringComparison.InvariantCultureIgnoreCase)).ToList();
-        if (altRes.Count > 0)
-        {
-            return altRes[0].game;
-        }
-
-        return 0;
+        return null;
     }
 
     private static string SanitizeName(string name)
@@ -300,12 +321,4 @@ public class IgdbController : Controller
             return m.Value;
         }
     }
-
-    //private static string GetSearchString(string gameName)
-    //{
-    //    return gameName.
-    //        Replace(":", " ", StringComparison.InvariantCultureIgnoreCase).
-    //        Replace("\"", string.Empty, StringComparison.InvariantCultureIgnoreCase).
-    //        Trim();
-    //}
 }

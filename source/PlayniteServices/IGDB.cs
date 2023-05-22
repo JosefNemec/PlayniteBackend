@@ -82,10 +82,7 @@ public partial class IgdbApi : IDisposable
 
         try
         {
-            var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
-            webhooks = DataSerialization.FromJson<List<Webhook>>(webhooksString);
-            logger.Info("Current IGDB webhook status:");
-            logger.Info(webhooksString);
+            webhooks = await GetWebhooks();
         }
         catch (Exception e)
         {
@@ -103,6 +100,12 @@ public partial class IgdbApi : IDisposable
                 logger.Error(e, $"Failed to register {collection.EndpointPath} webhooks.");
             }
         }
+    }
+
+    public async Task<List<Webhook>?> GetWebhooks()
+    {
+        var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
+        return DataSerialization.FromJson<List<Webhook>>(webhooksString);
     }
 
     private static async Task SaveTokens(string accessToken)
@@ -163,9 +166,9 @@ public partial class IgdbApi : IDisposable
         return request;
     }
 
-    public async Task<string> SendStringRequest(string url, string query, bool reTry = true)
+    public async Task<string> SendStringRequest(string url, string query, bool reTry = true, bool log = true)
     {
-        // logger.Debug($"IGDB live request: {url}, {query}");
+        if (log) { logger.Debug($"IGDB live request: {url}, {query}"); }
         return await SendStringRequest(url, new StringContent(query), HttpMethod.Post, reTry);
     }
 

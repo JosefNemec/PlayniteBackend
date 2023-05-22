@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using Playnite.SDK;
 using System.Net.Http;
 
@@ -53,7 +52,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
         while (true)
         {
             var query = $"fields *; limit 500; offset {i};";
-            var stringData = await igdb.SendStringRequest(EndpointPath, query);
+            var stringData = await igdb.SendStringRequest(EndpointPath, query, log: false);
             var items = DataSerialization.FromJson<List<T>>(stringData);
             if (!items.HasItems())
             {
@@ -97,7 +96,8 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
     private async Task RegisterWebhook(string method, List<Webhook> webhooksStatus)
     {
         var webhookUrl = igdb.Settings.Settings.IGDB!.WebHookRootAddress!.UriCombine(EndpointPath, method);
-        if (webhooksStatus?.Any(a => a.url == webhookUrl) != true)
+        var currentHook = webhooksStatus?.FirstOrDefault(a => a.url == webhookUrl);
+        if (currentHook?.active != true)
         {
             logger.Error($"IGDB {EndpointPath} {method} webhook is NOT active.");
 
@@ -123,10 +123,6 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
 
             logger.Debug(registeredStr);
         }
-        else
-        {
-            logger.Info($"IGDB {EndpointPath} {method} webhook is active.");
-        }
     }
 
     private async Task<long> GetCollectionCount()
@@ -144,7 +140,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
         }
     }
 
-    public async Task<T?> GetItem(ulong itemId)
+    public async Task<T?> GetItem(ulong itemId, bool fetchIfNeeded = false)
     {
         if (itemId == 0)
         {
@@ -152,24 +148,23 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
         }
 
         var item = await collection.Find(a => a.id == itemId).FirstOrDefaultAsync();
-        return item;
-        //if (item != null)
-        //{
-        //    return item;
-        //}
+        if (item != null || fetchIfNeeded == false)
+        {
+            return item;
+        }
 
-        //var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = {itemId};");
-        //var items = DataSerialization.FromJson<List<T>>(stringResult);
-        //if (items.HasItems())
-        //{
-        //    await Add(items[0]);
-        //    return items[0];
-        //}
+        var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = {itemId};");
+        var items = DataSerialization.FromJson<List<T>>(stringResult);
+        if (items.HasItems())
+        {
+            await Add(items[0]);
+            return items[0];
+        }
 
-        //return null;
+        return null;
     }
 
-    public async Task<List<T>?> GetItem(List<ulong>? itemIds)
+    public async Task<List<T>?> GetItem(List<ulong>? itemIds, bool fetchIfNeeded = false)
     {
         if (!itemIds.HasItems())
         {
@@ -178,19 +173,19 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
 
         var filter = Builders<T>.Filter.In(nameof(IIgdbItem.id), itemIds);
         var items = await collection.Find(filter).ToListAsync();
-        //if (items.Count == itemIds.Count)
-        //{
-        //    return items;
-        //}
+        if (items.Count == itemIds.Count || fetchIfNeeded == false)
+        {
+            return items;
+        }
 
-        //var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, items.Select(a => a.id));
-        //var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
-        //var newItems = DataSerialization.FromJson<List<T>>(stringResult);
-        //if (newItems.HasItems())
-        //{
-        //    await Add(newItems);
-        //    items.AddRange(newItems);
-        //}
+        var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, items.Select(a => a.id));
+        var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
+        var newItems = DataSerialization.FromJson<List<T>>(stringResult);
+        if (newItems.HasItems())
+        {
+            await Add(newItems);
+            items.AddRange(newItems);
+        }
 
         return items;
     }
@@ -219,6 +214,11 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
     public async Task Delete(T item)
     {
         await collection.DeleteOneAsync(a => a.id == item.id);
+    }
+
+    public async Task Delete(ulong itemId)
+    {
+        await collection.DeleteOneAsync(a => a.id == itemId);
     }
 }
 

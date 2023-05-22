@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson.Serialization;
-namespace PlayniteServices.Controllers.IGDB;
+﻿namespace PlayniteServices.Controllers.IGDB;
 public enum AgeRatingCategoryEnum
 {
     AGERATING_CATEGORY_NULL = 0,
@@ -311,15 +310,6 @@ public partial class AgeRating : IIgdbItem
 
     public List<AgeRatingContentDescription>? content_descriptions_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<AgeRating>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.content_descriptions_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -334,15 +324,6 @@ public partial class AgeRatingContentDescription : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<AgeRatingContentDescription>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -359,15 +340,6 @@ public partial class AlternativeName : IIgdbItem
 
     public Game? game_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<AlternativeName>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -388,15 +360,6 @@ public partial class Artwork : IIgdbItem
 
     public Game? game_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Artwork>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -423,16 +386,6 @@ public partial class Character : IIgdbItem
     public List<Game>? games_expanded { get; set; }
     public CharacterMugShot? mug_shot_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Character>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.games_expanded);
-            cm.UnmapProperty(p => p.mug_shot_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -451,15 +404,6 @@ public partial class CharacterMugShot : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<CharacterMugShot>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -479,15 +423,6 @@ public partial class Collection : IIgdbItem
 
     public List<Game>? games_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Collection>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.games_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -523,20 +458,6 @@ public partial class Company : IIgdbItem
     public List<Game>? published_expanded { get; set; }
     public List<CompanyWebsite>? websites_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Company>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.changed_company_id_expanded);
-            cm.UnmapProperty(p => p.developed_expanded);
-            cm.UnmapProperty(p => p.logo_expanded);
-            cm.UnmapProperty(p => p.parent_expanded);
-            cm.UnmapProperty(p => p.published_expanded);
-            cm.UnmapProperty(p => p.websites_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -555,15 +476,6 @@ public partial class CompanyLogo : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<CompanyLogo>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -579,15 +491,6 @@ public partial class CompanyWebsite : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<CompanyWebsite>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -610,16 +513,6 @@ public partial class Cover : IIgdbItem
     public Game? game_expanded { get; set; }
     public GameLocalization? game_localization_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Cover>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.game_localization_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -645,16 +538,6 @@ public partial class ExternalGame : IIgdbItem
     public Game? game_expanded { get; set; }
     public Platform? platform_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<ExternalGame>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.platform_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -674,15 +557,6 @@ public partial class Franchise : IIgdbItem
 
     public List<Game>? games_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Franchise>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.games_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -785,49 +659,6 @@ public partial class Game : IIgdbItem
     public List<LanguageSupport>? language_supports_expanded { get; set; }
     public List<GameLocalization>? game_localizations_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Game>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.age_ratings_expanded);
-            cm.UnmapProperty(p => p.alternative_names_expanded);
-            cm.UnmapProperty(p => p.artworks_expanded);
-            cm.UnmapProperty(p => p.bundles_expanded);
-            cm.UnmapProperty(p => p.collection_expanded);
-            cm.UnmapProperty(p => p.cover_expanded);
-            cm.UnmapProperty(p => p.dlcs_expanded);
-            cm.UnmapProperty(p => p.expansions_expanded);
-            cm.UnmapProperty(p => p.external_games_expanded);
-            cm.UnmapProperty(p => p.franchise_expanded);
-            cm.UnmapProperty(p => p.franchises_expanded);
-            cm.UnmapProperty(p => p.game_engines_expanded);
-            cm.UnmapProperty(p => p.game_modes_expanded);
-            cm.UnmapProperty(p => p.genres_expanded);
-            cm.UnmapProperty(p => p.involved_companies_expanded);
-            cm.UnmapProperty(p => p.keywords_expanded);
-            cm.UnmapProperty(p => p.multiplayer_modes_expanded);
-            cm.UnmapProperty(p => p.parent_game_expanded);
-            cm.UnmapProperty(p => p.platforms_expanded);
-            cm.UnmapProperty(p => p.player_perspectives_expanded);
-            cm.UnmapProperty(p => p.release_dates_expanded);
-            cm.UnmapProperty(p => p.screenshots_expanded);
-            cm.UnmapProperty(p => p.similar_games_expanded);
-            cm.UnmapProperty(p => p.standalone_expansions_expanded);
-            cm.UnmapProperty(p => p.themes_expanded);
-            cm.UnmapProperty(p => p.version_parent_expanded);
-            cm.UnmapProperty(p => p.videos_expanded);
-            cm.UnmapProperty(p => p.websites_expanded);
-            cm.UnmapProperty(p => p.remakes_expanded);
-            cm.UnmapProperty(p => p.remasters_expanded);
-            cm.UnmapProperty(p => p.expanded_games_expanded);
-            cm.UnmapProperty(p => p.ports_expanded);
-            cm.UnmapProperty(p => p.forks_expanded);
-            cm.UnmapProperty(p => p.language_supports_expanded);
-            cm.UnmapProperty(p => p.game_localizations_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -852,17 +683,6 @@ public partial class GameEngine : IIgdbItem
     public GameEngineLogo? logo_expanded { get; set; }
     public List<Platform>? platforms_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameEngine>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.companies_expanded);
-            cm.UnmapProperty(p => p.logo_expanded);
-            cm.UnmapProperty(p => p.platforms_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -881,15 +701,6 @@ public partial class GameEngineLogo : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameEngineLogo>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -911,17 +722,6 @@ public partial class GameLocalization : IIgdbItem
     public Game? game_expanded { get; set; }
     public Region? region_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameLocalization>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.cover_expanded);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.region_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -939,15 +739,6 @@ public partial class GameMode : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameMode>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -969,17 +760,6 @@ public partial class GameVersion : IIgdbItem
     public Game? game_expanded { get; set; }
     public List<Game>? games_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameVersion>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.features_expanded);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.games_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -998,15 +778,6 @@ public partial class GameVersionFeature : IIgdbItem
 
     public List<GameVersionFeatureValue>? values_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameVersionFeature>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.values_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1025,16 +796,6 @@ public partial class GameVersionFeatureValue : IIgdbItem
     public Game? game_expanded { get; set; }
     public GameVersionFeature? game_feature_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameVersionFeatureValue>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.game_feature_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1051,15 +812,6 @@ public partial class GameVideo : IIgdbItem
 
     public Game? game_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<GameVideo>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1077,15 +829,6 @@ public partial class Genre : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Genre>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1108,16 +851,6 @@ public partial class InvolvedCompany : IIgdbItem
     public Company? company_expanded { get; set; }
     public Game? game_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<InvolvedCompany>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.company_expanded);
-            cm.UnmapProperty(p => p.game_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1135,15 +868,6 @@ public partial class Keyword : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Keyword>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1161,15 +885,6 @@ public partial class Language : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Language>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1190,17 +905,6 @@ public partial class LanguageSupport : IIgdbItem
     public Language? language_expanded { get; set; }
     public LanguageSupportType? language_support_type_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<LanguageSupport>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.language_expanded);
-            cm.UnmapProperty(p => p.language_support_type_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1216,15 +920,6 @@ public partial class LanguageSupportType : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<LanguageSupportType>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1252,16 +947,6 @@ public partial class MultiplayerMode : IIgdbItem
     public Game? game_expanded { get; set; }
     public Platform? platform_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<MultiplayerMode>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.platform_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1292,18 +977,6 @@ public partial class Platform : IIgdbItem
     public List<PlatformVersion>? versions_expanded { get; set; }
     public List<PlatformWebsite>? websites_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Platform>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.platform_logo_expanded);
-            cm.UnmapProperty(p => p.platform_family_expanded);
-            cm.UnmapProperty(p => p.versions_expanded);
-            cm.UnmapProperty(p => p.websites_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1318,15 +991,6 @@ public partial class PlatformFamily : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<PlatformFamily>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1345,15 +1009,6 @@ public partial class PlatformLogo : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<PlatformLogo>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1389,18 +1044,6 @@ public partial class PlatformVersion : IIgdbItem
     public PlatformLogo? platform_logo_expanded { get; set; }
     public List<PlatformVersionReleaseDate>? platform_version_release_dates_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<PlatformVersion>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.companies_expanded);
-            cm.UnmapProperty(p => p.main_manufacturer_expanded);
-            cm.UnmapProperty(p => p.platform_logo_expanded);
-            cm.UnmapProperty(p => p.platform_version_release_dates_expanded);
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1418,15 +1061,6 @@ public partial class PlatformVersionCompany : IIgdbItem
 
     public Company? company_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<PlatformVersionCompany>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.company_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1449,15 +1083,6 @@ public partial class PlatformVersionReleaseDate : IIgdbItem
 
     public PlatformVersion? platform_version_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<PlatformVersionReleaseDate>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.platform_version_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1473,15 +1098,6 @@ public partial class PlatformWebsite : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<PlatformWebsite>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1499,15 +1115,6 @@ public partial class PlayerPerspective : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<PlayerPerspective>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1525,15 +1132,6 @@ public partial class Region : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Region>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1560,17 +1158,6 @@ public partial class ReleaseDate : IIgdbItem
     public Platform? platform_expanded { get; set; }
     public ReleaseDateStatus? status_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<ReleaseDate>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-            cm.UnmapProperty(p => p.platform_expanded);
-            cm.UnmapProperty(p => p.status_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1587,15 +1174,6 @@ public partial class ReleaseDateStatus : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<ReleaseDateStatus>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1616,15 +1194,6 @@ public partial class Screenshot : IIgdbItem
 
     public Game? game_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Screenshot>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();
@@ -1642,15 +1211,6 @@ public partial class Theme : IIgdbItem
     public string? checksum { get; set; }
 
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Theme>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-
-        });
-    }
     public override string ToString()
     {
         return $"{id}: {name}";
@@ -1668,15 +1228,6 @@ public partial class Website : IIgdbItem
 
     public Game? game_expanded { get; set; }
 
-    public static void RegisterClassMap()
-    {
-        BsonClassMap.RegisterClassMap<Website>(cm => {
-            cm.AutoMap();
-            cm.MapIdMember(p => p.id);
-            cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.game_expanded);
-        });
-    }
     public override string ToString()
     {
         return id.ToString();

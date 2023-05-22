@@ -62,12 +62,12 @@ public class MetadataTets
 
         var metadata = await GetMetadata(game);
         Assert.Equal(1996, metadata.first_release_date.ToDateFromUnixSeconds().Year);
-        Assert.Equal((ulong)912, metadata.id);
+        Assert.Equal(912ul, metadata.id);
 
         game.ReleaseYear = 2013;
         metadata = await GetMetadata(game);
         Assert.Equal(2013, metadata.first_release_date.ToDateFromUnixSeconds().Year);
-        Assert.Equal((ulong)1164, metadata.id);
+        Assert.Equal(1164ul, metadata.id);
     }
 
     [Fact]
@@ -75,10 +75,10 @@ public class MetadataTets
     {
         // No-Intro naming
         var metadata = await GetMetadata(new MetadataRequest("Bug's Life, A"));
-        Assert.Equal((ulong)2847, metadata.id);
+        Assert.Equal(2847ul, metadata.id);
 
         metadata = await GetMetadata(new MetadataRequest("Warhammer 40,000: Space Marine"));
-        Assert.Equal((ulong)578, metadata.id);
+        Assert.Equal(578ul, metadata.id);
 
         // & / and test
         metadata = await GetMetadata(new MetadataRequest("Command and Conquer"));
@@ -149,7 +149,17 @@ public class MetadataTets
         var response = await client.GetAsync(@"/igdb/game/333");
         var cnt = await response.Content.ReadAsStringAsync();
         var game = DataSerialization.FromJson<DataResponse<Game>>(cnt)?.Data;
-        Assert.Equal(333d, game!.id);
+        Assert.Equal(333ul, game!.id);
         Assert.Equal("Quake", game!.name);
+    }
+
+    [Fact]
+    public async Task SearchTest()
+    {
+        var request = new SearchRequest { SearchTerm = "unreal 2" };
+        var content = new StringContent(DataSerialization.ToJson(request), Encoding.UTF8, MediaTypeNames.Application.Json);
+        var response = await client.PostAsync(@"/igdb/search", content);
+        var str = await response.Content.ReadAsStringAsync();
+        var games =  DataSerialization.FromJson<DataResponse<List<Game>>>(str)?.Data ?? new ();
     }
 }

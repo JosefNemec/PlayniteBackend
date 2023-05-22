@@ -145,6 +145,20 @@ public class IgdbProtoParser
         }
     }
 
+    public class ExpandedMember
+    {
+        public string ExpandedType { get; set; }
+        public string ExpandedName { get; set; }
+        public string OriginalName { get; set; }
+
+        public ExpandedMember(string expandedType, string expandedName, string originalName)
+        {
+            ExpandedType = expandedType;
+            ExpandedName = expandedName;
+            OriginalName = originalName;
+        }
+    }
+
     private ProtoMessage ParseMessage()
     {
         var message = new ProtoMessage();
@@ -264,7 +278,11 @@ public class IgdbProtoParser
         }
 
         var result = new StringBuilder();
-        result.AppendLine("""            
+        var resultMethods = new StringBuilder();
+        result.AppendLine("""
+            namespace PlayniteServices.Controllers.IGDB;
+            """);
+        resultMethods.AppendLine("""            
             using MongoDB.Bson.Serialization;
             namespace PlayniteServices.Controllers.IGDB;
             """);
@@ -284,6 +302,7 @@ public class IgdbProtoParser
         {
             // Original properties
             result.AppendLine($"public partial class {message.Name} : IIgdbItem\r\n{{");
+            resultMethods.AppendLine($"public partial class {message.Name} : IIgdbItem\r\n{{");
             foreach (var prop in message.Properties)
             {
                 var type = "ulong";
@@ -315,7 +334,7 @@ public class IgdbProtoParser
             result.AppendLine("");
 
             // Expanded properties
-            var expandedMembers = new List<string>();
+            var expandedMembers = new List<ExpandedMember>();
             foreach (var prop in message.Properties)
             {
                 if (prop.Name == "id")
@@ -332,12 +351,12 @@ public class IgdbProtoParser
                 if (prop.Modified == "repeated")
                 {
                     result.AppendLine($"    public List<{type.Name.TrimEnd('?')}>? {prop.Name}_expanded {{ get; set; }}");
-                    expandedMembers.Add($"{prop.Name}_expanded");
+                    expandedMembers.Add(new ExpandedMember(type.Name.TrimEnd('?'), $"{prop.Name}_expanded", prop.Name));
                 }
                 else if (string.IsNullOrEmpty(prop.Modified))
                 {
                     result.AppendLine($"    public {type}? {prop.Name}_expanded {{ get; set; }}");
-                    expandedMembers.Add($"{prop.Name}_expanded");
+                    expandedMembers.Add(new ExpandedMember(type.Name, $"{prop.Name}_expanded", prop.Name));
                 }
                 else
                 {
@@ -348,17 +367,29 @@ public class IgdbProtoParser
             result.AppendLine("");
 
             // Class mapp
-            result.AppendLine($$"""
+            resultMethods.AppendLine($$"""
                     public static void RegisterClassMap()
                     {
                         BsonClassMap.RegisterClassMap<{{message.Name}}>(cm => {
                             cm.AutoMap();
                             cm.MapIdMember(p => p.id);
                             cm.SetIgnoreExtraElements(true);
-                {{string.Join("\r\n", expandedMembers.Select(a => $"            cm.UnmapProperty(p => p.{a});"))}}
+                {{string.Join("\r\n", expandedMembers.Select(a => $"            cm.UnmapProperty(p => p.{a.ExpandedName});"))}}
                         });
                     }
                 """);
+
+            // Expanding
+            foreach (var expMem in expandedMembers)
+            {
+                resultMethods.AppendLine($$"""
+                    public async Task expand_{{expMem.OriginalName}}(IgdbApi igdbApi)
+                    {
+                        {{expMem.ExpandedName}} = await igdbApi.{{expMem.ExpandedType}}s.GetItem({{expMem.OriginalName}});
+                    }
+                """);
+            }
+
 
             result.AppendLine("    public override string ToString()\r\n    {");
             if (message.Properties.Any(a => a.Name == "name"))
@@ -372,9 +403,11 @@ public class IgdbProtoParser
 
             result.AppendLine("    }");
             result.AppendLine("}\r\n");
+            resultMethods.AppendLine("}\r\n");
         }
 
         File.WriteAllText(Path.Combine(outputDir, "IgdbModels_Generated.cs"), result.ToString(), Encoding.UTF8);
+        File.WriteAllText(Path.Combine(outputDir, "IgdbModels_Methods_Generated.cs"), resultMethods.ToString(), Encoding.UTF8);
 
         result = new StringBuilder();
         result.AppendLine("""
@@ -448,5 +481,28 @@ public class IgdbProtoParser
         }
 
         File.WriteAllText(Path.Combine(outputDir, "WebhookController_Generated.cs"), result.ToString(), Encoding.UTF8);
+
+        result = new StringBuilder();
+        result.AppendLine("""
+            using Microsoft.AspNetCore.Mvc;
+
+            namespace PlayniteServices.Controllers.IGDB;
+            """);
+
+        foreach (var message in messages)
+        {
+            var endpoint = typeToEndpoint[message.Name];
+            result.AppendLine($$"""
+            [Route("igdb/collections/{{endpoint}}")]
+            public class {{message.Name}}CollectionController : CollectionController<{{message.Name}}>
+            {
+                public {{message.Name}}CollectionController(IgdbApi igdb, UpdatableAppSettings settings) : base("{{endpoint}}", igdb, settings)
+                {
+                }
+            }
+            """);
+        }
+
+        File.WriteAllText(Path.Combine(outputDir, "ColllectionController_Generated.cs"), result.ToString(), Encoding.UTF8);
     }
 }

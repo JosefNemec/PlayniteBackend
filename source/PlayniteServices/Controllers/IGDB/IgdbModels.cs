@@ -42,15 +42,28 @@ public class MetadataRequest
     {
         Name = name;
     }
-
 }
 
-//public partial class AlternativeName
-//{
-//    public double textScore { get; set; }
-//}
+public partial class Game
+{
+    [BsonIgnoreIfDefault] public double textScore { get; set; }
+}
 
-//public partial class Game
-//{
-//    public double textScore { get; set; }
-//}
+public partial class AlternativeName
+{
+    [BsonIgnoreIfDefault] public double textScore { get; set; }
+}
+
+class TextSearchResult
+{
+    public double TextScore { get; set; }
+    public string Name { get; set; }
+    public Game Game { get; set; }
+
+    public TextSearchResult(double textScore, string name, Game game)
+    {
+        TextScore = textScore;
+        Name = name;
+        Game = game;
+    }
+}

@@ -102,22 +102,4 @@ public abstract class WebhookController<T> : Controller where T : class, IIgdbIt
     {
         return await ProcessHook(collection.Add, "update");
     }
-
-    [HttpGet("create")]
-    public ActionResult CreateTest()
-    {
-        return Ok();
-    }
-
-    [HttpGet("delete")]
-    public ActionResult DeleteCreateTest()
-    {
-        return Ok();
-    }
-
-    [HttpGet("update")]
-    public ActionResult UpdateCreateTest()
-    {
-        return Ok();
-    }
 }
