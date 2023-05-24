@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Playnite.Common;
 using Playnite.SDK;
@@ -13,26 +14,12 @@ public class IgdbController : Controller
     private static readonly ILogger logger = LogManager.GetLogger();
     private readonly IgdbApi igdbApi;
 
-    private static readonly List<GameCategoryEnum> defaultSearchCategories = new()
-    {
-        GameCategoryEnum.MAIN_GAME,
-        GameCategoryEnum.REMAKE,
-        GameCategoryEnum.REMASTER,
-        GameCategoryEnum.STANDALONE_EXPANSION
-    };
-
     private static readonly Dictionary<Guid, ExternalGameCategoryEnum> libraryIdCategories = new()
     {
         [new Guid("CB91DFC9-B977-43BF-8E70-55F46E410FAB")] = ExternalGameCategoryEnum.EXTERNALGAME_STEAM,
         [new Guid("AEBE8B7C-6DC3-4A66-AF31-E7375C6B5E9E")] = ExternalGameCategoryEnum.EXTERNALGAME_GOG,
         [new Guid("00000002-DBD1-46C6-B5D0-B1BA559D10E4")] = ExternalGameCategoryEnum.EXTERNALGAME_EPIC_GAME_STORE,
         [new Guid("00000001-EBB2-4EEC-ABCB-7C89937A42BB")] = ExternalGameCategoryEnum.EXTERNALGAME_ITCH_IO
-    };
-
-    private static readonly TextSearchOptions gameSearchOptons = new()
-    {
-        CaseSensitive = false,
-        DiacriticSensitive = false
     };
 
     public IgdbController(IgdbApi igdbApi)
@@ -48,13 +35,28 @@ public class IgdbController : Controller
             return new ErrorResponse("No ID specified.");
         }
 
-        var game = await igdbApi.Games.GetItem(gameId);
-        if (game != null)
+        var game = await igdbApi.Games.GetItem(gameId, true);
+        if (game == null)
         {
-            return new DataResponse<Game>(game);
+            return new ErrorResponse("Game not found.");
         }
 
-        return new ErrorResponse("Game not found.");
+        await game.expand_cover(igdbApi);
+        await game.expand_artworks(igdbApi);
+        await game.expand_screenshots(igdbApi);
+        await game.expand_genres(igdbApi);
+        await game.expand_websites(igdbApi);
+        await game.expand_game_modes(igdbApi);
+        await game.expand_age_ratings(igdbApi);
+        await game.expand_collection(igdbApi);
+        await game.expand_platforms(igdbApi);
+        await game.expand_involved_companies(igdbApi);
+        foreach (var company in game.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
+        {
+            await company.expand_company(igdbApi);
+        }
+
+        return new DataResponse<Game>(game);
     }
 
     [HttpPost("search")]
@@ -71,6 +73,16 @@ public class IgdbController : Controller
         }
 
         var games = await SearchGame(searchRequest.SearchTerm, true);
+        foreach (var game in games)
+        {
+            await game.Game.expand_cover(igdbApi);
+            await game.Game.expand_involved_companies(igdbApi);
+            foreach (var company in game.Game.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
+            {
+                await company.expand_company(igdbApi);
+            }
+        }
+
         return new DataResponse<List<Game>>(games.Select(a => a.Game).ToList());
     }
 
@@ -103,33 +115,144 @@ public class IgdbController : Controller
         }
         else
         {
+            await match.expand_cover(igdbApi);
+            await match.expand_artworks(igdbApi);
+            await match.expand_screenshots(igdbApi);
+            await match.expand_genres(igdbApi);
+            await match.expand_websites(igdbApi);
+            await match.expand_game_modes(igdbApi);
+            await match.expand_age_ratings(igdbApi);
+            await match.expand_collection(igdbApi);
+            await match.expand_platforms(igdbApi);
+            await match.expand_involved_companies(igdbApi);
+            foreach (var company in match.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
+            {
+                await company.expand_company(igdbApi);
+            }
+
             return new DataResponse<Game>(match);
         }
     }
 
     private async Task<List<TextSearchResult>> SearchGameByName(string searchTerm)
     {
-        var filter = Builders<Game>.Filter;
-        var catFilter = filter.In(a => a.category, defaultSearchCategories);
-        var nameFilter = filter.Text(searchTerm, gameSearchOptons);
-        return (await igdbApi.Games.collection.
-            Find(catFilter & nameFilter).
-            Project<Game>(Builders<Game>.Projection.MetaTextScore("textScore")).
-            Sort(Builders<Game>.Sort.MetaTextScore("textScore")).                
-            Limit(30).
-            ToListAsync()).
-                Select(a => new TextSearchResult(a.textScore, a.name!, a)).ToList();
+        var serTerm = System.Text.Json.JsonSerializer.Serialize(searchTerm);
+        var agg = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument[]>($$"""
+            [
+              {
+                $match: {
+                  category: {
+                    $in: [0, 4, 8, 9],
+                  },
+                  $text: {
+                    $search: {{serTerm}},
+                    $caseSensitive: false,
+                    $diacriticSensitive: false,
+                  },
+                },
+              },
+              {
+                $set: {
+                  textScore: {
+                    $meta: "textScore",
+                  },
+                },
+              },
+              {
+                $match: {
+                  textScore: { $gte: 0.7 }
+                }
+              },
+              {
+                $sort: {
+                  score: {
+                    $meta: "textScore",
+                  },
+                },
+              },
+              {
+                $limit: 20,
+              },
+            ]
+            """);
+
+        var pipeline = PipelineDefinition<Game, Game>.Create(agg);
+        var searchRes = await igdbApi.Games.collection.Aggregate(pipeline).ToListAsync();
+
+        var res = new List<TextSearchResult>(20);
+        foreach (var item in searchRes)
+        {
+            res.Add(new TextSearchResult(item.textScore, item.name!, item));
+        }
+
+        return res;
     }
 
     private async Task<List<TextSearchResult>> SearchGameByAlternativeNames(string searchTerm)
     {
-        var searchRes = await igdbApi.AlternativeNames.collection.
-            Find(Builders<AlternativeName>.Filter.Text(searchTerm, gameSearchOptons)).
-            Project<AlternativeName>(Builders<AlternativeName>.Projection.MetaTextScore("textScore")).
-            Sort(Builders<AlternativeName>.Sort.MetaTextScore("textScore")).
-            Limit(30).
-            ToListAsync();
-        var res = new List<TextSearchResult>(30);
+        var serTerm = System.Text.Json.JsonSerializer.Serialize(searchTerm);
+        var agg = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument[]>($$"""
+            [
+              {
+                $match: {
+                  $text: {
+                    $search: {{serTerm}},
+                    $caseSensitive: false,
+                    $diacriticSensitive: false,
+                  },
+                },
+              },
+              {
+                $set: {
+                  textScore: {
+                    $meta: "textScore",
+                  },
+                },
+              },
+              {
+                $match: {
+              		textScore: { $gte: 0.9 }
+                }
+              },
+              {
+                $sort: {
+                  score: {
+                    $meta: "textScore",
+                  },
+                },
+              },
+              {
+                $lookup: {
+                  from: "IGDB_col_games",
+                  localField: "game",
+                  foreignField: "_id",
+                  as: "game_ex",
+                },
+              },
+              {
+                $set: {
+                  category: {
+                    $arrayElemAt: ["$game_ex.category", 0],
+                  },
+                },
+              },
+              {
+                $match: {
+                  category: {
+                    $in: [0, 4, 8, 9],
+                  },
+                },
+              },
+              {
+                $limit: 20,
+              },
+            ]
+            """);
+
+        var pipeline = PipelineDefinition<AlternativeName, AlternativeName>.Create(agg);
+        var searchRes = await igdbApi.AlternativeNames.collection.Aggregate(pipeline).ToListAsync();
+
+        var res = new List<TextSearchResult>(20);
         foreach (var item in searchRes)
         {
             await item.expand_game(igdbApi);

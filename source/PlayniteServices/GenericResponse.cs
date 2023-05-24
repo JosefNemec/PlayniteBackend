@@ -1,41 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿namespace PlayniteServices;
 
-namespace PlayniteServices
+public abstract class ResponseBase
 {
-    public abstract class ResponseBase
+    public string? Error
     {
-        public string? Error
-        {
-            get; set;
-        }
+        get; set;
+    }
+}
+
+public class ErrorResponse : ResponseBase
+{
+    public ErrorResponse(string error)
+    {
+        Error = error;
     }
 
-    public class ErrorResponse : ResponseBase
+    public ErrorResponse(Exception error)
     {
-        public ErrorResponse(string error)
-        {
-            Error = error;
-        }
+        Error = error.Message;
+    }
+}
 
-        public ErrorResponse(Exception error)
-        {
-            Error = error.Message;
-        }
+public class DataResponse<T> : ResponseBase
+{
+    public T? Data
+    {
+        get; set;
     }
 
-    public class DataResponse<T> : ResponseBase
+    public DataResponse(T? data)
     {
-        public T? Data
-        {
-            get; set;
-        }
-
-        public DataResponse(T? data)
-        {
-            Data = data;
-        }
+        Data = data;
     }
 }

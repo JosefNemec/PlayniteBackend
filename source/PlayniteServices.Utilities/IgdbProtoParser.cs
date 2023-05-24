@@ -280,7 +280,10 @@ public class IgdbProtoParser
         var result = new StringBuilder();
         var resultMethods = new StringBuilder();
         result.AppendLine("""
-            namespace PlayniteServices.Controllers.IGDB;
+            using System;
+            using System.Collections.Generic;
+            #nullable enable
+            namespace PlayniteServices.Controllers.IGDB {
             """);
         resultMethods.AppendLine("""            
             using MongoDB.Bson.Serialization;
@@ -405,6 +408,8 @@ public class IgdbProtoParser
             result.AppendLine("}\r\n");
             resultMethods.AppendLine("}\r\n");
         }
+
+        result.AppendLine("}");
 
         File.WriteAllText(Path.Combine(outputDir, "IgdbModels_Generated.cs"), result.ToString(), Encoding.UTF8);
         File.WriteAllText(Path.Combine(outputDir, "IgdbModels_Methods_Generated.cs"), resultMethods.ToString(), Encoding.UTF8);

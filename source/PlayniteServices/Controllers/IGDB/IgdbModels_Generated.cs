@@ -1,4 +1,7 @@
-﻿namespace PlayniteServices.Controllers.IGDB;
+﻿using System;
+using System.Collections.Generic;
+#nullable enable
+namespace PlayniteServices.Controllers.IGDB {
 public enum AgeRatingCategoryEnum
 {
     AGERATING_CATEGORY_NULL = 0,
@@ -1234,3 +1237,4 @@ public partial class Website : IIgdbItem
     }
 }
 
+}

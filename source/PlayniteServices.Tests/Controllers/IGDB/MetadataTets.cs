@@ -80,6 +80,20 @@ public class MetadataTets
         metadata = await GetMetadata(new MetadataRequest("Warhammer 40,000: Space Marine"));
         Assert.Equal(578ul, metadata.id);
 
+        // Diacritics test
+        metadata = await GetMetadata(new MetadataRequest("Pokémon Red"));
+        Assert.Equal(1561ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("Pokemon Red"));
+        Assert.Equal(1561ul, metadata.id);
+
+        // Stylized name
+        metadata = await GetMetadata(new MetadataRequest("fear"));
+        Assert.Equal(517ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("F.E.A.R."));
+        Assert.Equal(517ul, metadata.id);
+
         // & / and test
         metadata = await GetMetadata(new MetadataRequest("Command and Conquer"));
         Assert.Equal("Command & Conquer", metadata.name);
@@ -156,10 +170,11 @@ public class MetadataTets
     [Fact]
     public async Task SearchTest()
     {
-        var request = new SearchRequest { SearchTerm = "unreal 2" };
+        var request = new SearchRequest { SearchTerm = "half-life" };
         var content = new StringContent(DataSerialization.ToJson(request), Encoding.UTF8, MediaTypeNames.Application.Json);
         var response = await client.PostAsync(@"/igdb/search", content);
         var str = await response.Content.ReadAsStringAsync();
         var games =  DataSerialization.FromJson<DataResponse<List<Game>>>(str)?.Data ?? new ();
+        Assert.DoesNotContain(games, a => a.category == GameCategoryEnum.MOD);
     }
 }

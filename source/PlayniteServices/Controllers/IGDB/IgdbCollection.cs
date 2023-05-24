@@ -15,7 +15,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
 {
     private static readonly ILogger logger = LogManager.GetLogger();
     private readonly Database database;
-    private readonly string dbCollectionName;
+    public readonly string DbCollectionName;
     internal IMongoCollection<T> collection;
     internal readonly IgdbApi igdb;
 
@@ -26,8 +26,8 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
         this.igdb = igdb;
         this.database = database;
         EndpointPath = endpointPath;
-        dbCollectionName = $"IGDB_col_{endpointPath}";
-        collection = database.MongoDb.GetCollection<T>(dbCollectionName);
+        DbCollectionName = $"IGDB_col_{endpointPath}";
+        collection = database.MongoDb.GetCollection<T>(DbCollectionName);
         CreateIndexes();
     }
 
@@ -37,8 +37,8 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
 
     public virtual void DropCollection()
     {
-        database.MongoDb.DropCollection(dbCollectionName);
-        collection = database.MongoDb.GetCollection<T>(dbCollectionName);
+        database.MongoDb.DropCollection(DbCollectionName);
+        collection = database.MongoDb.GetCollection<T>(DbCollectionName);
         CreateIndexes();
     }
 
