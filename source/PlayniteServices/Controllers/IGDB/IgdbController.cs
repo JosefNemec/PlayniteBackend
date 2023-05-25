@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace PlayniteServices.Controllers.IGDB;
 
 [Route("igdb")]
-public class IgdbController : Controller
+public partial class IgdbController : Controller
 {
     private static readonly ILogger logger = LogManager.GetLogger();
     private readonly IgdbApi igdbApi;
@@ -21,6 +21,24 @@ public class IgdbController : Controller
         [new Guid("00000002-DBD1-46C6-B5D0-B1BA559D10E4")] = ExternalGameCategoryEnum.EXTERNALGAME_EPIC_GAME_STORE,
         [new Guid("00000001-EBB2-4EEC-ABCB-7C89937A42BB")] = ExternalGameCategoryEnum.EXTERNALGAME_ITCH_IO
     };
+
+    [GeneratedRegex(@"\d+")]
+    private static partial Regex NumberRegex();
+
+    [GeneratedRegex(@"\[.+?\]|\(.+?\)|\{.+?\}")]
+    private static partial Regex BracketsRegex();
+
+    [GeneratedRegex(@"(.+),\s*(the|a|an|der|das|die)$", RegexOptions.IgnoreCase)]
+    private static partial Regex ArticlesRegex();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhiteSpacesRegex();
+
+    [GeneratedRegex(@"\s*(:|-)\s*")]
+    private static partial Regex SubtextSeparatorRegex();
+
+    [GeneratedRegex(@"\s+and\s+", RegexOptions.IgnoreCase)]
+    private static partial Regex AndRegex();
 
     public IgdbController(IgdbApi igdbApi)
     {
@@ -109,8 +127,8 @@ public class IgdbController : Controller
                 {
                     return new DataResponse<Game>(default);
                 }
-                
-                await ExpandMetadataMatch(game);
+
+                await ExpandMetadatMatch(game);
                 return new DataResponse<Game>(game);
             }
         }
@@ -121,11 +139,11 @@ public class IgdbController : Controller
             return new DataResponse<Game>(default);
         }
 
-        await ExpandMetadataMatch(match);
+        await ExpandMetadatMatch(match);
         return new DataResponse<Game>(match);
     }
 
-    private async Task ExpandMetadataMatch(Game game)
+    private async Task ExpandMetadatMatch(Game game)
     {
         await game.expand_cover(igdbApi);
         await game.expand_artworks(igdbApi);
@@ -320,7 +338,7 @@ public class IgdbController : Controller
         }
 
         // Try replacing roman numerals: 3 => III
-        var testName = Regex.Replace(name, @"\d+", ReplaceNumsForRomans);
+        var testName = NumberRegex().Replace(name, ReplaceNumsForRomans);
         matchedGame = TryMatchGames(metadataRequest, testName, results);
         if (matchedGame != null)
         {
@@ -336,7 +354,7 @@ public class IgdbController : Controller
         }
 
         // Try chaning & / and
-        testName = Regex.Replace(name, @"\s+and\s+", " & ");
+        testName = AndRegex().Replace(name, " & ");
         matchedGame = TryMatchGames(metadataRequest, testName, results);
         if (matchedGame != null)
         {
@@ -352,8 +370,8 @@ public class IgdbController : Controller
         }
 
         // Try removing all ":" and "-"
-        testName = Regex.Replace(name, @"\s*(:|-)\s*", " ");
-        resCopy = results.Select(a => new TextSearchResult(0, Regex.Replace(a.Name, @"\s*(:|-)\s*", " "), a.Game)).ToList();
+        testName = SubtextSeparatorRegex().Replace(name, " ");
+        resCopy = results.Select(a => new TextSearchResult(0, SubtextSeparatorRegex().Replace(a.Name, " "), a.Game)).ToList();
         matchedGame = TryMatchGames(metadataRequest, testName, resCopy);
         if (matchedGame != null)
         {
@@ -434,19 +452,19 @@ public class IgdbController : Controller
             return string.Empty;
         }
 
-        var match = Regex.Match(name, @"(.+),\s*(the|a|an|der|das|die)$", RegexOptions.IgnoreCase);
+        var match = ArticlesRegex().Match(name);
         if (match.Success)
         {
             name = match.Groups[2].Value + " " + match.Groups[1].Value;
         }
 
-        name = Regex.Replace(name, @"\[.+?\]|\(.+?\)|\{.+?\}", string.Empty);
+        name = BracketsRegex().Replace(name, string.Empty);
         name = name.RemoveTrademarks();
         name = name.Replace('_', ' ');
         name = name.Replace('.', ' ');
         name = name.Replace(',', ' ');
         name = name.Replace('’', '\'');
-        name = Regex.Replace(name, @"\s+", " ");
+        name = WhiteSpacesRegex().Replace(name, " ");
         name = name.Replace(@"\", string.Empty, StringComparison.Ordinal);
         return name.Trim();
     }
