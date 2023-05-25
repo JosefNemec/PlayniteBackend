@@ -38,4 +38,9 @@ public class TextSearchResult
         Name = name;
         Game = game;
     }
+
+    public override string ToString()
+    {
+        return $"{Game.id}: {TextScore}: {Name}";
+    }
 }

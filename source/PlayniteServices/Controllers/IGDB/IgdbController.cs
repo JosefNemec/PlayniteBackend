@@ -104,7 +104,14 @@ public class IgdbController : Controller
                 FirstOrDefaultAsync();
             if (externalGame != null)
             {
-                return new DataResponse<Game>(await igdbApi.Games.GetItem(externalGame.game));
+                var game = await igdbApi.Games.GetItem(externalGame.game);
+                if (game == null)
+                {
+                    return new DataResponse<Game>(default);
+                }
+                
+                await ExpandMetadataMatch(game);
+                return new DataResponse<Game>(game);
             }
         }
 
@@ -113,24 +120,26 @@ public class IgdbController : Controller
         {
             return new DataResponse<Game>(default);
         }
-        else
-        {
-            await match.expand_cover(igdbApi);
-            await match.expand_artworks(igdbApi);
-            await match.expand_screenshots(igdbApi);
-            await match.expand_genres(igdbApi);
-            await match.expand_websites(igdbApi);
-            await match.expand_game_modes(igdbApi);
-            await match.expand_age_ratings(igdbApi);
-            await match.expand_collection(igdbApi);
-            await match.expand_platforms(igdbApi);
-            await match.expand_involved_companies(igdbApi);
-            foreach (var company in match.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
-            {
-                await company.expand_company(igdbApi);
-            }
 
-            return new DataResponse<Game>(match);
+        await ExpandMetadataMatch(match);
+        return new DataResponse<Game>(match);
+    }
+
+    private async Task ExpandMetadataMatch(Game game)
+    {
+        await game.expand_cover(igdbApi);
+        await game.expand_artworks(igdbApi);
+        await game.expand_screenshots(igdbApi);
+        await game.expand_genres(igdbApi);
+        await game.expand_websites(igdbApi);
+        await game.expand_game_modes(igdbApi);
+        await game.expand_age_ratings(igdbApi);
+        await game.expand_collection(igdbApi);
+        await game.expand_platforms(igdbApi);
+        await game.expand_involved_companies(igdbApi);
+        foreach (var company in game.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
+        {
+            await company.expand_company(igdbApi);
         }
     }
 
@@ -142,7 +151,7 @@ public class IgdbController : Controller
               {
                 $match: {
                   category: {
-                    $in: [0, 4, 8, 9],
+                    $in: [0, 2, 3, 4, 8, 9, 10],
                   },
                   $text: {
                     $search: {{serTerm}},
@@ -182,7 +191,12 @@ public class IgdbController : Controller
         var res = new List<TextSearchResult>(20);
         foreach (var item in searchRes)
         {
-            res.Add(new TextSearchResult(item.textScore, item.name!, item));
+            if (item.name.IsNullOrEmpty())
+            {
+                continue;
+            }
+
+            res.Add(new TextSearchResult(item.textScore, item.name, item));
         }
 
         return res;
@@ -239,7 +253,7 @@ public class IgdbController : Controller
               {
                 $match: {
                   category: {
-                    $in: [0, 4, 8, 9],
+                    $in: [0, 2, 3, 4, 8, 9, 10],
                   },
                 },
               },
@@ -255,10 +269,15 @@ public class IgdbController : Controller
         var res = new List<TextSearchResult>(20);
         foreach (var item in searchRes)
         {
+            if (item.name.IsNullOrEmpty())
+            {
+                continue;
+            }
+
             await item.expand_game(igdbApi);
             if (item.game_expanded != null)
             {
-                res.Add(new TextSearchResult(item.textScore, item.name!, item.game_expanded));
+                res.Add(new TextSearchResult(item.textScore, item.name, item.game_expanded));
             }
         }
 
@@ -325,8 +344,7 @@ public class IgdbController : Controller
         }
 
         // Try removing apostrophes
-        var resCopy = results.GetCopy();
-        resCopy.ForEach(a => a.Name = a.Name!.Replace("'", "", StringComparison.Ordinal));
+        var resCopy = results.Select(a => new TextSearchResult(0, a.Name.Replace("'", "", StringComparison.Ordinal), a.Game)).ToList();
         matchedGame = TryMatchGames(metadataRequest, name, resCopy);
         if (matchedGame != null)
         {
@@ -335,8 +353,7 @@ public class IgdbController : Controller
 
         // Try removing all ":" and "-"
         testName = Regex.Replace(name, @"\s*(:|-)\s*", " ");
-        resCopy = results.GetCopy();
-        resCopy.ForEach(a => a.Name = Regex.Replace(a.Name!, @"\s*(:|-)\s*", " "));
+        resCopy = results.Select(a => new TextSearchResult(0, Regex.Replace(a.Name, @"\s*(:|-)\s*", " "), a.Game)).ToList();
         matchedGame = TryMatchGames(metadataRequest, testName, resCopy);
         if (matchedGame != null)
         {
@@ -374,7 +391,7 @@ public class IgdbController : Controller
         {
             return res[0].Game;
         }
-        
+
         if (res.Count > 1)
         {
             if (metadataRequest.ReleaseYear > 0)
@@ -427,6 +444,7 @@ public class IgdbController : Controller
         name = name.RemoveTrademarks();
         name = name.Replace('_', ' ');
         name = name.Replace('.', ' ');
+        name = name.Replace(',', ' ');
         name = name.Replace('’', '\'');
         name = Regex.Replace(name, @"\s+", " ");
         name = name.Replace(@"\", string.Empty, StringComparison.Ordinal);
