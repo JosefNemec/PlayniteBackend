@@ -1,184 +1,199 @@
-﻿using Playnite.Common;
-using Playnite.SDK;
-using PlayniteServices;
-using PlayniteServices.Controllers.IGDB;
-using PlayniteServices.Models;
-using PlayniteServices.Models.IGDB;
-using System;
-using System.Collections.Generic;
+﻿using PlayniteServices.Controllers.IGDB;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Mime;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
-using SdkModels = Playnite.SDK.Models;
 
-namespace PlayniteServices.Tests.Controllers.IGDB
+namespace PlayniteServices.Tests.IGDB;
+
+[Collection("DefaultCollection")]
+public class MetadataTets
 {
-    [Collection("DefaultCollection")]
-    public class MetadataTets
+    private readonly HttpClient client;
+
+    public MetadataTets(TestFixture fixture)
     {
-        private readonly HttpClient client;
-
-        public MetadataTets(TestFixture<Startup> fixture)
-        {
-            client = fixture.Client;
-        }
-
-        private async Task<ExpandedGame> GetMetadata(PlayniteGame game)
-        {
-            var str = DataSerialization.ToJson(game);
-            var content = new StringContent(str, Encoding.UTF8, MediaTypeNames.Application.Json);
-            var response = await client.PostAsync(@"/igdb/metadata_v3", content);
-            return DataSerialization.FromJson<ServicesResponse<ExpandedGame>>(await response.Content.ReadAsStringAsync())?.Data ?? new ExpandedGame();
-        }
-
-        private int GetYearFromUnix(long date)
-        {
-            return DateTimeOffset.FromUnixTimeMilliseconds(date).DateTime.Year;
-        }
-
-        [Fact]
-        public async Task AlternateNameUseTest()
-        {
-            var metadata = await GetMetadata(new PlayniteGame("pubg"));
-            Assert.Equal("PUBG: BATTLEGROUNDS", metadata.name);
-
-            metadata = await GetMetadata(new PlayniteGame("unreal 2"));
-            Assert.Equal("Unreal II: The Awakening", metadata.name);
-        }
-
-        [Fact]
-        public void ReleaseDateLegacyDeserializationTest()
-        {
-            var game = DataSerialization.FromJson<PlayniteGame>("""
-                {"Name":"Chavez II","ReleaseDate":"1993","GameId":"61810"}
-                """);
-            Assert.Equal(1993, game!.ReleaseDate!.Value.Year);
-            Assert.Equal("61810", game!.GameId);
-
-            game = DataSerialization.FromJson<PlayniteGame>("""
-                {"ReleaseDate":{"ReleaseDate":"1993"},"GameId":"61810","Name":"Chavez II"}
-                """);
-            Assert.Equal(1993, game!.ReleaseDate!.Value.Year);
-            Assert.Equal("61810", game!.GameId);
-            Assert.Equal("Chavez II", game!.Name);
-        }
-
-        [Fact]
-        public async Task SteamIdUseTest()
-        {
-            var metadata = await GetMetadata(new PlayniteGame("")
-            {
-                PluginId = BuiltinExtensions.GetIdFromExtension(BuiltinExtension.SteamLibrary),
-                GameId = "7200"
-            });
-
-            Assert.Equal("TrackMania United", metadata.name);
-        }
-
-        [Fact]
-        public async Task ReleaseDateUseTest()
-        {
-            var game = new PlayniteGame("Tomb Raider")
-            {
-                ReleaseDate = new SdkModels.ReleaseDate(1996)
-            };
-
-            var metadata = await GetMetadata(game);
-            Assert.Equal(1996, GetYearFromUnix(metadata.first_release_date));
-            Assert.Equal("Core Design", metadata.involved_companies?.Where(a => a.developer).FirstOrDefault()?.company?.name);
-
-            game.ReleaseDate = new SdkModels.ReleaseDate(2013, 1, 1);
-            metadata = await GetMetadata(game);
-            Assert.Equal(2013, GetYearFromUnix(metadata.first_release_date));
-            Assert.Equal("Crystal Dynamics", metadata.involved_companies?.Where(a => a.developer).FirstOrDefault()?.company?.name);
-        }
-
-        [Fact]
-        public async Task NameMatchingTest()
-        {
-            // No-Intro naming
-            var metadata = await GetMetadata(new PlayniteGame("Bug's Life, A"));
-            Assert.Equal((ulong)49841, metadata.id);
-
-            metadata = await GetMetadata(new PlayniteGame("Warhammer 40,000: Space Marine"));
-            Assert.Equal((ulong)578, metadata.id);
-
-            // & / and test
-            metadata = await GetMetadata(new PlayniteGame("Command and Conquer"));
-            Assert.NotNull(metadata.cover);
-            Assert.Equal("Command & Conquer", metadata.name);
-            Assert.Equal(1995, GetYearFromUnix(metadata.first_release_date));
-
-            // Matches exactly
-            metadata = await GetMetadata(new PlayniteGame("Grand Theft Auto IV"));
-            Assert.Equal(2008, GetYearFromUnix(metadata.first_release_date));
-
-            // Roman numerals test
-            metadata = await GetMetadata(new PlayniteGame("Quake 3 Arena"));
-            Assert.NotNull(metadata.cover);
-            Assert.Equal("Quake III Arena", metadata.name);
-
-            // THE test
-            metadata = await GetMetadata(new PlayniteGame("Witcher 3: Wild Hunt"));
-            Assert.Equal("The Witcher 3: Wild Hunt", metadata.name);
-
-            // No subtitle test
-            metadata = await GetMetadata(new PlayniteGame("The Witcher 3"));
-            Assert.Equal("The Witcher 3: Wild Hunt", metadata.name);
-
-            // Apostrophe test
-            metadata = await GetMetadata(new PlayniteGame("Dragons Lair"));
-            Assert.Equal("Dragon's Lair", metadata.name);
-
-            // Hyphen vs. colon test
-            metadata = await GetMetadata(new PlayniteGame("Legacy of Kain - Soul Reaver 2"));
-            Assert.Equal("Legacy of Kain: Soul Reaver 2", metadata.name);
-
-            metadata = await GetMetadata(new PlayniteGame("Legacy of Kain: Soul Reaver 2"));
-            Assert.Equal("Legacy of Kain: Soul Reaver 2", metadata.name);
-
-            // Trademarks test
-            metadata = await GetMetadata(new PlayniteGame("Dishonored®: Death of the Outsider™"));
-            Assert.Equal("Dishonored: Death of the Outsider", metadata.name);
-        }
-
-        [Fact]
-        public async Task CrashNameTests()
-        {
-            await GetMetadata(new PlayniteGame(@"\millennium 2"));
-            await GetMetadata(new PlayniteGame("BroForce.v864.201901211236"));
-            await GetMetadata(new PlayniteGame("Danganronpa １・２ Reload"));
-            await GetMetadata(new PlayniteGame("ココロクローバー パート１/Kokoro Clover Part1"));
-        }
-
-        [Fact]
-        public async Task DashSearch()
-        {
-            var response = await (await client.GetAsync(@"/igdb/games/x-com")).Content.ReadAsStringAsync();
-            var data = DataSerialization.FromJson<ServicesResponse<List<ExpandedGameLegacy>>>(response);
-            Assert.NotNull(data?.Data?.FirstOrDefault(a => a.name == "X-COM: UFO Defense"));
-        }
-
-        //[Fact]
-        //public async Task BigMatchingTest()
-        //{
-        //    var resultPath = @"d:\Downloads\download_" + Guid.NewGuid() + ".txt";
-        //    var gameList = File.ReadAllLines(@"d:\Downloads\export.csv");
-        //    var results = new List<string>();
-        //    foreach (var game in gameList)
-        //    {
-        //        if (game.IsNullOrEmpty())
-        //        {
-        //            continue;
-        //        }
-
-        //        var metadata = await GetMetadata(new PlayniteGame(game));
-        //        File.AppendAllText(resultPath, $"{game}#{metadata.id}#{metadata.name}" + Environment.NewLine);
-        //    }
-        //}
+        client = fixture.Client;
     }
+
+    private async Task<Game> GetMetadata(MetadataRequest request)
+    {
+        var str = DataSerialization.ToJson(request);
+        var content = new StringContent(str, Encoding.UTF8, MediaTypeNames.Application.Json);
+        var response = await client.PostAsync(@"/igdb/metadata", content);
+        var cntStr = await response.Content.ReadAsStringAsync();
+        return DataSerialization.FromJson<DataResponse<Game>>(cntStr)?.Data ?? new Game();
+    }
+
+    [Fact]
+    public async Task AlternateNameUseTest()
+    {
+        var metadata = await GetMetadata(new MetadataRequest("unreal 2"));
+        Assert.Equal(6222ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("Rally Championship 2000"));
+        Assert.Equal(793ul, metadata.id);
+    }
+
+    [Fact]
+    public async Task PlatformIdUsetTest()
+    {
+        // Steam
+        var metadata = await GetMetadata(new MetadataRequest
+        {
+            LibraryId = new Guid("CB91DFC9-B977-43BF-8E70-55F46E410FAB"),
+            GameId = "7200"
+        });
+
+        Assert.Equal(9908ul, metadata.id);
+
+        // GOG
+        metadata = await GetMetadata(new MetadataRequest
+        {
+            LibraryId = new Guid("AEBE8B7C-6DC3-4A66-AF31-E7375C6B5E9E"),
+            GameId = "1207658692"
+        });
+
+        Assert.Equal(24723ul, metadata.id);
+    }
+
+    [Fact]
+    public async Task ReleaseDateUseTest()
+    {
+        var game = new MetadataRequest("Tomb Raider") { ReleaseYear = 1996 };
+
+        var metadata = await GetMetadata(game);
+        Assert.Equal(1996, metadata.first_release_date.ToDateFromUnixSeconds().Year);
+        Assert.Equal(912ul, metadata.id);
+
+        game.ReleaseYear = 2013;
+        metadata = await GetMetadata(game);
+        Assert.Equal(2013, metadata.first_release_date.ToDateFromUnixSeconds().Year);
+        Assert.Equal(1164ul, metadata.id);
+    }
+
+    [Fact]
+    public async Task NameMatchingTest()
+    {
+        // No-Intro naming
+        var metadata = await GetMetadata(new MetadataRequest("Bug's Life, A"));
+        Assert.Equal(2847ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("Warhammer 40,000: Space Marine"));
+        Assert.Equal(578ul, metadata.id);
+
+        // Diacritics test
+        metadata = await GetMetadata(new MetadataRequest("Pokémon Red"));
+        Assert.Equal(1561ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("Pokemon Red"));
+        Assert.Equal(1561ul, metadata.id);
+
+        // Stylized name
+        metadata = await GetMetadata(new MetadataRequest("fear"));
+        Assert.Equal(517ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("F.E.A.R."));
+        Assert.Equal(517ul, metadata.id);
+
+        // & / and test
+        metadata = await GetMetadata(new MetadataRequest("Command and Conquer"));
+        Assert.Equal(647ul, metadata.id);
+        Assert.Equal(1995, metadata.first_release_date.ToDateFromUnixSeconds().Year);
+
+        // Matches exactly
+        metadata = await GetMetadata(new MetadataRequest("Grand Theft Auto IV"));
+        Assert.Equal(731ul, metadata.id);
+        Assert.Equal(2008, metadata.first_release_date.ToDateFromUnixSeconds().Year);
+
+        metadata = await GetMetadata(new MetadataRequest("Grand Theft Auto [sub 1](sub 2) { sub 3} IV"));
+        Assert.Equal(731ul, metadata.id);
+        Assert.Equal(2008, metadata.first_release_date.ToDateFromUnixSeconds().Year);
+
+        // Roman numerals test
+        metadata = await GetMetadata(new MetadataRequest("Quake 3 Arena"));
+        Assert.Equal(355ul, metadata.id);
+
+        // THE test
+        metadata = await GetMetadata(new MetadataRequest("Witcher 3: Wild Hunt"));
+        Assert.Equal(1942ul, metadata.id);
+
+        // No subtitle test
+        metadata = await GetMetadata(new MetadataRequest("The Witcher 3"));
+        Assert.Equal(1942ul, metadata.id);
+
+        // Apostrophe test
+        metadata = await GetMetadata(new MetadataRequest("Assassins Creed II"));
+        Assert.Equal(127ul, metadata.id);
+
+        // Hyphen vs. colon test
+        metadata = await GetMetadata(new MetadataRequest("Legacy of Kain - Soul Reaver 2"));
+        Assert.Equal(7893ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("Legacy of Kain: Soul Reaver 2"));
+        Assert.Equal(7893ul, metadata.id);
+
+        // Trademarks test
+        metadata = await GetMetadata(new MetadataRequest("Dishonored®: Death of the Outsider™"));
+        Assert.Equal(37030ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("X-COM: UFO Defense"));
+        Assert.Equal(24ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("Invisible Inc."));
+        Assert.Equal(6044ul, metadata.id);
+
+        metadata = await GetMetadata(new MetadataRequest("Invisible, Inc."));
+        Assert.Equal(6044ul, metadata.id);
+    }
+
+    [Fact]
+    public async Task GetGameTest()
+    { 
+        var response = await client.GetAsync(@"/igdb/game/333");
+        var cnt = await response.Content.ReadAsStringAsync();
+        var game = DataSerialization.FromJson<DataResponse<Game>>(cnt)?.Data;
+        Assert.Equal(333ul, game!.id);
+    }
+
+    [Fact]
+    public async Task SearchTest()
+    {
+        var request = new SearchRequest { SearchTerm = "half-life" };
+        var content = new StringContent(DataSerialization.ToJson(request), Encoding.UTF8, MediaTypeNames.Application.Json);
+        var response = await client.PostAsync(@"/igdb/search", content);
+        var str = await response.Content.ReadAsStringAsync();
+        var games =  DataSerialization.FromJson<DataResponse<List<Game>>>(str)?.Data ?? new ();
+        Assert.DoesNotContain(games, a => a.category == GameCategoryEnum.MOD);
+    }
+
+    //[Fact]
+    //public async Task BigMatchingTest()
+    //{
+    //    var gameList = File.ReadAllLines(@"c:\devel\test.txt", Encoding.UTF8);
+    //    var found = new StringBuilder();
+    //    var missing = new StringBuilder();
+
+    //    foreach (var game in gameList)
+    //    {
+    //        if (game.IsNullOrEmpty())
+    //        {
+    //            continue;
+    //        }
+
+    //        var metadata = await GetMetadata(new MetadataRequest(game));
+    //        if (metadata?.id > 0)
+    //        {
+    //            found.AppendLine($"{game}#{metadata.id}#{metadata.name}");
+    //        }
+    //        else
+    //        {
+    //            missing.AppendLine(game);
+    //        }
+    //    }
+
+    //    var id = Guid.NewGuid();
+    //    File.WriteAllText($@"c:\devel\test_found_{id}.txt", found.ToString(), Encoding.UTF8);
+    //    File.WriteAllText($@"c:\devel\test_missing_{id}.txt", missing.ToString(), Encoding.UTF8);
+    //}
 }

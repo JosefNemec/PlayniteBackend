@@ -43,32 +43,32 @@ namespace PlayniteServices.Controllers.Addons
         }
 
         [HttpGet("blacklist")]
-        public ServicesResponse<string[]> GetBlackList()
+        public DataResponse<string[]> GetBlackList()
         {
-            return new ServicesResponse<string[]>(settings.Settings.Addons?.Blacklist ?? Array.Empty<string>());
+            return new DataResponse<string[]>(settings.Settings.Addons?.Blacklist ?? Array.Empty<string>());
         }
 
         [HttpGet("defaultextensions")]
-        public ServicesResponse<string> GetDefaultExtensions()
+        public DataResponse<string> GetDefaultExtensions()
         {
             if (settings.Settings.Addons?.DefaultExtensionsFile.IsNullOrWhiteSpace() == true)
             {
-                return new ServicesResponse<string>(null);
+                return new DataResponse<string>(null);
             }
 
             var extensionFile = Path.Combine(ServicePaths.ExecutingDirectory, settings.Settings.Addons!.DefaultExtensionsFile!);
             if (IO.File.Exists(extensionFile))
             {
-                return new ServicesResponse<string>(IO.File.ReadAllText(extensionFile));
+                return new DataResponse<string>(IO.File.ReadAllText(extensionFile));
             }
             else
             {
-                return new ServicesResponse<string>(null);
+                return new DataResponse<string>(null);
             }
         }
 
         [HttpGet()]
-        public ServicesResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
+        public DataResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
         {
             var col = db.Addons;
             var result = new List<AddonManifestBase>();
@@ -100,7 +100,7 @@ namespace PlayniteServices.Controllers.Addons
                 }
             }
 
-            return new ServicesResponse<List<AddonManifestBase>>(result);
+            return new DataResponse<List<AddonManifestBase>>(result);
         }
 
         [ServiceFilter(typeof(ServiceKeyFilter))]

@@ -15,7 +15,7 @@ namespace PlayniteServices.Tests.Controllers.Steam
     {
         private readonly HttpClient client;
 
-        public LibraryControllerTests(TestFixture<Startup> fixture)
+        public LibraryControllerTests(TestFixture fixture)
         {
             client = fixture.Client;
         }
@@ -24,12 +24,12 @@ namespace PlayniteServices.Tests.Controllers.Steam
         public async Task GetLibraryTest()
         {
             var response = await client.GetAsync("/steam/library/123456789");
-            var errorResponse = DataSerialization.FromJson<GenericResponse>(await response.Content.ReadAsStringAsync());
+            var errorResponse = DataSerialization.FromJson<DataResponse<List<GetOwnedGamesResult.Game>>>(await response.Content.ReadAsStringAsync());
             Assert.True(errorResponse?.Error.IsNullOrEmpty() == false);
             Assert.Null(errorResponse?.Data);
 
             response = await client.GetAsync("/steam/library/76561198358889790");
-            var validResponse = DataSerialization.FromJson<ServicesResponse<List<GetOwnedGamesResult.Game>>>(await response.Content.ReadAsStringAsync());
+            var validResponse = DataSerialization.FromJson<DataResponse<List<GetOwnedGamesResult.Game>>>(await response.Content.ReadAsStringAsync());
             Assert.NotNull(validResponse);
             Assert.True(validResponse.Error.IsNullOrEmpty());
             Assert.True(validResponse.Data?.Count > 0);

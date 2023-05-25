@@ -46,11 +46,11 @@ namespace PlayniteServices.Controllers.Steam
         }
 
         [HttpGet("{steamId}")]
-        public async Task<ServicesResponse<List<GetOwnedGamesResult.Game>>> Get(ulong steamId, [FromQuery]bool freeSub)
+        public async Task<DataResponse<List<GetOwnedGamesResult.Game>>> Get(ulong steamId, [FromQuery]bool freeSub)
         {
             if (settings.Settings.Steam?.ApiKey.IsNullOrEmpty() == true)
             {
-                return new ServicesResponse<List<GetOwnedGamesResult.Game>>(new List<GetOwnedGamesResult.Game>());
+                return new DataResponse<List<GetOwnedGamesResult.Game>>(new List<GetOwnedGamesResult.Game>());
             }
 
             var libraryUrl = string.Format(
@@ -66,7 +66,7 @@ namespace PlayniteServices.Controllers.Steam
             var libraryStringResult = await httpClient.GetStringAsync(libraryUrl);
             var libraryResult = DataSerialization.FromJson<GetOwnedGamesResult>(libraryStringResult);
 
-            return new ServicesResponse<List<GetOwnedGamesResult.Game>>(libraryResult?.response?.games ?? new List<GetOwnedGamesResult.Game>());
+            return new DataResponse<List<GetOwnedGamesResult.Game>>(libraryResult?.response?.games ?? new List<GetOwnedGamesResult.Game>());
         }
     }
 }

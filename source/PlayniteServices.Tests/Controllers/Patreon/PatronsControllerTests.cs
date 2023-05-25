@@ -14,7 +14,7 @@ namespace PlayniteServices.Tests.Controllers.Patreon
     {
         private readonly HttpClient client;
 
-        public PatronsControllerTests(TestFixture<Startup> fixture)
+        public PatronsControllerTests(TestFixture fixture)
         {
             client = fixture.Client;
         }
@@ -23,7 +23,7 @@ namespace PlayniteServices.Tests.Controllers.Patreon
         public async Task CompanyControllerTest()
         {
             var response = await client.GetAsync("patreon/patrons");
-            var validResponse = DataSerialization.FromJson<ServicesResponse<List<string>>>(await response.Content.ReadAsStringAsync());
+            var validResponse = DataSerialization.FromJson<DataResponse<List<string>>>(await response.Content.ReadAsStringAsync());
             Assert.NotNull(validResponse);
             Assert.True(validResponse.Data.HasItems());
             Assert.True(validResponse.Error.IsNullOrEmpty());
