@@ -1,5 +1,5 @@
 ﻿using MongoDB.Bson.Serialization;
-namespace PlayniteServices.Controllers.IGDB;
+namespace PlayniteServices.IGDB;
 public partial class AgeRating : IIgdbItem
 {
     public static void RegisterClassMap()
@@ -11,9 +11,9 @@ public partial class AgeRating : IIgdbItem
             cm.UnmapProperty(p => p.content_descriptions_expanded);
         });
     }
-    public async Task expand_content_descriptions(IgdbApi igdbApi)
+    public async Task expand_content_descriptions(IgdbManager igdb)
     {
-        content_descriptions_expanded = await igdbApi.AgeRatingContentDescriptions.GetItem(content_descriptions);
+        content_descriptions_expanded = await igdb.AgeRatingContentDescriptions.GetItem(content_descriptions);
     }
 }
 
@@ -41,9 +41,9 @@ public partial class AlternativeName : IIgdbItem
             cm.UnmapProperty(p => p.game_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
 }
 
@@ -58,9 +58,9 @@ public partial class Artwork : IIgdbItem
             cm.UnmapProperty(p => p.game_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
 }
 
@@ -76,13 +76,13 @@ public partial class Character : IIgdbItem
             cm.UnmapProperty(p => p.mug_shot_expanded);
         });
     }
-    public async Task expand_games(IgdbApi igdbApi)
+    public async Task expand_games(IgdbManager igdb)
     {
-        games_expanded = await igdbApi.Games.GetItem(games);
+        games_expanded = await igdb.Games.GetItem(games);
     }
-    public async Task expand_mug_shot(IgdbApi igdbApi)
+    public async Task expand_mug_shot(IgdbManager igdb)
     {
-        mug_shot_expanded = await igdbApi.CharacterMugShots.GetItem(mug_shot);
+        mug_shot_expanded = await igdb.CharacterMugShots.GetItem(mug_shot);
     }
 }
 
@@ -110,9 +110,9 @@ public partial class Collection : IIgdbItem
             cm.UnmapProperty(p => p.games_expanded);
         });
     }
-    public async Task expand_games(IgdbApi igdbApi)
+    public async Task expand_games(IgdbManager igdb)
     {
-        games_expanded = await igdbApi.Games.GetItem(games);
+        games_expanded = await igdb.Games.GetItem(games);
     }
 }
 
@@ -132,29 +132,29 @@ public partial class Company : IIgdbItem
             cm.UnmapProperty(p => p.websites_expanded);
         });
     }
-    public async Task expand_changed_company_id(IgdbApi igdbApi)
+    public async Task expand_changed_company_id(IgdbManager igdb)
     {
-        changed_company_id_expanded = await igdbApi.Companys.GetItem(changed_company_id);
+        changed_company_id_expanded = await igdb.Companys.GetItem(changed_company_id);
     }
-    public async Task expand_developed(IgdbApi igdbApi)
+    public async Task expand_developed(IgdbManager igdb)
     {
-        developed_expanded = await igdbApi.Games.GetItem(developed);
+        developed_expanded = await igdb.Games.GetItem(developed);
     }
-    public async Task expand_logo(IgdbApi igdbApi)
+    public async Task expand_logo(IgdbManager igdb)
     {
-        logo_expanded = await igdbApi.CompanyLogos.GetItem(logo);
+        logo_expanded = await igdb.CompanyLogos.GetItem(logo);
     }
-    public async Task expand_parent(IgdbApi igdbApi)
+    public async Task expand_parent(IgdbManager igdb)
     {
-        parent_expanded = await igdbApi.Companys.GetItem(parent);
+        parent_expanded = await igdb.Companys.GetItem(parent);
     }
-    public async Task expand_published(IgdbApi igdbApi)
+    public async Task expand_published(IgdbManager igdb)
     {
-        published_expanded = await igdbApi.Games.GetItem(published);
+        published_expanded = await igdb.Games.GetItem(published);
     }
-    public async Task expand_websites(IgdbApi igdbApi)
+    public async Task expand_websites(IgdbManager igdb)
     {
-        websites_expanded = await igdbApi.CompanyWebsites.GetItem(websites);
+        websites_expanded = await igdb.CompanyWebsites.GetItem(websites);
     }
 }
 
@@ -196,13 +196,13 @@ public partial class Cover : IIgdbItem
             cm.UnmapProperty(p => p.game_localization_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_game_localization(IgdbApi igdbApi)
+    public async Task expand_game_localization(IgdbManager igdb)
     {
-        game_localization_expanded = await igdbApi.GameLocalizations.GetItem(game_localization);
+        game_localization_expanded = await igdb.GameLocalizations.GetItem(game_localization);
     }
 }
 
@@ -218,13 +218,13 @@ public partial class ExternalGame : IIgdbItem
             cm.UnmapProperty(p => p.platform_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_platform(IgdbApi igdbApi)
+    public async Task expand_platform(IgdbManager igdb)
     {
-        platform_expanded = await igdbApi.Platforms.GetItem(platform);
+        platform_expanded = await igdb.Platforms.GetItem(platform);
     }
 }
 
@@ -239,9 +239,9 @@ public partial class Franchise : IIgdbItem
             cm.UnmapProperty(p => p.games_expanded);
         });
     }
-    public async Task expand_games(IgdbApi igdbApi)
+    public async Task expand_games(IgdbManager igdb)
     {
-        games_expanded = await igdbApi.Games.GetItem(games);
+        games_expanded = await igdb.Games.GetItem(games);
     }
 }
 
@@ -290,145 +290,145 @@ public partial class Game : IIgdbItem
             cm.UnmapProperty(p => p.game_localizations_expanded);
         });
     }
-    public async Task expand_age_ratings(IgdbApi igdbApi)
+    public async Task expand_age_ratings(IgdbManager igdb)
     {
-        age_ratings_expanded = await igdbApi.AgeRatings.GetItem(age_ratings);
+        age_ratings_expanded = await igdb.AgeRatings.GetItem(age_ratings);
     }
-    public async Task expand_alternative_names(IgdbApi igdbApi)
+    public async Task expand_alternative_names(IgdbManager igdb)
     {
-        alternative_names_expanded = await igdbApi.AlternativeNames.GetItem(alternative_names);
+        alternative_names_expanded = await igdb.AlternativeNames.GetItem(alternative_names);
     }
-    public async Task expand_artworks(IgdbApi igdbApi)
+    public async Task expand_artworks(IgdbManager igdb)
     {
-        artworks_expanded = await igdbApi.Artworks.GetItem(artworks);
+        artworks_expanded = await igdb.Artworks.GetItem(artworks);
     }
-    public async Task expand_bundles(IgdbApi igdbApi)
+    public async Task expand_bundles(IgdbManager igdb)
     {
-        bundles_expanded = await igdbApi.Games.GetItem(bundles);
+        bundles_expanded = await igdb.Games.GetItem(bundles);
     }
-    public async Task expand_collection(IgdbApi igdbApi)
+    public async Task expand_collection(IgdbManager igdb)
     {
-        collection_expanded = await igdbApi.Collections.GetItem(collection);
+        collection_expanded = await igdb.Collections.GetItem(collection);
     }
-    public async Task expand_cover(IgdbApi igdbApi)
+    public async Task expand_cover(IgdbManager igdb)
     {
-        cover_expanded = await igdbApi.Covers.GetItem(cover);
+        cover_expanded = await igdb.Covers.GetItem(cover);
     }
-    public async Task expand_dlcs(IgdbApi igdbApi)
+    public async Task expand_dlcs(IgdbManager igdb)
     {
-        dlcs_expanded = await igdbApi.Games.GetItem(dlcs);
+        dlcs_expanded = await igdb.Games.GetItem(dlcs);
     }
-    public async Task expand_expansions(IgdbApi igdbApi)
+    public async Task expand_expansions(IgdbManager igdb)
     {
-        expansions_expanded = await igdbApi.Games.GetItem(expansions);
+        expansions_expanded = await igdb.Games.GetItem(expansions);
     }
-    public async Task expand_external_games(IgdbApi igdbApi)
+    public async Task expand_external_games(IgdbManager igdb)
     {
-        external_games_expanded = await igdbApi.ExternalGames.GetItem(external_games);
+        external_games_expanded = await igdb.ExternalGames.GetItem(external_games);
     }
-    public async Task expand_franchise(IgdbApi igdbApi)
+    public async Task expand_franchise(IgdbManager igdb)
     {
-        franchise_expanded = await igdbApi.Franchises.GetItem(franchise);
+        franchise_expanded = await igdb.Franchises.GetItem(franchise);
     }
-    public async Task expand_franchises(IgdbApi igdbApi)
+    public async Task expand_franchises(IgdbManager igdb)
     {
-        franchises_expanded = await igdbApi.Franchises.GetItem(franchises);
+        franchises_expanded = await igdb.Franchises.GetItem(franchises);
     }
-    public async Task expand_game_engines(IgdbApi igdbApi)
+    public async Task expand_game_engines(IgdbManager igdb)
     {
-        game_engines_expanded = await igdbApi.GameEngines.GetItem(game_engines);
+        game_engines_expanded = await igdb.GameEngines.GetItem(game_engines);
     }
-    public async Task expand_game_modes(IgdbApi igdbApi)
+    public async Task expand_game_modes(IgdbManager igdb)
     {
-        game_modes_expanded = await igdbApi.GameModes.GetItem(game_modes);
+        game_modes_expanded = await igdb.GameModes.GetItem(game_modes);
     }
-    public async Task expand_genres(IgdbApi igdbApi)
+    public async Task expand_genres(IgdbManager igdb)
     {
-        genres_expanded = await igdbApi.Genres.GetItem(genres);
+        genres_expanded = await igdb.Genres.GetItem(genres);
     }
-    public async Task expand_involved_companies(IgdbApi igdbApi)
+    public async Task expand_involved_companies(IgdbManager igdb)
     {
-        involved_companies_expanded = await igdbApi.InvolvedCompanys.GetItem(involved_companies);
+        involved_companies_expanded = await igdb.InvolvedCompanys.GetItem(involved_companies);
     }
-    public async Task expand_keywords(IgdbApi igdbApi)
+    public async Task expand_keywords(IgdbManager igdb)
     {
-        keywords_expanded = await igdbApi.Keywords.GetItem(keywords);
+        keywords_expanded = await igdb.Keywords.GetItem(keywords);
     }
-    public async Task expand_multiplayer_modes(IgdbApi igdbApi)
+    public async Task expand_multiplayer_modes(IgdbManager igdb)
     {
-        multiplayer_modes_expanded = await igdbApi.MultiplayerModes.GetItem(multiplayer_modes);
+        multiplayer_modes_expanded = await igdb.MultiplayerModes.GetItem(multiplayer_modes);
     }
-    public async Task expand_parent_game(IgdbApi igdbApi)
+    public async Task expand_parent_game(IgdbManager igdb)
     {
-        parent_game_expanded = await igdbApi.Games.GetItem(parent_game);
+        parent_game_expanded = await igdb.Games.GetItem(parent_game);
     }
-    public async Task expand_platforms(IgdbApi igdbApi)
+    public async Task expand_platforms(IgdbManager igdb)
     {
-        platforms_expanded = await igdbApi.Platforms.GetItem(platforms);
+        platforms_expanded = await igdb.Platforms.GetItem(platforms);
     }
-    public async Task expand_player_perspectives(IgdbApi igdbApi)
+    public async Task expand_player_perspectives(IgdbManager igdb)
     {
-        player_perspectives_expanded = await igdbApi.PlayerPerspectives.GetItem(player_perspectives);
+        player_perspectives_expanded = await igdb.PlayerPerspectives.GetItem(player_perspectives);
     }
-    public async Task expand_release_dates(IgdbApi igdbApi)
+    public async Task expand_release_dates(IgdbManager igdb)
     {
-        release_dates_expanded = await igdbApi.ReleaseDates.GetItem(release_dates);
+        release_dates_expanded = await igdb.ReleaseDates.GetItem(release_dates);
     }
-    public async Task expand_screenshots(IgdbApi igdbApi)
+    public async Task expand_screenshots(IgdbManager igdb)
     {
-        screenshots_expanded = await igdbApi.Screenshots.GetItem(screenshots);
+        screenshots_expanded = await igdb.Screenshots.GetItem(screenshots);
     }
-    public async Task expand_similar_games(IgdbApi igdbApi)
+    public async Task expand_similar_games(IgdbManager igdb)
     {
-        similar_games_expanded = await igdbApi.Games.GetItem(similar_games);
+        similar_games_expanded = await igdb.Games.GetItem(similar_games);
     }
-    public async Task expand_standalone_expansions(IgdbApi igdbApi)
+    public async Task expand_standalone_expansions(IgdbManager igdb)
     {
-        standalone_expansions_expanded = await igdbApi.Games.GetItem(standalone_expansions);
+        standalone_expansions_expanded = await igdb.Games.GetItem(standalone_expansions);
     }
-    public async Task expand_themes(IgdbApi igdbApi)
+    public async Task expand_themes(IgdbManager igdb)
     {
-        themes_expanded = await igdbApi.Themes.GetItem(themes);
+        themes_expanded = await igdb.Themes.GetItem(themes);
     }
-    public async Task expand_version_parent(IgdbApi igdbApi)
+    public async Task expand_version_parent(IgdbManager igdb)
     {
-        version_parent_expanded = await igdbApi.Games.GetItem(version_parent);
+        version_parent_expanded = await igdb.Games.GetItem(version_parent);
     }
-    public async Task expand_videos(IgdbApi igdbApi)
+    public async Task expand_videos(IgdbManager igdb)
     {
-        videos_expanded = await igdbApi.GameVideos.GetItem(videos);
+        videos_expanded = await igdb.GameVideos.GetItem(videos);
     }
-    public async Task expand_websites(IgdbApi igdbApi)
+    public async Task expand_websites(IgdbManager igdb)
     {
-        websites_expanded = await igdbApi.Websites.GetItem(websites);
+        websites_expanded = await igdb.Websites.GetItem(websites);
     }
-    public async Task expand_remakes(IgdbApi igdbApi)
+    public async Task expand_remakes(IgdbManager igdb)
     {
-        remakes_expanded = await igdbApi.Games.GetItem(remakes);
+        remakes_expanded = await igdb.Games.GetItem(remakes);
     }
-    public async Task expand_remasters(IgdbApi igdbApi)
+    public async Task expand_remasters(IgdbManager igdb)
     {
-        remasters_expanded = await igdbApi.Games.GetItem(remasters);
+        remasters_expanded = await igdb.Games.GetItem(remasters);
     }
-    public async Task expand_expanded_games(IgdbApi igdbApi)
+    public async Task expand_expanded_games(IgdbManager igdb)
     {
-        expanded_games_expanded = await igdbApi.Games.GetItem(expanded_games);
+        expanded_games_expanded = await igdb.Games.GetItem(expanded_games);
     }
-    public async Task expand_ports(IgdbApi igdbApi)
+    public async Task expand_ports(IgdbManager igdb)
     {
-        ports_expanded = await igdbApi.Games.GetItem(ports);
+        ports_expanded = await igdb.Games.GetItem(ports);
     }
-    public async Task expand_forks(IgdbApi igdbApi)
+    public async Task expand_forks(IgdbManager igdb)
     {
-        forks_expanded = await igdbApi.Games.GetItem(forks);
+        forks_expanded = await igdb.Games.GetItem(forks);
     }
-    public async Task expand_language_supports(IgdbApi igdbApi)
+    public async Task expand_language_supports(IgdbManager igdb)
     {
-        language_supports_expanded = await igdbApi.LanguageSupports.GetItem(language_supports);
+        language_supports_expanded = await igdb.LanguageSupports.GetItem(language_supports);
     }
-    public async Task expand_game_localizations(IgdbApi igdbApi)
+    public async Task expand_game_localizations(IgdbManager igdb)
     {
-        game_localizations_expanded = await igdbApi.GameLocalizations.GetItem(game_localizations);
+        game_localizations_expanded = await igdb.GameLocalizations.GetItem(game_localizations);
     }
 }
 
@@ -445,17 +445,17 @@ public partial class GameEngine : IIgdbItem
             cm.UnmapProperty(p => p.platforms_expanded);
         });
     }
-    public async Task expand_companies(IgdbApi igdbApi)
+    public async Task expand_companies(IgdbManager igdb)
     {
-        companies_expanded = await igdbApi.Companys.GetItem(companies);
+        companies_expanded = await igdb.Companys.GetItem(companies);
     }
-    public async Task expand_logo(IgdbApi igdbApi)
+    public async Task expand_logo(IgdbManager igdb)
     {
-        logo_expanded = await igdbApi.GameEngineLogos.GetItem(logo);
+        logo_expanded = await igdb.GameEngineLogos.GetItem(logo);
     }
-    public async Task expand_platforms(IgdbApi igdbApi)
+    public async Task expand_platforms(IgdbManager igdb)
     {
-        platforms_expanded = await igdbApi.Platforms.GetItem(platforms);
+        platforms_expanded = await igdb.Platforms.GetItem(platforms);
     }
 }
 
@@ -485,17 +485,17 @@ public partial class GameLocalization : IIgdbItem
             cm.UnmapProperty(p => p.region_expanded);
         });
     }
-    public async Task expand_cover(IgdbApi igdbApi)
+    public async Task expand_cover(IgdbManager igdb)
     {
-        cover_expanded = await igdbApi.Covers.GetItem(cover);
+        cover_expanded = await igdb.Covers.GetItem(cover);
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_region(IgdbApi igdbApi)
+    public async Task expand_region(IgdbManager igdb)
     {
-        region_expanded = await igdbApi.Regions.GetItem(region);
+        region_expanded = await igdb.Regions.GetItem(region);
     }
 }
 
@@ -525,17 +525,17 @@ public partial class GameVersion : IIgdbItem
             cm.UnmapProperty(p => p.games_expanded);
         });
     }
-    public async Task expand_features(IgdbApi igdbApi)
+    public async Task expand_features(IgdbManager igdb)
     {
-        features_expanded = await igdbApi.GameVersionFeatures.GetItem(features);
+        features_expanded = await igdb.GameVersionFeatures.GetItem(features);
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_games(IgdbApi igdbApi)
+    public async Task expand_games(IgdbManager igdb)
     {
-        games_expanded = await igdbApi.Games.GetItem(games);
+        games_expanded = await igdb.Games.GetItem(games);
     }
 }
 
@@ -550,9 +550,9 @@ public partial class GameVersionFeature : IIgdbItem
             cm.UnmapProperty(p => p.values_expanded);
         });
     }
-    public async Task expand_values(IgdbApi igdbApi)
+    public async Task expand_values(IgdbManager igdb)
     {
-        values_expanded = await igdbApi.GameVersionFeatureValues.GetItem(values);
+        values_expanded = await igdb.GameVersionFeatureValues.GetItem(values);
     }
 }
 
@@ -568,13 +568,13 @@ public partial class GameVersionFeatureValue : IIgdbItem
             cm.UnmapProperty(p => p.game_feature_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_game_feature(IgdbApi igdbApi)
+    public async Task expand_game_feature(IgdbManager igdb)
     {
-        game_feature_expanded = await igdbApi.GameVersionFeatures.GetItem(game_feature);
+        game_feature_expanded = await igdb.GameVersionFeatures.GetItem(game_feature);
     }
 }
 
@@ -589,9 +589,9 @@ public partial class GameVideo : IIgdbItem
             cm.UnmapProperty(p => p.game_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
 }
 
@@ -620,13 +620,13 @@ public partial class InvolvedCompany : IIgdbItem
             cm.UnmapProperty(p => p.game_expanded);
         });
     }
-    public async Task expand_company(IgdbApi igdbApi)
+    public async Task expand_company(IgdbManager igdb)
     {
-        company_expanded = await igdbApi.Companys.GetItem(company);
+        company_expanded = await igdb.Companys.GetItem(company);
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
 }
 
@@ -669,17 +669,17 @@ public partial class LanguageSupport : IIgdbItem
             cm.UnmapProperty(p => p.language_support_type_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_language(IgdbApi igdbApi)
+    public async Task expand_language(IgdbManager igdb)
     {
-        language_expanded = await igdbApi.Languages.GetItem(language);
+        language_expanded = await igdb.Languages.GetItem(language);
     }
-    public async Task expand_language_support_type(IgdbApi igdbApi)
+    public async Task expand_language_support_type(IgdbManager igdb)
     {
-        language_support_type_expanded = await igdbApi.LanguageSupportTypes.GetItem(language_support_type);
+        language_support_type_expanded = await igdb.LanguageSupportTypes.GetItem(language_support_type);
     }
 }
 
@@ -708,13 +708,13 @@ public partial class MultiplayerMode : IIgdbItem
             cm.UnmapProperty(p => p.platform_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_platform(IgdbApi igdbApi)
+    public async Task expand_platform(IgdbManager igdb)
     {
-        platform_expanded = await igdbApi.Platforms.GetItem(platform);
+        platform_expanded = await igdb.Platforms.GetItem(platform);
     }
 }
 
@@ -732,21 +732,21 @@ public partial class Platform : IIgdbItem
             cm.UnmapProperty(p => p.websites_expanded);
         });
     }
-    public async Task expand_platform_logo(IgdbApi igdbApi)
+    public async Task expand_platform_logo(IgdbManager igdb)
     {
-        platform_logo_expanded = await igdbApi.PlatformLogos.GetItem(platform_logo);
+        platform_logo_expanded = await igdb.PlatformLogos.GetItem(platform_logo);
     }
-    public async Task expand_platform_family(IgdbApi igdbApi)
+    public async Task expand_platform_family(IgdbManager igdb)
     {
-        platform_family_expanded = await igdbApi.PlatformFamilys.GetItem(platform_family);
+        platform_family_expanded = await igdb.PlatformFamilys.GetItem(platform_family);
     }
-    public async Task expand_versions(IgdbApi igdbApi)
+    public async Task expand_versions(IgdbManager igdb)
     {
-        versions_expanded = await igdbApi.PlatformVersions.GetItem(versions);
+        versions_expanded = await igdb.PlatformVersions.GetItem(versions);
     }
-    public async Task expand_websites(IgdbApi igdbApi)
+    public async Task expand_websites(IgdbManager igdb)
     {
-        websites_expanded = await igdbApi.PlatformWebsites.GetItem(websites);
+        websites_expanded = await igdb.PlatformWebsites.GetItem(websites);
     }
 }
 
@@ -790,21 +790,21 @@ public partial class PlatformVersion : IIgdbItem
             cm.UnmapProperty(p => p.platform_version_release_dates_expanded);
         });
     }
-    public async Task expand_companies(IgdbApi igdbApi)
+    public async Task expand_companies(IgdbManager igdb)
     {
-        companies_expanded = await igdbApi.PlatformVersionCompanys.GetItem(companies);
+        companies_expanded = await igdb.PlatformVersionCompanys.GetItem(companies);
     }
-    public async Task expand_main_manufacturer(IgdbApi igdbApi)
+    public async Task expand_main_manufacturer(IgdbManager igdb)
     {
-        main_manufacturer_expanded = await igdbApi.PlatformVersionCompanys.GetItem(main_manufacturer);
+        main_manufacturer_expanded = await igdb.PlatformVersionCompanys.GetItem(main_manufacturer);
     }
-    public async Task expand_platform_logo(IgdbApi igdbApi)
+    public async Task expand_platform_logo(IgdbManager igdb)
     {
-        platform_logo_expanded = await igdbApi.PlatformLogos.GetItem(platform_logo);
+        platform_logo_expanded = await igdb.PlatformLogos.GetItem(platform_logo);
     }
-    public async Task expand_platform_version_release_dates(IgdbApi igdbApi)
+    public async Task expand_platform_version_release_dates(IgdbManager igdb)
     {
-        platform_version_release_dates_expanded = await igdbApi.PlatformVersionReleaseDates.GetItem(platform_version_release_dates);
+        platform_version_release_dates_expanded = await igdb.PlatformVersionReleaseDates.GetItem(platform_version_release_dates);
     }
 }
 
@@ -819,9 +819,9 @@ public partial class PlatformVersionCompany : IIgdbItem
             cm.UnmapProperty(p => p.company_expanded);
         });
     }
-    public async Task expand_company(IgdbApi igdbApi)
+    public async Task expand_company(IgdbManager igdb)
     {
-        company_expanded = await igdbApi.Companys.GetItem(company);
+        company_expanded = await igdb.Companys.GetItem(company);
     }
 }
 
@@ -836,9 +836,9 @@ public partial class PlatformVersionReleaseDate : IIgdbItem
             cm.UnmapProperty(p => p.platform_version_expanded);
         });
     }
-    public async Task expand_platform_version(IgdbApi igdbApi)
+    public async Task expand_platform_version(IgdbManager igdb)
     {
-        platform_version_expanded = await igdbApi.PlatformVersions.GetItem(platform_version);
+        platform_version_expanded = await igdb.PlatformVersions.GetItem(platform_version);
     }
 }
 
@@ -894,17 +894,17 @@ public partial class ReleaseDate : IIgdbItem
             cm.UnmapProperty(p => p.status_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
-    public async Task expand_platform(IgdbApi igdbApi)
+    public async Task expand_platform(IgdbManager igdb)
     {
-        platform_expanded = await igdbApi.Platforms.GetItem(platform);
+        platform_expanded = await igdb.Platforms.GetItem(platform);
     }
-    public async Task expand_status(IgdbApi igdbApi)
+    public async Task expand_status(IgdbManager igdb)
     {
-        status_expanded = await igdbApi.ReleaseDateStatuss.GetItem(status);
+        status_expanded = await igdb.ReleaseDateStatuss.GetItem(status);
     }
 }
 
@@ -932,9 +932,9 @@ public partial class Screenshot : IIgdbItem
             cm.UnmapProperty(p => p.game_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
 }
 
@@ -962,9 +962,9 @@ public partial class Website : IIgdbItem
             cm.UnmapProperty(p => p.game_expanded);
         });
     }
-    public async Task expand_game(IgdbApi igdbApi)
+    public async Task expand_game(IgdbManager igdb)
     {
-        game_expanded = await igdbApi.Games.GetItem(game);
+        game_expanded = await igdb.Games.GetItem(game);
     }
 }
 

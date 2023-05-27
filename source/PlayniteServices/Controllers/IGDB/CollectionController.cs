@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace PlayniteServices.Controllers.IGDB;
+namespace PlayniteServices.IGDB;
 
 [ServiceFilter(typeof(ServiceKeyFilter))]
 public class CollectionController<T> : Controller where T : class, IIgdbItem
 {
     private readonly UpdatableAppSettings settings;
-    private readonly IgdbApi igdb;
+    private readonly IgdbManager igdb;
     private readonly IgdbCollection<T> collection;
     public readonly string EndpointPath;
 
-    public CollectionController(string endpointPath, IgdbApi igdb, UpdatableAppSettings settings)
+    public CollectionController(string endpointPath, IgdbManager igdb, UpdatableAppSettings settings)
     {
         EndpointPath = endpointPath;
         this.igdb = igdb;

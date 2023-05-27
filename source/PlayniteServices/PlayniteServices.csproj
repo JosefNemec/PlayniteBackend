@@ -20,29 +20,16 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Collections\ObservableObject.cs" Link="Shared\SDK\ObservableObject.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Extensions\ListExtensions.cs" Link="Shared\SDK\ListExtensions.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\ILogger.cs" Link="Shared\SDK\ILogger.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\LogManager.cs" Link="Shared\SDK\LogManager.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\PlayniteSDK\Models\ReleaseDate.cs" Link="Shared\SDK\ReleaseDate.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\LongExtensions.cs" Link="Shared\LongExtensions.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\ObjectExtensions.cs" Link="Shared\ObjectExtensions.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Extensions\StringExtensions.cs" Link="Shared\StringExtensions.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\FileSystem.cs" Link="Shared\FileSystem.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Paths.cs" Link="Shared\Paths.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Common\Roman.cs" Link="Shared\Roman.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\DiagnosticPackageInfo.cs" Link="Shared\DiagnosticPackageInfo.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Manifests\AddonManifestBase.cs" Link="Models\Playnite\AddonManifestBase.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Fileapi.cs" Link="Shared\Native\Fileapi.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Kernel32.cs" Link="Shared\Native\Kernel32.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Ntdll.cs" Link="Shared\Native\Ntdll.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Processthreadsapi.cs" Link="Shared\Native\Processthreadsapi.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Shlwapi.cs" Link="Shared\Native\Shlwapi.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Winbase.cs" Link="Shared\Native\Winbase.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Windef.cs" Link="Shared\Native\Windef.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\Winnt.cs" Link="Shared\Native\Winnt.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Native\winuser.cs" Link="Shared\Native\winuser.cs" />
-    <Compile Include="..\..\PlayniteRepo\source\Playnite\Services\Models\Playnite.cs" Link="Models\Playnite\Playnite.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\PlayniteSDK\ILogger.cs" Link="Shared\ILogger.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\DiagnosticPackageInfo.cs" Link="Shared\DiagnosticPackageInfo.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\FileSystem.cs" Link="Shared\FileSystem.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\Logger.cs" Link="Shared\Logger.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\Paths.cs" Link="Shared\Paths.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\Roman.cs" Link="Shared\Roman.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\Serialization.cs" Link="Shared\Serialization.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\TypeExtensions\ListExtensions.cs" Link="Shared\ListExtensions.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\TypeExtensions\LongExtensions.cs" Link="Shared\LongExtensions.cs" />
+    <Compile Include="..\..\PlayniteRepo\source7\Playnite\TypeExtensions\StringExtensions.cs" Link="Shared\StringExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -62,15 +49,15 @@
 
   <ItemGroup>
     <PackageReference Include="JsonApiSerializer" Version="1.7.4" />
-    <PackageReference Include="MongoDB.Analyzer" Version="1.2.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.19.1" />
-    <PackageReference Include="NLog" Version="4.7.8" />
+    <PackageReference Include="MongoDB.Driver" Version="2.19.2" />
+    <PackageReference Include="NLog" Version="5.1.5" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
-    <PackageReference Include="YamlDotNet" Version="12.0.2" />
+    <PackageReference Include="Vanara.PInvoke.Kernel32" Version="3.4.15" />
+    <PackageReference Include="Vanara.PInvoke.ShlwApi" Version="3.4.15" />
+    <PackageReference Include="YamlDotNet" Version="13.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Shared\Native\" />
-    <Folder Include="Shared\SDK\" />
+    <Folder Include="Shared\" />
   </ItemGroup>
 </Project>

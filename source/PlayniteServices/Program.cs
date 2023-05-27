@@ -1,22 +1,19 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
-using Playnite.SDK;
 using Microsoft.Extensions.DependencyInjection;
-using PlayniteServices.Controllers.IGDB;
-using PlayniteServices.Filters;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
+using Playnite;
+using ILogger = Playnite.ILogger;
 
 namespace PlayniteServices;
 
 public class Program
 {
-    private static readonly Playnite.SDK.ILogger logger = LogManager.GetLogger();
+    private static readonly ILogger logger = LogManager.GetLogger();
     public static readonly HttpClient HttpClient = new ();
 
     public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -38,7 +35,6 @@ public class Program
         {
             options.JsonSerializerOptions.IncludeFields = true;
             options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault;
-            options.JsonSerializerOptions.Converters.Add(new ReleaseDateConverter());
         });
 
         services.AddLogging(loggingBuilder =>
@@ -50,13 +46,13 @@ public class Program
 
         services.Configure<AppSettings>(configuration);
         services.AddSingleton(s => new UpdatableAppSettings(s.GetService<IOptionsMonitor<AppSettings>>()!));
-        services.AddSingleton<IgdbApi>();
+        services.AddSingleton<IGDB.IgdbManager>();
         services.AddSingleton<PlayniteVersionFilter>();
         services.AddSingleton<ServiceKeyFilter>();
-        services.AddSingleton<Discord>();
-        services.AddSingleton<Addons>();
+        services.AddSingleton<Discord.DiscordManager>();
+        services.AddSingleton<Addons.AddonsManager>();
         services.AddSingleton<Database>();
-        services.AddSingleton<Patreon>();
+        services.AddSingleton<Patreon.PatreonManager>();
     }
 
     public static void ConfigureApp(IApplicationBuilder app)
@@ -77,8 +73,6 @@ public class Program
 
     public static async Task Main(string[] args)
     {
-        NLogLogger.ConfigureLogger();
-        LogManager.Init(new NLogLogProvider());
         logger.Info("Server starting...");
 
         var builder = WebApplication.CreateBuilder(args);
@@ -93,13 +87,13 @@ public class Program
         var settings = app.Services.GetService<UpdatableAppSettings>()!;
         if (settings.Settings.Addons?.AutoUpdate == true)
         {
-            var addons = app.Services.GetService<Addons>()!;
+            var addons = app.Services.GetService<Addons.AddonsManager>()!;
             addons.StartUpdateChecker();
         }
 
         if (settings.Settings.Discord?.BotEnabled == true)
         {
-            var discord = app.Services.GetService<Discord>()!;
+            var discord = app.Services.GetService<Discord.DiscordManager>()!;
             await discord.Init();
         }
 

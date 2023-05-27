@@ -2,161 +2,149 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Playnite;
-using Playnite.Common;
-using Playnite.SDK;
-using PlayniteServices.Controllers.Webhooks;
-using PlayniteServices.Filters;
-using PlayniteServices.Models.GitHub;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using PlayniteServices.Webhooks;
+using PlayniteServices.GitHub;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using IO = System.IO;
 
-namespace PlayniteServices.Controllers.Addons
+namespace PlayniteServices.Addons;
+
+public class AddonRequest
 {
-    public class AddonRequest
+    public string? AddonId { get; set; }
+    public string? SearchTerm { get; set; }
+    public AddonType? Type { get; set; }
+}
+
+[Route("addons")]
+public class AddonsController : Controller
+{
+    private readonly static ILogger logger = LogManager.GetLogger();
+    private readonly UpdatableAppSettings settings;
+    private readonly Database db;
+    private readonly AddonsManager addons;
+
+    public AddonsController(UpdatableAppSettings settings, Database db, AddonsManager addons)
     {
-        public string? AddonId { get; set; }
-        public string? SearchTerm { get; set; }
-        public AddonType? Type { get; set; }
+        this.settings = settings;
+        this.db = db;
+        this.addons = addons;
     }
 
-    [Route("addons")]
-    public class AddonsController : Controller
+    [HttpGet("blacklist")]
+    public DataResponse<string[]> GetBlackList()
     {
-        private readonly static ILogger logger = LogManager.GetLogger();
-        private readonly UpdatableAppSettings settings;
-        private readonly Database db;
-        private readonly PlayniteServices.Addons addons;
+        return new DataResponse<string[]>(settings.Settings.Addons?.Blacklist ?? Array.Empty<string>());
+    }
 
-        public AddonsController(UpdatableAppSettings settings, Database db, PlayniteServices.Addons addons)
+    [HttpGet("defaultextensions")]
+    public DataResponse<string> GetDefaultExtensions()
+    {
+        if (settings.Settings.Addons?.DefaultExtensionsFile.IsNullOrWhiteSpace() == true)
         {
-            this.settings = settings;
-            this.db = db;
-            this.addons = addons;
+            return new DataResponse<string>(null);
         }
 
-        [HttpGet("blacklist")]
-        public DataResponse<string[]> GetBlackList()
+        var extensionFile = Path.Combine(ServicePaths.ExecutingDirectory, settings.Settings.Addons!.DefaultExtensionsFile!);
+        if (IO.File.Exists(extensionFile))
         {
-            return new DataResponse<string[]>(settings.Settings.Addons?.Blacklist ?? Array.Empty<string>());
+            return new DataResponse<string>(IO.File.ReadAllText(extensionFile));
         }
-
-        [HttpGet("defaultextensions")]
-        public DataResponse<string> GetDefaultExtensions()
+        else
         {
-            if (settings.Settings.Addons?.DefaultExtensionsFile.IsNullOrWhiteSpace() == true)
-            {
-                return new DataResponse<string>(null);
-            }
-
-            var extensionFile = Path.Combine(ServicePaths.ExecutingDirectory, settings.Settings.Addons!.DefaultExtensionsFile!);
-            if (IO.File.Exists(extensionFile))
-            {
-                return new DataResponse<string>(IO.File.ReadAllText(extensionFile));
-            }
-            else
-            {
-                return new DataResponse<string>(null);
-            }
+            return new DataResponse<string>(null);
         }
+    }
 
-        [HttpGet()]
-        public DataResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
+    [HttpGet()]
+    public DataResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
+    {
+        var col = db.Addons;
+        var result = new List<AddonManifestBase>();
+        if (!request.AddonId.IsNullOrEmpty())
         {
-            var col = db.Addons;
-            var result = new List<AddonManifestBase>();
-            if (!request.AddonId.IsNullOrEmpty())
+            var filter = Builders<AddonManifestBase>.Filter.Eq(u => u.AddonId, request.AddonId);
+            result = col.Find(filter).ToList();
+        }
+        else
+        {
+            // TODO convert to proper query
+            foreach (var addon in col.Find(new BsonDocument()).ToCursor().ToEnumerable())
             {
-                var filter = Builders<AddonManifestBase>.Filter.Eq(u => u.AddonId, request.AddonId);
-                result = col.Find(filter).ToList();
-            }
-            else
-            {
-                // TODO convert to proper query
-                foreach (var addon in col.Find(new BsonDocument()).ToCursor().ToEnumerable())
+                if (request.Type != null && addon.Type != request.Type)
                 {
-                    if (request.Type != null && addon.Type != request.Type)
+                    continue;
+                }
+
+                if (!request.SearchTerm.IsNullOrEmpty())
+                {
+                    if (!(addon.Name?.Contains(request.SearchTerm, StringComparison.InvariantCultureIgnoreCase) == true ||
+                          addon.Tags?.ContainsStringPartial(request.SearchTerm, StringComparison.InvariantCultureIgnoreCase) == true))
                     {
                         continue;
                     }
-
-                    if (!request.SearchTerm.IsNullOrEmpty())
-                    {
-                        if (!(addon.Name?.Contains(request.SearchTerm, StringComparison.InvariantCultureIgnoreCase) == true ||
-                              addon.Tags?.ContainsStringPartial(request.SearchTerm, StringComparison.InvariantCultureIgnoreCase) == true))
-                        {
-                            continue;
-                        }
-                    }
-
-                    result.Add(addon);
                 }
-            }
 
-            return new DataResponse<List<AddonManifestBase>>(result);
+                result.Add(addon);
+            }
         }
 
-        [ServiceFilter(typeof(ServiceKeyFilter))]
-        [HttpPost("build")]
-        public async Task<ActionResult> RegenerateDatabase()
+        return new DataResponse<List<AddonManifestBase>>(result);
+    }
+
+    [ServiceFilter(typeof(ServiceKeyFilter))]
+    [HttpPost("build")]
+    public async Task<ActionResult> RegenerateDatabase()
+    {
+        await addons.RegenerateAddonDatabase();
+        return Ok();
+    }
+
+    [HttpPost("githubhook")]
+    public async Task<ActionResult> GithubWebhook()
+    {
+        if (settings.Settings.Addons?.GitHubSecret.IsNullOrWhiteSpace() == true)
         {
-            await addons.RegenerateAddonDatabase();
+            logger.Error("Can't process addons github webhook, secret not configured.");
             return Ok();
         }
 
-        [HttpPost("githubhook")]
-        public async Task<ActionResult> GithubWebhook()
+        if (Request.Headers.TryGetValue("X-Hub-Signature", out var sig))
         {
-            if (settings.Settings.Addons?.GitHubSecret.IsNullOrWhiteSpace() == true)
+            if (!Request.Headers.TryGetValue("X-GitHub-Event", out var eventType))
             {
-                logger.Error("Can't process addons github webhook, secret not configured.");
-                return Ok();
+                logger.Error("X-GitHub-Event missing.");
+                return BadRequest("No event.");
             }
 
-            if (Request.Headers.TryGetValue("X-Hub-Signature", out var sig))
+            var payloadString = string.Empty;
+            using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
             {
-                if (!Request.Headers.TryGetValue("X-GitHub-Event", out var eventType))
-                {
-                    logger.Error("X-GitHub-Event missing.");
-                    return BadRequest("No event.");
-                }
+                payloadString = await reader.ReadToEndAsync();
+            }
 
-                var payloadString = string.Empty;
-                using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
-                {
-                    payloadString = await reader.ReadToEndAsync();
-                }
+            var payloadHash = GitHubWebHookController.GetPayloadHash(payloadString, settings.Settings.Addons!.GitHubSecret!);
+            if (sig != $"sha1={payloadHash}")
+            {
+                logger.Error("PayloadHash signature check failed.");
+                return BadRequest("Signature check failed.");
+            }
 
-                var payloadHash = GitHubWebHookController.GetPayloadHash(payloadString, settings.Settings.Addons!.GitHubSecret!);
-                if (sig != $"sha1={payloadHash}")
+            if (eventType == WebHookEvents.Push)
+            {
+                var payload = Serialization.FromJson<PushEvent>(payloadString);
+                if (payload?.@ref?.EndsWith("master", StringComparison.Ordinal) == true)
                 {
-                    logger.Error("PayloadHash signature check failed.");
-                    return BadRequest("Signature check failed.");
-                }
-
-                if (eventType == WebHookEvents.Push)
-                {
-                    var payload = DataSerialization.FromJson<PushEvent>(payloadString);
-                    if (payload?.@ref?.EndsWith("master", StringComparison.Ordinal) == true)
-                    {
 #pragma warning disable CS4014
-                        addons.RegenerateAddonDatabase();
+                    addons.RegenerateAddonDatabase();
 #pragma warning restore CS4014
-                    }
                 }
-
-                return Ok();
             }
 
-            logger.Error("Addons github webhook not processed correctly.");
-            return BadRequest();
+            return Ok();
         }
+
+        logger.Error("Addons github webhook not processed correctly.");
+        return BadRequest();
     }
 }

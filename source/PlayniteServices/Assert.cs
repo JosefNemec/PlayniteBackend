@@ -1,54 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿namespace PlayniteServices;
 
-namespace PlayniteServices
+public class AssertException : Exception
 {
-    public class AssertException : Exception
+    public AssertException() : base()
     {
-        public AssertException() : base()
-        {
-        }
+    }
 
-        public AssertException(string message) : base(message)
+    public AssertException(string message) : base(message)
+    {
+    }
+}
+
+public class TestAssert
+{
+    public static void IsTrue(bool condition)
+    {
+        if (!condition)
         {
+            throw new AssertException();
         }
     }
 
-    public class TestAssert
+    public static void IsTrue(bool condition, string message)
     {
-        public static void IsTrue(bool condition)
+        if (!condition)
         {
-            if (!condition)
-            {
-                throw new AssertException();
-            }
+            throw new AssertException(message);
         }
+    }
 
-        public static void IsTrue(bool condition, string message)
+    public static void IsFalse(bool condition)
+    {
+        if (condition)
         {
-            if (!condition)
-            {
-                throw new AssertException(message);
-            }
+            throw new AssertException();
         }
+    }
 
-        public static void IsFalse(bool condition)
+    public static void IsFalse(bool condition, string message)
+    {
+        if (condition)
         {
-            if (condition)
-            {
-                throw new AssertException();
-            }
-        }
-
-        public static void IsFalse(bool condition, string message)
-        {
-            if (condition)
-            {
-                throw new AssertException(message);
-            }
+            throw new AssertException(message);
         }
     }
 }

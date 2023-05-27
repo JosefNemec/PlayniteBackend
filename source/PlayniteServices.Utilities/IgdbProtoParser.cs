@@ -283,11 +283,11 @@ public class IgdbProtoParser
             using System;
             using System.Collections.Generic;
             #nullable enable
-            namespace PlayniteServices.Controllers.IGDB {
+            namespace PlayniteServices.IGDB {
             """);
         resultMethods.AppendLine("""            
             using MongoDB.Bson.Serialization;
-            namespace PlayniteServices.Controllers.IGDB;
+            namespace PlayniteServices.IGDB;
             """);
 
         foreach (var pEnum in enums)
@@ -386,9 +386,9 @@ public class IgdbProtoParser
             foreach (var expMem in expandedMembers)
             {
                 resultMethods.AppendLine($$"""
-                    public async Task expand_{{expMem.OriginalName}}(IgdbApi igdbApi)
+                    public async Task expand_{{expMem.OriginalName}}(IgdbManager igdb)
                     {
-                        {{expMem.ExpandedName}} = await igdbApi.{{expMem.ExpandedType}}s.GetItem({{expMem.OriginalName}});
+                        {{expMem.ExpandedName}} = await igdb.{{expMem.ExpandedType}}s.GetItem({{expMem.OriginalName}});
                     }
                 """);
             }
@@ -416,11 +416,11 @@ public class IgdbProtoParser
 
         result = new StringBuilder();
         result.AppendLine("""
-            using PlayniteServices.Controllers.IGDB;
+            using PlayniteServices.IGDB;
             using MongoDB.Driver;
             using System.Diagnostics.CodeAnalysis;
-            namespace PlayniteServices.Controllers.IGDB;
-            public partial class IgdbApi : IDisposable
+            namespace PlayniteServices.IGDB;
+            public partial class IgdbManager : IDisposable
             {
             """);
 
@@ -455,20 +455,20 @@ public class IgdbProtoParser
             result.AppendLine($$"""
             public partial class {{message.Name}}Collection : IgdbCollection<{{message.Name}}>
             {
-                public {{message.Name}}Collection(IgdbApi igdb, Database database) : base("{{typeToEndpoint[message.Name]}}", igdb, database)
+                public {{message.Name}}Collection(IgdbManager igdb, Database database) : base("{{typeToEndpoint[message.Name]}}", igdb, database)
                 {
                 }
             }
             """);
         }
 
-        File.WriteAllText(Path.Combine(outputDir, "IgdbApi_Generated.cs"), result.ToString(), Encoding.UTF8);
+        File.WriteAllText(Path.Combine(outputDir, "IgdbManager_Generated.cs"), result.ToString(), Encoding.UTF8);
 
         result = new StringBuilder();
         result.AppendLine("""
             using Microsoft.AspNetCore.Mvc;
 
-            namespace PlayniteServices.Controllers.IGDB;
+            namespace PlayniteServices.IGDB;
             """);
 
         foreach (var message in messages)
@@ -478,7 +478,7 @@ public class IgdbProtoParser
             [Route("igdb/webhooks/{{endpoint}}")]
             public class {{message.Name}}WebhookController : WebhookController<{{message.Name}}>
             {
-                public {{message.Name}}WebhookController(IgdbApi igdb, UpdatableAppSettings settings) : base("{{endpoint}}", igdb, settings)
+                public {{message.Name}}WebhookController(IgdbManager igdb, UpdatableAppSettings settings) : base("{{endpoint}}", igdb, settings)
                 {
                 }
             }
@@ -491,7 +491,7 @@ public class IgdbProtoParser
         result.AppendLine("""
             using Microsoft.AspNetCore.Mvc;
 
-            namespace PlayniteServices.Controllers.IGDB;
+            namespace PlayniteServices.IGDB;
             """);
 
         foreach (var message in messages)
@@ -501,7 +501,7 @@ public class IgdbProtoParser
             [Route("igdb/collections/{{endpoint}}")]
             public class {{message.Name}}CollectionController : CollectionController<{{message.Name}}>
             {
-                public {{message.Name}}CollectionController(IgdbApi igdb, UpdatableAppSettings settings) : base("{{endpoint}}", igdb, settings)
+                public {{message.Name}}CollectionController(IgdbManager igdb, UpdatableAppSettings settings) : base("{{endpoint}}", igdb, settings)
                 {
                 }
             }

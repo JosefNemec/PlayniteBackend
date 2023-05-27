@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace PlayniteServices
 {
@@ -13,6 +9,19 @@ namespace PlayniteServices
         static ServicePaths()
         {
             ExecutingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;
+        }
+    }
+}
+
+namespace Playnite
+{
+    public static class PlaynitePaths
+    {
+        public static string LogFile { get; }
+
+        static PlaynitePaths()
+        {
+            LogFile = Path.Combine(PlayniteServices.ServicePaths.ExecutingDirectory, "playnite.log");
         }
     }
 }

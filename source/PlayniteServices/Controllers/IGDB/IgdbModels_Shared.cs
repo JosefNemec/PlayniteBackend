@@ -4,7 +4,7 @@
 using System;
 
 #nullable enable
-namespace PlayniteServices.Controllers.IGDB
+namespace PlayniteServices.IGDB
 {
     public interface IIgdbItem
     {

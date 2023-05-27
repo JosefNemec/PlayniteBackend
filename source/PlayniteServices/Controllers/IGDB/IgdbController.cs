@@ -1,18 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Playnite.Common;
-using Playnite.SDK;
-using System.Net.NetworkInformation;
+using Playnite;
 using System.Text.RegularExpressions;
 
-namespace PlayniteServices.Controllers.IGDB;
+namespace PlayniteServices.IGDB;
 
 [Route("igdb")]
 public partial class IgdbController : Controller
 {
     private static readonly ILogger logger = LogManager.GetLogger();
-    private readonly IgdbApi igdbApi;
+    private readonly IgdbManager igdbApi;
 
     private static readonly Dictionary<Guid, ExternalGameCategoryEnum> libraryIdCategories = new()
     {
@@ -40,7 +38,7 @@ public partial class IgdbController : Controller
     [GeneratedRegex(@"\s+and\s+", RegexOptions.IgnoreCase)]
     private static partial Regex AndRegex();
 
-    public IgdbController(IgdbApi igdbApi)
+    public IgdbController(IgdbManager igdbApi)
     {
         this.igdbApi = igdbApi;
     }

@@ -1,8 +1,8 @@
-﻿using PlayniteServices.Controllers.IGDB;
+﻿using PlayniteServices.IGDB;
 using MongoDB.Driver;
 using System.Diagnostics.CodeAnalysis;
-namespace PlayniteServices.Controllers.IGDB;
-public partial class IgdbApi : IDisposable
+namespace PlayniteServices.IGDB;
+public partial class IgdbManager : IDisposable
 {
     [AllowNull] public AgeRatingCollection AgeRatings { get; private set; }
     [AllowNull] public AgeRatingContentDescriptionCollection AgeRatingContentDescriptions { get; private set; }
@@ -185,259 +185,259 @@ Website.RegisterClassMap();
 }
 public partial class AgeRatingCollection : IgdbCollection<AgeRating>
 {
-    public AgeRatingCollection(IgdbApi igdb, Database database) : base("age_ratings", igdb, database)
+    public AgeRatingCollection(IgdbManager igdb, Database database) : base("age_ratings", igdb, database)
     {
     }
 }
 public partial class AgeRatingContentDescriptionCollection : IgdbCollection<AgeRatingContentDescription>
 {
-    public AgeRatingContentDescriptionCollection(IgdbApi igdb, Database database) : base("age_rating_content_descriptions", igdb, database)
+    public AgeRatingContentDescriptionCollection(IgdbManager igdb, Database database) : base("age_rating_content_descriptions", igdb, database)
     {
     }
 }
 public partial class AlternativeNameCollection : IgdbCollection<AlternativeName>
 {
-    public AlternativeNameCollection(IgdbApi igdb, Database database) : base("alternative_names", igdb, database)
+    public AlternativeNameCollection(IgdbManager igdb, Database database) : base("alternative_names", igdb, database)
     {
     }
 }
 public partial class ArtworkCollection : IgdbCollection<Artwork>
 {
-    public ArtworkCollection(IgdbApi igdb, Database database) : base("artworks", igdb, database)
+    public ArtworkCollection(IgdbManager igdb, Database database) : base("artworks", igdb, database)
     {
     }
 }
 public partial class CharacterCollection : IgdbCollection<Character>
 {
-    public CharacterCollection(IgdbApi igdb, Database database) : base("characters", igdb, database)
+    public CharacterCollection(IgdbManager igdb, Database database) : base("characters", igdb, database)
     {
     }
 }
 public partial class CharacterMugShotCollection : IgdbCollection<CharacterMugShot>
 {
-    public CharacterMugShotCollection(IgdbApi igdb, Database database) : base("character_mug_shots", igdb, database)
+    public CharacterMugShotCollection(IgdbManager igdb, Database database) : base("character_mug_shots", igdb, database)
     {
     }
 }
 public partial class CollectionCollection : IgdbCollection<Collection>
 {
-    public CollectionCollection(IgdbApi igdb, Database database) : base("collections", igdb, database)
+    public CollectionCollection(IgdbManager igdb, Database database) : base("collections", igdb, database)
     {
     }
 }
 public partial class CompanyCollection : IgdbCollection<Company>
 {
-    public CompanyCollection(IgdbApi igdb, Database database) : base("companies", igdb, database)
+    public CompanyCollection(IgdbManager igdb, Database database) : base("companies", igdb, database)
     {
     }
 }
 public partial class CompanyLogoCollection : IgdbCollection<CompanyLogo>
 {
-    public CompanyLogoCollection(IgdbApi igdb, Database database) : base("company_logos", igdb, database)
+    public CompanyLogoCollection(IgdbManager igdb, Database database) : base("company_logos", igdb, database)
     {
     }
 }
 public partial class CompanyWebsiteCollection : IgdbCollection<CompanyWebsite>
 {
-    public CompanyWebsiteCollection(IgdbApi igdb, Database database) : base("company_websites", igdb, database)
+    public CompanyWebsiteCollection(IgdbManager igdb, Database database) : base("company_websites", igdb, database)
     {
     }
 }
 public partial class CoverCollection : IgdbCollection<Cover>
 {
-    public CoverCollection(IgdbApi igdb, Database database) : base("covers", igdb, database)
+    public CoverCollection(IgdbManager igdb, Database database) : base("covers", igdb, database)
     {
     }
 }
 public partial class ExternalGameCollection : IgdbCollection<ExternalGame>
 {
-    public ExternalGameCollection(IgdbApi igdb, Database database) : base("external_games", igdb, database)
+    public ExternalGameCollection(IgdbManager igdb, Database database) : base("external_games", igdb, database)
     {
     }
 }
 public partial class FranchiseCollection : IgdbCollection<Franchise>
 {
-    public FranchiseCollection(IgdbApi igdb, Database database) : base("franchises", igdb, database)
+    public FranchiseCollection(IgdbManager igdb, Database database) : base("franchises", igdb, database)
     {
     }
 }
 public partial class GameCollection : IgdbCollection<Game>
 {
-    public GameCollection(IgdbApi igdb, Database database) : base("games", igdb, database)
+    public GameCollection(IgdbManager igdb, Database database) : base("games", igdb, database)
     {
     }
 }
 public partial class GameEngineCollection : IgdbCollection<GameEngine>
 {
-    public GameEngineCollection(IgdbApi igdb, Database database) : base("game_engines", igdb, database)
+    public GameEngineCollection(IgdbManager igdb, Database database) : base("game_engines", igdb, database)
     {
     }
 }
 public partial class GameEngineLogoCollection : IgdbCollection<GameEngineLogo>
 {
-    public GameEngineLogoCollection(IgdbApi igdb, Database database) : base("game_engine_logos", igdb, database)
+    public GameEngineLogoCollection(IgdbManager igdb, Database database) : base("game_engine_logos", igdb, database)
     {
     }
 }
 public partial class GameLocalizationCollection : IgdbCollection<GameLocalization>
 {
-    public GameLocalizationCollection(IgdbApi igdb, Database database) : base("game_localizations", igdb, database)
+    public GameLocalizationCollection(IgdbManager igdb, Database database) : base("game_localizations", igdb, database)
     {
     }
 }
 public partial class GameModeCollection : IgdbCollection<GameMode>
 {
-    public GameModeCollection(IgdbApi igdb, Database database) : base("game_modes", igdb, database)
+    public GameModeCollection(IgdbManager igdb, Database database) : base("game_modes", igdb, database)
     {
     }
 }
 public partial class GameVersionCollection : IgdbCollection<GameVersion>
 {
-    public GameVersionCollection(IgdbApi igdb, Database database) : base("game_versions", igdb, database)
+    public GameVersionCollection(IgdbManager igdb, Database database) : base("game_versions", igdb, database)
     {
     }
 }
 public partial class GameVersionFeatureCollection : IgdbCollection<GameVersionFeature>
 {
-    public GameVersionFeatureCollection(IgdbApi igdb, Database database) : base("game_version_features", igdb, database)
+    public GameVersionFeatureCollection(IgdbManager igdb, Database database) : base("game_version_features", igdb, database)
     {
     }
 }
 public partial class GameVersionFeatureValueCollection : IgdbCollection<GameVersionFeatureValue>
 {
-    public GameVersionFeatureValueCollection(IgdbApi igdb, Database database) : base("game_version_feature_values", igdb, database)
+    public GameVersionFeatureValueCollection(IgdbManager igdb, Database database) : base("game_version_feature_values", igdb, database)
     {
     }
 }
 public partial class GameVideoCollection : IgdbCollection<GameVideo>
 {
-    public GameVideoCollection(IgdbApi igdb, Database database) : base("game_videos", igdb, database)
+    public GameVideoCollection(IgdbManager igdb, Database database) : base("game_videos", igdb, database)
     {
     }
 }
 public partial class GenreCollection : IgdbCollection<Genre>
 {
-    public GenreCollection(IgdbApi igdb, Database database) : base("genres", igdb, database)
+    public GenreCollection(IgdbManager igdb, Database database) : base("genres", igdb, database)
     {
     }
 }
 public partial class InvolvedCompanyCollection : IgdbCollection<InvolvedCompany>
 {
-    public InvolvedCompanyCollection(IgdbApi igdb, Database database) : base("involved_companies", igdb, database)
+    public InvolvedCompanyCollection(IgdbManager igdb, Database database) : base("involved_companies", igdb, database)
     {
     }
 }
 public partial class KeywordCollection : IgdbCollection<Keyword>
 {
-    public KeywordCollection(IgdbApi igdb, Database database) : base("keywords", igdb, database)
+    public KeywordCollection(IgdbManager igdb, Database database) : base("keywords", igdb, database)
     {
     }
 }
 public partial class LanguageCollection : IgdbCollection<Language>
 {
-    public LanguageCollection(IgdbApi igdb, Database database) : base("languages", igdb, database)
+    public LanguageCollection(IgdbManager igdb, Database database) : base("languages", igdb, database)
     {
     }
 }
 public partial class LanguageSupportCollection : IgdbCollection<LanguageSupport>
 {
-    public LanguageSupportCollection(IgdbApi igdb, Database database) : base("language_supports", igdb, database)
+    public LanguageSupportCollection(IgdbManager igdb, Database database) : base("language_supports", igdb, database)
     {
     }
 }
 public partial class LanguageSupportTypeCollection : IgdbCollection<LanguageSupportType>
 {
-    public LanguageSupportTypeCollection(IgdbApi igdb, Database database) : base("language_support_types", igdb, database)
+    public LanguageSupportTypeCollection(IgdbManager igdb, Database database) : base("language_support_types", igdb, database)
     {
     }
 }
 public partial class MultiplayerModeCollection : IgdbCollection<MultiplayerMode>
 {
-    public MultiplayerModeCollection(IgdbApi igdb, Database database) : base("multiplayer_modes", igdb, database)
+    public MultiplayerModeCollection(IgdbManager igdb, Database database) : base("multiplayer_modes", igdb, database)
     {
     }
 }
 public partial class PlatformCollection : IgdbCollection<Platform>
 {
-    public PlatformCollection(IgdbApi igdb, Database database) : base("platforms", igdb, database)
+    public PlatformCollection(IgdbManager igdb, Database database) : base("platforms", igdb, database)
     {
     }
 }
 public partial class PlatformFamilyCollection : IgdbCollection<PlatformFamily>
 {
-    public PlatformFamilyCollection(IgdbApi igdb, Database database) : base("platform_families", igdb, database)
+    public PlatformFamilyCollection(IgdbManager igdb, Database database) : base("platform_families", igdb, database)
     {
     }
 }
 public partial class PlatformLogoCollection : IgdbCollection<PlatformLogo>
 {
-    public PlatformLogoCollection(IgdbApi igdb, Database database) : base("platform_logos", igdb, database)
+    public PlatformLogoCollection(IgdbManager igdb, Database database) : base("platform_logos", igdb, database)
     {
     }
 }
 public partial class PlatformVersionCollection : IgdbCollection<PlatformVersion>
 {
-    public PlatformVersionCollection(IgdbApi igdb, Database database) : base("platform_versions", igdb, database)
+    public PlatformVersionCollection(IgdbManager igdb, Database database) : base("platform_versions", igdb, database)
     {
     }
 }
 public partial class PlatformVersionCompanyCollection : IgdbCollection<PlatformVersionCompany>
 {
-    public PlatformVersionCompanyCollection(IgdbApi igdb, Database database) : base("platform_version_companies", igdb, database)
+    public PlatformVersionCompanyCollection(IgdbManager igdb, Database database) : base("platform_version_companies", igdb, database)
     {
     }
 }
 public partial class PlatformVersionReleaseDateCollection : IgdbCollection<PlatformVersionReleaseDate>
 {
-    public PlatformVersionReleaseDateCollection(IgdbApi igdb, Database database) : base("platform_version_release_dates", igdb, database)
+    public PlatformVersionReleaseDateCollection(IgdbManager igdb, Database database) : base("platform_version_release_dates", igdb, database)
     {
     }
 }
 public partial class PlatformWebsiteCollection : IgdbCollection<PlatformWebsite>
 {
-    public PlatformWebsiteCollection(IgdbApi igdb, Database database) : base("platform_websites", igdb, database)
+    public PlatformWebsiteCollection(IgdbManager igdb, Database database) : base("platform_websites", igdb, database)
     {
     }
 }
 public partial class PlayerPerspectiveCollection : IgdbCollection<PlayerPerspective>
 {
-    public PlayerPerspectiveCollection(IgdbApi igdb, Database database) : base("player_perspectives", igdb, database)
+    public PlayerPerspectiveCollection(IgdbManager igdb, Database database) : base("player_perspectives", igdb, database)
     {
     }
 }
 public partial class RegionCollection : IgdbCollection<Region>
 {
-    public RegionCollection(IgdbApi igdb, Database database) : base("regions", igdb, database)
+    public RegionCollection(IgdbManager igdb, Database database) : base("regions", igdb, database)
     {
     }
 }
 public partial class ReleaseDateCollection : IgdbCollection<ReleaseDate>
 {
-    public ReleaseDateCollection(IgdbApi igdb, Database database) : base("release_dates", igdb, database)
+    public ReleaseDateCollection(IgdbManager igdb, Database database) : base("release_dates", igdb, database)
     {
     }
 }
 public partial class ReleaseDateStatusCollection : IgdbCollection<ReleaseDateStatus>
 {
-    public ReleaseDateStatusCollection(IgdbApi igdb, Database database) : base("release_date_statuses", igdb, database)
+    public ReleaseDateStatusCollection(IgdbManager igdb, Database database) : base("release_date_statuses", igdb, database)
     {
     }
 }
 public partial class ScreenshotCollection : IgdbCollection<Screenshot>
 {
-    public ScreenshotCollection(IgdbApi igdb, Database database) : base("screenshots", igdb, database)
+    public ScreenshotCollection(IgdbManager igdb, Database database) : base("screenshots", igdb, database)
     {
     }
 }
 public partial class ThemeCollection : IgdbCollection<Theme>
 {
-    public ThemeCollection(IgdbApi igdb, Database database) : base("themes", igdb, database)
+    public ThemeCollection(IgdbManager igdb, Database database) : base("themes", igdb, database)
     {
     }
 }
 public partial class WebsiteCollection : IgdbCollection<Website>
 {
-    public WebsiteCollection(IgdbApi igdb, Database database) : base("websites", igdb, database)
+    public WebsiteCollection(IgdbManager igdb, Database database) : base("websites", igdb, database)
     {
     }
 }

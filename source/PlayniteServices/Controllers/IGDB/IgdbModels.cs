@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace PlayniteServices.Controllers.IGDB;
+namespace PlayniteServices.IGDB;
 
 public class Webhook
 {

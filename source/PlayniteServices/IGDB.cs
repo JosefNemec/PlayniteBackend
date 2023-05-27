@@ -1,20 +1,12 @@
 ﻿using ComposableAsync;
-using MongoDB.Driver;
-using Playnite.Common;
-using Playnite.SDK;
-using PlayniteServices.Controllers.IGDB;
+using Playnite;
 using RateLimiter;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace PlayniteServices.Controllers.IGDB;
+namespace PlayniteServices.IGDB;
 
-public partial class IgdbApi : IDisposable
+public partial class IgdbManager : IDisposable
 {
     public class AuthResponse
     {
@@ -30,21 +22,21 @@ public partial class IgdbApi : IDisposable
     public HttpClient HttpClient { get; }
     public List<IIgdbCollection> DataCollections { get; } = new List<IIgdbCollection>();
 
-    public IgdbApi(UpdatableAppSettings settings, Database db)
+    public IgdbManager(UpdatableAppSettings settings, Database db)
     {
         if (settings.Settings.IGDB == null)
         {
             throw new Exception("IGDB settings missing");
         }
 
-        TestAssert.IsFalse(instantiated, $"{nameof(IgdbApi)} already instantiated");
+        TestAssert.IsFalse(instantiated, $"{nameof(IgdbManager)} already instantiated");
         instantiated = true;
 
         Settings = settings;
         Database = db;
-        var requestLimiterHandler = TimeLimiter
-            .GetFromMaxCountByInterval(4, TimeSpan.FromSeconds(1))
-            .AsDelegatingHandler();
+        var requestLimiterHandler = TimeLimiter.
+            GetFromMaxCountByInterval(4, TimeSpan.FromSeconds(1)).
+            AsDelegatingHandler();
         HttpClient = new HttpClient(requestLimiterHandler);
         HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         HttpClient.Timeout = new TimeSpan(0, 0, 50);
@@ -105,7 +97,7 @@ public partial class IgdbApi : IDisposable
     public async Task<List<Webhook>?> GetWebhooks()
     {
         var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
-        return DataSerialization.FromJson<List<Webhook>>(webhooksString);
+        return Serialization.FromJson<List<Webhook>>(webhooksString);
     }
 
     private static async Task SaveTokens(string accessToken)
@@ -123,7 +115,7 @@ public partial class IgdbApi : IDisposable
 
         try
         {
-            File.WriteAllText(path, DataSerialization.ToJson(config));
+            File.WriteAllText(path, Serialization.ToJson(config));
         }
         catch (Exception e)
         {
@@ -137,7 +129,7 @@ public partial class IgdbApi : IDisposable
         var clientSecret = Settings.Settings.IGDB.ClientSecret;
         var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
         var response = await HttpClient.PostAsync(authUrl, null);
-        var auth = DataSerialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
+        var auth = Serialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
         if (auth?.access_token == null)
         {
             throw new Exception("Failed to authenticate IGDB.");

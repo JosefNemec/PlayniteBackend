@@ -1,10 +1,10 @@
-﻿using PlayniteServices.Controllers.IGDB;
-using System.IO;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Mime;
 using Xunit;
+using Playnite;
+using PlayniteServices.Tests;
 
-namespace PlayniteServices.Tests.IGDB;
+namespace PlayniteServices.IGDB.Tests;
 
 [Collection("DefaultCollection")]
 public class MetadataTets
@@ -18,11 +18,11 @@ public class MetadataTets
 
     private async Task<Game> GetMetadata(MetadataRequest request)
     {
-        var str = DataSerialization.ToJson(request);
+        var str = Serialization.ToJson(request);
         var content = new StringContent(str, Encoding.UTF8, MediaTypeNames.Application.Json);
         var response = await client.PostAsync(@"/igdb/metadata", content);
         var cntStr = await response.Content.ReadAsStringAsync();
-        return DataSerialization.FromJson<DataResponse<Game>>(cntStr)?.Data ?? new Game();
+        return Serialization.FromJson<DataResponse<Game>>(cntStr)?.Data ?? new Game();
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public class MetadataTets
     { 
         var response = await client.GetAsync(@"/igdb/game/333");
         var cnt = await response.Content.ReadAsStringAsync();
-        var game = DataSerialization.FromJson<DataResponse<Game>>(cnt)?.Data;
+        var game = Serialization.FromJson<DataResponse<Game>>(cnt)?.Data;
         Assert.Equal(333ul, game!.id);
     }
 
@@ -160,10 +160,10 @@ public class MetadataTets
     public async Task SearchTest()
     {
         var request = new SearchRequest { SearchTerm = "half-life" };
-        var content = new StringContent(DataSerialization.ToJson(request), Encoding.UTF8, MediaTypeNames.Application.Json);
+        var content = new StringContent(Serialization.ToJson(request), Encoding.UTF8, MediaTypeNames.Application.Json);
         var response = await client.PostAsync(@"/igdb/search", content);
         var str = await response.Content.ReadAsStringAsync();
-        var games =  DataSerialization.FromJson<DataResponse<List<Game>>>(str)?.Data ?? new ();
+        var games =  Serialization.FromJson<DataResponse<List<Game>>>(str)?.Data ?? new ();
         Assert.DoesNotContain(games, a => a.category == GameCategoryEnum.MOD);
     }
 

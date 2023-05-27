@@ -1,19 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using Playnite.SDK;
+using Playnite;
 using System.IO;
 
-namespace PlayniteServices.Controllers.IGDB;
+namespace PlayniteServices.IGDB;
 
 public abstract class WebhookController<T> : Controller where T : class, IIgdbItem
 {
     private static readonly ILogger logger = LogManager.GetLogger();
 
     private readonly UpdatableAppSettings settings;
-    private readonly IgdbApi igdb;
+    private readonly IgdbManager igdb;
     private readonly IgdbCollection<T> collection;
     public readonly string EndpointPath;
 
-    public WebhookController(string endpointPath, IgdbApi igdb, UpdatableAppSettings settings)
+    public WebhookController(string endpointPath, IgdbManager igdb, UpdatableAppSettings settings)
     {
         EndpointPath = endpointPath;
         this.igdb = igdb;
@@ -62,7 +62,7 @@ public abstract class WebhookController<T> : Controller where T : class, IIgdbIt
                 jsonString = await reader.ReadToEndAsync();
                 if (!string.IsNullOrEmpty(jsonString))
                 {
-                    item = DataSerialization.FromJson<T>(jsonString);
+                    item = Serialization.FromJson<T>(jsonString);
                 }
             }
 

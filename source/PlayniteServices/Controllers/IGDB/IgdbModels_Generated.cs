@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 #nullable enable
-namespace PlayniteServices.Controllers.IGDB {
+namespace PlayniteServices.IGDB {
 public enum AgeRatingCategoryEnum
 {
     AGERATING_CATEGORY_NULL = 0,

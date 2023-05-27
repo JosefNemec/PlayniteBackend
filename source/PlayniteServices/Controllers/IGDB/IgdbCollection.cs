@@ -1,8 +1,8 @@
 ﻿using MongoDB.Driver;
-using Playnite.SDK;
+using Playnite;
 using System.Net.Http;
 
-namespace PlayniteServices.Controllers.IGDB;
+namespace PlayniteServices.IGDB;
 
 public interface IIgdbCollection
 {
@@ -17,11 +17,11 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
     private readonly Database database;
     public readonly string DbCollectionName;
     internal IMongoCollection<T> collection;
-    internal readonly IgdbApi igdb;
+    internal readonly IgdbManager igdb;
 
     public string EndpointPath { get; }
 
-    public IgdbCollection(string endpointPath, IgdbApi igdb, Database database)
+    public IgdbCollection(string endpointPath, IgdbManager igdb, Database database)
     {
         this.igdb = igdb;
         this.database = database;
@@ -53,7 +53,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
         {
             var query = $"fields *; limit 500; offset {i};";
             var stringData = await igdb.SendStringRequest(EndpointPath, query, log: false);
-            var items = DataSerialization.FromJson<List<T>>(stringData);
+            var items = Serialization.FromJson<List<T>>(stringData);
             if (!items.HasItems())
             {
                 break;
@@ -111,7 +111,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
                 }),
                 HttpMethod.Post,
                 true);
-            var registeredHooks = DataSerialization.FromJson<List<Webhook>>(registeredStr);
+            var registeredHooks = Serialization.FromJson<List<Webhook>>(registeredStr);
             if (!registeredHooks.HasItems() || !registeredHooks[0].active)
             {
                 logger.Error($"Failed to register {EndpointPath} {method} IGDB webhook.");
@@ -128,7 +128,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
     private async Task<long> GetCollectionCount()
     {
         var stringResult = await igdb.SendStringRequest(EndpointPath + "/count", null, HttpMethod.Post, true);
-        var response = DataSerialization.FromJson<Dictionary<string, long>>(stringResult);
+        var response = Serialization.FromJson<Dictionary<string, long>>(stringResult);
         if (response?.TryGetValue("count", out var count) == null)
         {
             logger.Error(stringResult);
@@ -154,7 +154,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
         }
 
         var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = {itemId};");
-        var items = DataSerialization.FromJson<List<T>>(stringResult);
+        var items = Serialization.FromJson<List<T>>(stringResult);
         if (items.HasItems())
         {
             await Add(items[0]);
@@ -180,7 +180,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
 
         var idsToGet = ListExtensions.GetDistinctItemsP(itemIds, items.Select(a => a.id));
         var stringResult = await igdb.SendStringRequest(EndpointPath, $"fields *; where id = ({string.Join(',', idsToGet)}); limit 500;");
-        var newItems = DataSerialization.FromJson<List<T>>(stringResult);
+        var newItems = Serialization.FromJson<List<T>>(stringResult);
         if (newItems.HasItems())
         {
             await Add(newItems);
