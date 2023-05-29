@@ -19,7 +19,7 @@ public class AddonRequest
 [Route("addons")]
 public class AddonsController : Controller
 {
-    private readonly static ILogger logger = LogManager.GetLogger();
+    private static readonly ILogger logger = LogManager.GetLogger();
     private readonly UpdatableAppSettings settings;
     private readonly Database db;
     private readonly AddonsManager addons;
@@ -57,19 +57,19 @@ public class AddonsController : Controller
     }
 
     [HttpGet()]
-    public DataResponse<List<AddonManifestBase>> GetAddons([FromQuery]AddonRequest request)
+    public async Task<DataResponse<List<AddonManifestBase>>> GetAddons([FromQuery]AddonRequest request)
     {
         var col = db.Addons;
         var result = new List<AddonManifestBase>();
         if (!request.AddonId.IsNullOrEmpty())
         {
             var filter = Builders<AddonManifestBase>.Filter.Eq(u => u.AddonId, request.AddonId);
-            result = col.Find(filter).ToList();
+            result = await col.Find(filter).ToListAsync();
         }
         else
         {
             // TODO convert to proper query
-            foreach (var addon in col.Find(new BsonDocument()).ToCursor().ToEnumerable())
+            foreach (var addon in await col.Find(Builders<AddonManifestBase>.Filter.Empty).ToListAsync())
             {
                 if (request.Type != null && addon.Type != request.Type)
                 {

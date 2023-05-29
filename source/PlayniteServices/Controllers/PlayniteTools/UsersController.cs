@@ -14,7 +14,7 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody]User? user)
+    public async Task<IActionResult> Create([FromBody]User? user)
     {
         if (user == null)
         {
@@ -22,7 +22,7 @@ public class UsersController : Controller
         }
 
         user.LastLaunch = DateTime.Today;
-        db.Users.ReplaceOne(
+        await db.Users.ReplaceOneAsync(
             Builders<User>.Filter.Eq(u => u.Id, user.Id),
             user,
             Database.ItemUpsertOptions);

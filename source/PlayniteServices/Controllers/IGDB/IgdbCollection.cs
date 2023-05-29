@@ -28,14 +28,13 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
         EndpointPath = endpointPath;
         DbCollectionName = $"IGDB_col_{endpointPath}";
         collection = database.MongoDb.GetCollection<T>(DbCollectionName);
-        CreateIndexes();
     }
 
     public virtual void CreateIndexes()
     {
     }
 
-    public virtual void DropCollection()
+    public void DropCollection()
     {
         database.MongoDb.DropCollection(DbCollectionName);
         collection = database.MongoDb.GetCollection<T>(DbCollectionName);
@@ -96,7 +95,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
     private async Task RegisterWebhook(string method, List<Webhook> webhooksStatus)
     {
         var webhookUrl = igdb.Settings.Settings.IGDB!.WebHookRootAddress!.UriCombine(EndpointPath, method);
-        var currentHook = webhooksStatus?.FirstOrDefault(a => a.url == webhookUrl);
+        var currentHook = webhooksStatus.FirstOrDefault(a => a.url == webhookUrl);
         if (currentHook?.active != true)
         {
             logger.Error($"IGDB {EndpointPath} {method} webhook is NOT active.");
@@ -134,10 +133,8 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
             logger.Error(stringResult);
             throw new Exception($"Failed to get item count from {EndpointPath} colletion");
         }
-        else
-        {
-            return count;
-        }
+
+        return count;
     }
 
     public async Task<T?> GetItem(ulong itemId, bool fetchIfNeeded = false)

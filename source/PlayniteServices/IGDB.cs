@@ -20,7 +20,7 @@ public partial class IgdbManager : IDisposable
     private readonly System.Threading.Timer? webhookTimer;
 
     public HttpClient HttpClient { get; }
-    public List<IIgdbCollection> DataCollections { get; } = new List<IIgdbCollection>();
+    public List<IIgdbCollection> DataCollections { get; } = new();
 
     public IgdbManager(UpdatableAppSettings settings, Database db)
     {
@@ -55,17 +55,6 @@ public partial class IgdbManager : IDisposable
     public void Dispose()
     {
         webhookTimer?.Dispose();
-    }
-
-    public async Task CloneCollections()
-    {
-        await Parallel.ForEachAsync(
-            DataCollections,
-            new ParallelOptions { MaxDegreeOfParallelism = 3 },
-            async (collection, token) =>
-        {
-            await collection.CloneCollection();
-        });
     }
 
     private async void RegiserWebhooksCallback(object? _)
@@ -106,16 +95,15 @@ public partial class IgdbManager : IDisposable
         var path = Path.Combine(ServicePaths.ExecutingDirectory, "twitchTokens.json");
         var config = new Dictionary<string, Dictionary<string, string>>
         {
-            { "IGDB", new Dictionary<string, string>()
-                {
-                    { "AccessToken", accessToken }
-                }
+            ["IGDB"] = new()
+            {
+                ["AccessToken"] = accessToken
             }
         };
 
         try
         {
-            File.WriteAllText(path, Serialization.ToJson(config));
+            await File.WriteAllTextAsync(path, Serialization.ToJson(config));
         }
         catch (Exception e)
         {
@@ -174,39 +162,38 @@ public partial class IgdbManager : IDisposable
             return await response.Content.ReadAsStringAsync();
         }
 
-        var authFailed = response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.Forbidden;
+        var authFailed = response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden;
         if (authFailed && reTry)
         {
             logger.Error($"IGDB request failed on authentication {response.StatusCode}.");
             await Authenticate();
             return await SendStringRequest(url, content, method, false);
         }
-        else if (authFailed)
+
+        if (authFailed)
         {
             throw new Exception($"Failed to authenticate IGDB {response.StatusCode}.");
         }
-        else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests && reTry)
+
+        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests && reTry)
         {
             await Task.Delay(250);
             return await SendStringRequest(url, content, method, false);
         }
-        else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+
+        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
         {
-            throw new Exception($"IGDB failed due to too many requests.");
+            throw new Exception("IGDB failed due to too many requests.");
         }
-        else
+
+        var errorMessage = await response.Content.ReadAsStringAsync();
+        logger.Error(errorMessage);
+        // Request sometimes fails on generic error, but then works when sent again...
+        if (errorMessage.Contains("Internal server error", StringComparison.OrdinalIgnoreCase) && reTry)
         {
-            var errorMessage = await response.Content.ReadAsStringAsync();
-            logger.Error(errorMessage);
-            // Request sometimes fails on generic error, but then works when sent again...
-            if (errorMessage.Contains("Internal server error", StringComparison.OrdinalIgnoreCase) && reTry)
-            {
-                return await SendStringRequest(url, content, method, false);
-            }
-            else
-            {
-                throw new Exception($"Uknown IGDB API response {response.StatusCode}.");
-            }
+            return await SendStringRequest(url, content, method, false);
         }
+
+        throw new Exception($"Uknown IGDB API response {response.StatusCode}.");
     }
 }
