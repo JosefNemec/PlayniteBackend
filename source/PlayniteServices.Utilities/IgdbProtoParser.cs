@@ -285,7 +285,7 @@ public class IgdbProtoParser
             #nullable enable
             namespace PlayniteServices.IGDB {
             """);
-        resultMethods.AppendLine("""            
+        resultMethods.AppendLine("""
             using MongoDB.Bson.Serialization;
             namespace PlayniteServices.IGDB;
             """);
@@ -435,6 +435,7 @@ public class IgdbProtoParser
         foreach (var message in messages)
         {
             result.AppendLine($"       {message.Name}s = new {message.Name}Collection(this, Database);");
+            result.AppendLine($"       {message.Name}s.CreateIndexes();");
             result.AppendLine($"       DataCollections.Add({message.Name}s);");
         }
         result.AppendLine("    }");
