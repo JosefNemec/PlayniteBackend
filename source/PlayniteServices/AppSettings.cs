@@ -25,6 +25,7 @@ public class PatreonSettings
     public string? RefreshToken { get; set; }
     public string? Secret { get; set; }
     public string? Id { get; set; }
+    public bool PatronsFetchEnabled { get; set; }
 }
 
 public class GitHubSettings

@@ -1,6 +1,8 @@
 ﻿using Playnite;
 using System.IO;
 using System.Net.Http;
+using JsonApiSerializer;
+using JsonApiSerializer.JsonApi;
 
 namespace PlayniteServices.Patreon;
 
@@ -10,6 +12,8 @@ public class PatreonManager : IDisposable
     private static bool instantiated = false;
     private readonly UpdatableAppSettings settings;
     private readonly HttpClient httpClient;
+    private readonly System.Threading.Timer? patronsFetchTimer;
+    public List<string> PatronsList { get; } = new();
 
     public PatreonManager(UpdatableAppSettings settings)
     {
@@ -22,11 +26,69 @@ public class PatreonManager : IDisposable
         instantiated = true;
         this.settings = settings;
         httpClient = new HttpClient();
+
+        if (settings.Settings.Patreon.PatronsFetchEnabled)
+        {
+            patronsFetchTimer = new System.Threading.Timer(
+                PatronsFetchCallback,
+                null,
+                new TimeSpan(0),
+                new TimeSpan(0, 20, 0));
+        }
     }
 
     public void Dispose()
     {
         httpClient.Dispose();
+        patronsFetchTimer?.Dispose();
+    }
+
+    private async void PatronsFetchCallback(object? _)
+    {
+        try
+        {
+            await UpdatePatronsList();
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Failed to update patrons list.");
+        }
+    }
+
+    private async Task UpdatePatronsList()
+    {
+        PatronsList.Clear();
+        var nextLink = "api/campaigns/1400397/pledges?include=patron.null&page%5Bcount%5D=9999";
+
+        do
+        {
+            var stringData = await SendStringRequest(nextLink);
+            var document = Newtonsoft.Json.JsonConvert.DeserializeObject<DocumentRoot<Pledge[]>>(stringData, new JsonApiSerializerSettings());
+            if (document == null)
+            {
+                logger.Error("Failed to get list of patrons, no data from API.");
+                return;
+            }
+
+            if (document.Errors.HasItems())
+            {
+                logger.Error("Failed to get list of patrons.");
+                document.Errors.ForEach(a => logger.Error(a.Detail));
+                return;
+            }
+
+            PatronsList.AddRange(document.Data.Where(a => a.declined_since == null).Select(a => a.patron?.full_name ?? string.Empty));
+            if (document.Links.TryGetValue("next", out var value))
+            {
+                nextLink = value.Href;
+            }
+            else
+            {
+                break;
+            }
+        }
+        while (!nextLink.IsNullOrEmpty());
+        PatronsList.Sort();
     }
 
     private static async Task SaveTokens(string accessToken, string refreshToken)
@@ -35,17 +97,16 @@ public class PatreonManager : IDisposable
         var path = Path.Combine(ServicePaths.ExecutingDirectory, "patreonTokens.json");
         var config = new Dictionary<string, Dictionary<string, string>>
         {
-            { "Patreon", new Dictionary<string, string>
-                {
-                    { "AccessToken", accessToken },
-                    { "RefreshToken", refreshToken }
-                }
+            ["Patreon"] = new()
+            {
+                ["AccessToken"] = accessToken,
+                ["RefreshToken"] = refreshToken
             }
         };
 
         try
         {
-            File.WriteAllText(path, Serialization.ToJson(config));
+            await File.WriteAllTextAsync(path, Serialization.ToJson(config));
         }
         catch (Exception e)
         {
@@ -87,7 +148,7 @@ public class PatreonManager : IDisposable
             throw new Exception("Failed to update Patreon tokens.");
         }
 
-        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        if (response.IsSuccessStatusCode)
         {
             settings.Settings.Patreon.AccessToken = data.access_token;
             settings.Settings.Patreon.RefreshToken = data.refresh_token;
@@ -121,4 +182,6 @@ public class PatreonManager : IDisposable
 
         return await response.Content.ReadAsStringAsync();
     }
+
+
 }
