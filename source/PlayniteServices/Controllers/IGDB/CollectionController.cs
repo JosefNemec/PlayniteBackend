@@ -35,13 +35,8 @@ public class CollectionController<T> : Controller where T : class, IIgdbItem
     public async Task<ResponseBase> GetWebhooks()
     {
         var hooks = await igdb.GetWebhooks();
-        if (hooks == null)
-        {
-            return new DataResponse<List<Webhook>>(default);
-        }
-
         return new DataResponse<List<Webhook>>(hooks.
-            Where(a => 
+            Where(a =>
                 a.url?.Replace(settings.Settings.IGDB!.WebHookRootAddress!, string.Empty, StringComparison.OrdinalIgnoreCase).
                 TrimStart('/').
                 StartsWith(EndpointPath, StringComparison.OrdinalIgnoreCase) == true).

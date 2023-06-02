@@ -33,6 +33,12 @@ public partial class IgdbManager : IDisposable
         instantiated = true;
 
         Settings = settings;
+
+        if (Settings.Settings.IGDB?.ApiEndpoint.IsNullOrWhiteSpace() == true)
+        {
+            throw new Exception("IGDB API endpoint not configured.");
+        }
+
         Database = db;
         var requestLimiterHandler = TimeLimiter.
             GetFromMaxCountByInterval(4, TimeSpan.FromSeconds(1)).
@@ -59,7 +65,7 @@ public partial class IgdbManager : IDisposable
 
     private async void RegiserWebhooksCallback(object? _)
     {
-        List<Webhook>? webhooks = null;
+        var webhooks = new List<Webhook>();
 
         try
         {
@@ -74,7 +80,7 @@ public partial class IgdbManager : IDisposable
         {
             try
             {
-                await collection.ConfigureWebhooks(webhooks ?? new List<Webhook>());
+                await collection.ConfigureWebhooks(webhooks);
             }
             catch (Exception e)
             {
@@ -83,10 +89,26 @@ public partial class IgdbManager : IDisposable
         }
     }
 
-    public async Task<List<Webhook>?> GetWebhooks()
+    public async Task<List<Webhook>> GetWebhooks()
     {
         var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
-        return Serialization.FromJson<List<Webhook>>(webhooksString);
+        return Serialization.FromJson<List<Webhook>>(webhooksString) ?? new List<Webhook>();
+    }
+
+    public async Task DeleteWebhook(int webhookId)
+    {
+        await SendStringRequest($"webhooks/{webhookId}", null, HttpMethod.Delete, false);
+    }
+
+    public async Task CloneAllCollections()
+    {
+        await Parallel.ForEachAsync(
+            DataCollections,
+            new ParallelOptions { MaxDegreeOfParallelism = 3 },
+            async (collection, _) =>
+            {
+                await collection.CloneCollection();
+            });
     }
 
     private static async Task SaveTokens(string accessToken)
@@ -136,7 +158,7 @@ public partial class IgdbManager : IDisposable
     {
         var request = new HttpRequestMessage()
         {
-            RequestUri = new Uri(Settings.Settings.IGDB!.ApiEndpoint + url),
+            RequestUri = new Uri(Settings.Settings.IGDB!.ApiEndpoint!.UriCombine(url)),
             Method = method,
             Content = content
         };
