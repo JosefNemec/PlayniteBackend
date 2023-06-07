@@ -7,6 +7,10 @@ public class ResponseBase
 
 public class ErrorResponse : ResponseBase
 {
+    public ErrorResponse()
+    {
+    }
+
     public ErrorResponse(string error)
     {
         Error = error;
@@ -21,6 +25,10 @@ public class ErrorResponse : ResponseBase
 public class DataResponse<T> : ResponseBase
 {
     public T? Data { get; set; }
+
+    public DataResponse()
+    {
+    }
 
     public DataResponse()
     {
