@@ -30,10 +30,6 @@ public class DataResponse<T> : ResponseBase
     {
     }
 
-    public DataResponse()
-    {
-    }
-
     public DataResponse(T? data)
     {
         Data = data;
