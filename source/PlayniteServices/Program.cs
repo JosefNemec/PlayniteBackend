@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.IO;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -6,6 +7,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
+using System.Reflection;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Hosting;
 using Playnite;
 using ILogger = Playnite.ILogger;
 
@@ -15,9 +19,13 @@ public class Program
 {
     private static readonly ILogger logger = LogManager.GetLogger();
     public static readonly HttpClient HttpClient = new ();
+    public static readonly Version? Version = Assembly.GetExecutingAssembly().GetName().Version;
 
-    public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    public static void ConfigureServices(WebApplicationBuilder builder)
     {
+        var services = builder.Services;
+        var configuration = builder.Configuration;
+
         services.Configure<KestrelServerOptions>(options =>
         {
             options.AllowSynchronousIO = true;
@@ -26,6 +34,11 @@ public class Program
         services.Configure<IISServerOptions>(options =>
         {
             options.AllowSynchronousIO = true;
+        });
+
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
         });
 
         services.AddControllers(options =>
@@ -41,7 +54,10 @@ public class Program
         {
             loggingBuilder.AddConfiguration(configuration.GetSection("Logging"));
             loggingBuilder.AddConsole();
-            loggingBuilder.AddDebug();
+            if (builder.Environment.IsDevelopment())
+            {
+                loggingBuilder.AddDebug();
+            }
         });
 
         services.Configure<AppSettings>(configuration);
@@ -65,22 +81,33 @@ public class Program
         });
 
         app.UseRouting();
+        app.UseForwardedHeaders();
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
         });
     }
 
-    public static async Task Main(string[] args)
+    private static async Task Run(string[] args)
     {
-        logger.Info("Server starting...");
-
         var builder = WebApplication.CreateBuilder(args);
-        builder.Configuration.AddJsonFile("customSettings.json", optional: true, reloadOnChange: true);
-        builder.Configuration.AddJsonFile("patreonTokens.json", optional: true, reloadOnChange: true);
-        builder.Configuration.AddJsonFile("twitchTokens.json", optional: true, reloadOnChange: true);
+        builder.Configuration.AddCommandLine(args);
+        var runtimeDataDir = builder.Configuration.GetValue<string>("RuntimeDataDir");
+        if (!runtimeDataDir.IsNullOrWhiteSpace() && Directory.Exists(runtimeDataDir))
+        {
+            builder.Configuration.SetBasePath(runtimeDataDir);
+            PlaynitePaths.SetRuntimeDataDir(runtimeDataDir);
+            PlaynitePaths.SetLogDir(runtimeDataDir);
+        }
 
-        ConfigureServices(builder.Services, builder.Configuration);
+        builder.Configuration.AddJsonFile(PlaynitePaths.CustomConfigFileName, optional: true, reloadOnChange: true);
+        builder.Configuration.AddJsonFile(PlaynitePaths.PatreonConfigFileName, optional: true, reloadOnChange: true);
+        builder.Configuration.AddJsonFile(PlaynitePaths.TwitchConfigFileName, optional: true, reloadOnChange: true);
+
+        logger.Info($"Server {Version?.ToString(2)} starting...");
+        logger.Info($"Using runtime dir: {PlaynitePaths.RuntimeDataDir}");
+
+        ConfigureServices(builder);
         var app = builder.Build();
         ConfigureApp(app);
 
@@ -97,6 +124,24 @@ public class Program
             await discord.Init();
         }
 
+        TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
+        {
+            eventArgs.SetObserved();
+            logger.Error(eventArgs.Exception, "Unhandled task exception:");
+        };
+
         app.Run();
+    }
+
+    public static async Task Main(string[] args)
+    {
+        try
+        {
+            await Run(args);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Server startup failed.");
+        }
     }
 }

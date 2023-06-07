@@ -114,7 +114,7 @@ public partial class IgdbManager : IDisposable
     private static async Task SaveTokens(string accessToken)
     {
         await Task.Delay(2000);
-        var path = Path.Combine(ServicePaths.ExecutingDirectory, "twitchTokens.json");
+        var path = Path.Combine(PlaynitePaths.RuntimeDataDir, PlaynitePaths.TwitchConfigFileName);
         var config = new Dictionary<string, Dictionary<string, string>>
         {
             ["IGDB"] = new()

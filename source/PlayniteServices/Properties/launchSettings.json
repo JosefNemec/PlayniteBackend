@@ -20,7 +20,8 @@
         "commandName": "Project",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
-        }
+        },
+        "commandLineArgs": "--RuntimeDataDir \"C:\\Devel\""
       }
     }
 }

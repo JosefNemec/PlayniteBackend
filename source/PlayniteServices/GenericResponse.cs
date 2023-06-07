@@ -1,11 +1,8 @@
 ﻿namespace PlayniteServices;
 
-public abstract class ResponseBase
+public class ResponseBase
 {
-    public string? Error
-    {
-        get; set;
-    }
+    public string? Error { get; set; }
 }
 
 public class ErrorResponse : ResponseBase
@@ -23,9 +20,10 @@ public class ErrorResponse : ResponseBase
 
 public class DataResponse<T> : ResponseBase
 {
-    public T? Data
+    public T? Data { get; set; }
+
+    public DataResponse()
     {
-        get; set;
     }
 
     public DataResponse(T? data)

@@ -94,7 +94,7 @@ public class PatreonManager : IDisposable
     private static async Task SaveTokens(string accessToken, string refreshToken)
     {
         await Task.Delay(2000);
-        var path = Path.Combine(ServicePaths.ExecutingDirectory, "patreonTokens.json");
+        var path = Path.Combine(PlaynitePaths.RuntimeDataDir, PlaynitePaths.PatreonConfigFileName);
         var config = new Dictionary<string, Dictionary<string, string>>
         {
             ["Patreon"] = new()

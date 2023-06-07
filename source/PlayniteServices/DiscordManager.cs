@@ -135,7 +135,7 @@ public class DiscordManager : IDisposable
                 continue;
             }
 
-            var latestPackage = installer.Packages?.OrderByDescending(a => a.Version).FirstOrDefault();
+            var latestPackage = installer.Packages?.MaxBy(a => a.Version);
             if (latestPackage == null)
             {
                 logger.Error($"Addon {addon.AddonId} has no install packages.");
@@ -170,7 +170,7 @@ public class DiscordManager : IDisposable
                 await Post<Message>($"channels/{addonsFeedChannel}/messages/{sentMessage.id}/crosspost");
             }
 
-            db.DiscordAddonNotifications.ReplaceOne(
+            await db.DiscordAddonNotifications.ReplaceOneAsync(
                 a => a.AddonId == addon.AddonId,
                 new AddonUpdateNotification
                 {

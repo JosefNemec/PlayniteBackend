@@ -24,19 +24,25 @@ public class DiagnosticsController : Controller
         diagsDir = settings.Settings.DiagsDirectory;
         if (!Path.IsPathRooted(diagsDir))
         {
-            diagsDir = Path.Combine(ServicePaths.ExecutingDirectory, diagsDir);
+            diagsDir = Path.Combine(PlaynitePaths.RuntimeDataDir, diagsDir);
         }
 
         diagsCrashDir = Path.Combine(diagsDir, "crashes");
         FileSystem.CreateDirectory(diagsCrashDir);
     }
 
+    [HttpGet("test")]
+    public DataResponse<string> GetTest()
+    {
+        return new DataResponse<string>($"ok working {Program.Version?.ToString(2)}");
+    }
+
     [ServiceFilter(typeof(ServiceKeyFilter))]
     [HttpGet("serverlog")]
     public IActionResult GetServerLog()
     {
-        var logPath = Path.Combine(ServicePaths.ExecutingDirectory, "playnite.log");
-        var zipLog = Path.Combine(ServicePaths.ExecutingDirectory, "serverlog.zip");
+        var logPath = Path.Combine(PlaynitePaths.LogFile);
+        var zipLog = Path.Combine(PlaynitePaths.RuntimeDataDir, "serverlog.zip");
         if (System.IO.File.Exists(zipLog))
         {
             System.IO.File.Delete(zipLog);

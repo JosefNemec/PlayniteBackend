@@ -50,7 +50,7 @@ public class AddonsManager : IDisposable
             UpdateAddonInstallersCallback,
             null,
             new TimeSpan(0),
-            new TimeSpan(0, 15, 0));
+            new TimeSpan(0, 20, 0));
     }
 
     private async void UpdateAddonInstallersCallback(object? _)
@@ -85,7 +85,7 @@ public class AddonsManager : IDisposable
                     if (newData)
                     {
                         anyUpdates = true;
-                        db.AddonInstallers.ReplaceOne(
+                        await db.AddonInstallers.ReplaceOneAsync(
                             a => a.AddonId == newInstaller.AddonId,
                             newInstaller,
                             Database.ItemUpsertOptions);
@@ -140,18 +140,18 @@ public class AddonsManager : IDisposable
                     var addonDirectory = settings.Settings.Addons!.AddonRepository;
                     if (settings.Settings.Addons!.AddonRepository.IsHttpUrl())
                     {
-                        addonDirectory = Path.Combine(ServicePaths.ExecutingDirectory, "PlayniteAddonDatabase");
+                        addonDirectory = Path.Combine(PlaynitePaths.RuntimeDataDir, "PlayniteAddonDatabase");
                         FileSystem.DeleteDirectory(addonDirectory, true);
 
                         var info = new ProcessStartInfo("git")
                         {
                             Arguments = $"clone --depth=1 --branch=master {settings.Settings.Addons.AddonRepository}",
-                            WorkingDirectory = ServicePaths.ExecutingDirectory,
+                            WorkingDirectory = PlaynitePaths.RuntimeDataDir,
                             CreateNoWindow = true,
                             UseShellExecute = false,
                         };
 
-                        using var proc = Process.Start(info);                            
+                        using var proc = Process.Start(info);
                         proc!.WaitForExit();
                         if (proc.ExitCode != 0)
                         {

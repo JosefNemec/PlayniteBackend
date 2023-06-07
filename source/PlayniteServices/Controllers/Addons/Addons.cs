@@ -40,23 +40,26 @@ public class AddonsController : Controller
     [HttpGet("defaultextensions")]
     public DataResponse<string> GetDefaultExtensions()
     {
-        if (settings.Settings.Addons?.DefaultExtensionsFile.IsNullOrWhiteSpace() == true)
+        if (settings.Settings.Addons?.DefaultExtensionsFile == null || settings.Settings.Addons?.DefaultExtensionsFile.IsNullOrWhiteSpace() == true)
         {
             return new DataResponse<string>(null);
         }
 
-        var extensionFile = Path.Combine(ServicePaths.ExecutingDirectory, settings.Settings.Addons!.DefaultExtensionsFile!);
+        var extensionFile = settings.Settings.Addons?.DefaultExtensionsFile!;
+        if (!Path.IsPathRooted(extensionFile))
+        {
+            extensionFile = Path.Combine(PlaynitePaths.RuntimeDataDir, extensionFile);
+        }
+
         if (IO.File.Exists(extensionFile))
         {
             return new DataResponse<string>(IO.File.ReadAllText(extensionFile));
         }
-        else
-        {
-            return new DataResponse<string>(null);
-        }
+
+        return new DataResponse<string>(null);
     }
 
-    [HttpGet()]
+    [HttpGet]
     public async Task<DataResponse<List<AddonManifestBase>>> GetAddons([FromQuery]AddonRequest request)
     {
         var col = db.Addons;

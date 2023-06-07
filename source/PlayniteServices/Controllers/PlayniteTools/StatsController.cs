@@ -5,6 +5,7 @@ using MongoDB.Bson;
 namespace PlayniteServices.Playnite;
 
 [ServiceFilter(typeof(ServiceKeyFilter))]
+[Route("playnite/stats")]
 public class StatsController : Controller
 {
     private readonly Database db;
@@ -14,8 +15,8 @@ public class StatsController : Controller
         this.db = db;
     }
 
-    [HttpGet("stats")]
-    public async Task<DataResponse<ServiceStats>> GetStarts()
+    [HttpGet]
+    public async Task<DataResponse<ServiceStats>> GetStats()
     {
         var now = DateTime.Now;
         var stats = new ServiceStats();
@@ -59,5 +60,12 @@ public class StatsController : Controller
         });
 
         return new DataResponse<ServiceStats>(stats);
+    }
+
+    [HttpPost("drop")]
+    public async Task<ActionResult> DropStats()
+    {
+        await db.MongoDb.DropCollectionAsync("Users");
+        return Ok();
     }
 }
