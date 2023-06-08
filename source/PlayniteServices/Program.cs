@@ -88,7 +88,7 @@ public class Program
         });
     }
 
-    private static async Task Run(string[] args)
+    private static void Run(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.Configuration.AddCommandLine(args);
@@ -121,7 +121,9 @@ public class Program
         if (settings.Settings.Discord?.BotEnabled == true)
         {
             var discord = app.Services.GetService<Discord.DiscordManager>()!;
-            await discord.Init();
+#pragma warning disable CS4014
+            discord.Init();
+#pragma warning restore CS4014
         }
 
         TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
@@ -133,11 +135,11 @@ public class Program
         app.Run();
     }
 
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
         try
         {
-            await Run(args);
+            Run(args);
         }
         catch (Exception e)
         {

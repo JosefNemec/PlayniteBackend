@@ -121,7 +121,7 @@ public class AddonsManager : IDisposable
 
     public Task RegenerateAddonDatabase()
     {
-        return Task.Factory.StartNew(() =>
+        return Task.Run(() =>
         {
             if (settings.Settings.Addons!.AddonRepository.IsNullOrEmpty())
             {

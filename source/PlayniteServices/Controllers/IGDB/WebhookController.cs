@@ -56,19 +56,25 @@ public abstract class WebhookController<T> : Controller where T : class, IIgdbIt
         var jsonString = string.Empty;
         try
         {
+            Exception? serError = null;
             T? item = null;
             using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
             {
                 jsonString = await reader.ReadToEndAsync();
                 if (!string.IsNullOrEmpty(jsonString))
                 {
-                    item = Serialization.FromJson<T>(jsonString);
+                    Serialization.TryFromJson(jsonString, out item, out serError);
                 }
             }
 
             if (item == null)
             {
                 logger.Error($"Failed {actionDescription} {EndpointPath} webhook content deserialization.");
+                if (serError != null)
+                {
+                    logger.Error(serError.Message);
+                }
+
                 logger.Debug(jsonString);
                 return Ok();
             }

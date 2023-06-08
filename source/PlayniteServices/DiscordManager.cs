@@ -46,29 +46,30 @@ public class DiscordManager : IDisposable
         httpClient.Dispose();
     }
 
-    public async Task<bool> Init()
+    public Task Init()
     {
-        try
+        return Task.Run(async () =>
         {
-            var guilds = await Get<List<Guild>>(@"users/@me/guilds");
-            var channels = await Get<List<Channel>>($"guilds/{guilds[0].id}/channels");
-            addonsFeedChannel = channels.First(a => a.name == "addons-feed").id;
-            if (addonsFeedChannel.IsNullOrWhiteSpace())
+            try
             {
-                logger.Error("Failed to initialize Discord bot, addons-feed channel not found.");
-                return false;
-            }
+                var guilds = await Get<List<Guild>>(@"users/@me/guilds");
+                var channels = await Get<List<Channel>>($"guilds/{guilds[0].id}/channels");
+                addonsFeedChannel = channels.First(a => a.name == "addons-feed").id;
+                if (addonsFeedChannel.IsNullOrWhiteSpace())
+                {
+                    logger.Error("Failed to initialize Discord bot, addons-feed channel not found.");
+                    return;
+                }
 
-            addons.InstallerManifestsUpdated += Addons_InstallerManifestsUpdated;
-            await ProcessAddonUpdates(true);
-            logger.Info("Discord bot enabled.");
-            return true;
-        }
-        catch (Exception e)
-        {
-            logger.Error(e, "Failed to init Discord bot.");
-            return false;
-        }
+                addons.InstallerManifestsUpdated += Addons_InstallerManifestsUpdated;
+                await ProcessAddonUpdates(true);
+                logger.Info("Discord bot enabled.");
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to init Discord bot.");
+            }
+        });
     }
 
     private static string AddonTypeToFriendlyString(AddonType type)

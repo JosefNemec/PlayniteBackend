@@ -77,12 +77,7 @@ public partial class GamesController : Controller
         var games = await SearchGame(searchRequest.SearchTerm, true);
         foreach (var game in games)
         {
-            await game.Game.expand_cover(igdbApi);
-            await game.Game.expand_involved_companies(igdbApi);
-            foreach (var company in game.Game.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
-            {
-                await company.expand_company(igdbApi);
-            }
+            await ExpandAndStripSearchGame(game.Game);
         }
 
         return new DataResponse<List<Game>>(games.Select(a => a.Game).ToList());
@@ -127,6 +122,76 @@ public partial class GamesController : Controller
         return new DataResponse<Game>(match);
     }
 
+    private async Task ExpandAndStripSearchGame(Game game)
+    {
+        // This way stripping is kind of stupid, but it won't cause issues later
+        // in case some other serialization methods/sources would want to use arbitrary data.
+        // As compared to handling this via serialization attributes and implementing it in expansion methods.
+
+        await game.expand_cover(igdbApi);
+        if (game.cover_expanded != default)
+        {
+            game.cover_expanded.id = default;
+            game.cover_expanded.game = default;
+            game.cover_expanded.checksum = default;
+            game.cover_expanded.game_localization = default;
+        }
+
+        await game.expand_platforms(igdbApi);
+        game.platforms_expanded?.ForEach(a =>
+        {
+            a.id = default;
+            a.checksum = default;
+            a.created_at = default;
+            a.updated_at = default;
+            a.abbreviation = default;
+            a.generation = default;
+            a.platform_logo = default;
+            a.platform_family = default;
+            a.slug = default;
+            a.summary = default;
+            a.versions = default;
+            a.websites = default;
+        });
+
+        await game.expand_involved_companies(igdbApi);
+        foreach (var company in game.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
+        {
+            await company.expand_company(igdbApi);
+            if (company.company_expanded != default)
+            {
+                company.company_expanded.id = default;
+                company.company_expanded.change_date = default;
+                company.company_expanded.change_date_category = default;
+                company.company_expanded.changed_company_id = default;
+                company.company_expanded.country = default;
+                company.company_expanded.created_at = default;
+                company.company_expanded.updated_at = default;
+                company.company_expanded.description = default;
+                company.company_expanded.developed = default;
+                company.company_expanded.logo = default;
+                company.company_expanded.parent = default;
+                company.company_expanded.published = default;
+                company.company_expanded.slug = default;
+                company.company_expanded.start_date = default;
+                company.company_expanded.start_date_category = default;
+                company.company_expanded.url = default;
+                company.company_expanded.websites = default;
+                company.company_expanded.checksum = default;
+            }
+
+            company.id = default;
+            company.company = default;
+            company.created_at = default;
+            company.updated_at = default;
+            company.checksum = default;
+            company.game = default;
+        }
+
+        StripExpandableBases(game);
+        game.summary = default;
+    }
+
     private async Task ExpandAndStripGame(Game game)
     {
         // This way stripping is kind of stupid, but it won't cause issues later
@@ -134,177 +199,182 @@ public partial class GamesController : Controller
         // As compared to handling this via serialization attributes and implementing it in expansion methods.
 
         await game.expand_cover(igdbApi);
-        if (game.cover_expanded != null)
+        if (game.cover_expanded != default)
         {
-            game.cover_expanded.id = 0;
-            game.cover_expanded.game = 0;
-            game.cover_expanded.checksum = null;
-            game.cover_expanded.game_localization = 0;
+            game.cover_expanded.id = default;
+            game.cover_expanded.game = default;
+            game.cover_expanded.checksum = default;
+            game.cover_expanded.game_localization = default;
         }
 
         await game.expand_artworks(igdbApi);
         game.artworks_expanded?.ForEach(a =>
         {
-            a.id = 0;
-            a.game = 0;
-            a.checksum = null;
+            a.id = default;
+            a.game = default;
+            a.checksum = default;
         });
 
         await game.expand_screenshots(igdbApi);
         game.screenshots_expanded?.ForEach(a =>
         {
-            a.id = 0;
-            a.game = 0;
-            a.checksum = null;
+            a.id = default;
+            a.game = default;
+            a.checksum = default;
         });
 
         await game.expand_genres(igdbApi);
         game.genres_expanded?.ForEach(a =>
         {
-            a.id = 0;
-            a.created_at = 0;
-            a.updated_at = 0;
-            a.checksum = null;
-            a.slug = null;
-            a.url = null;
+            a.id = default;
+            a.created_at = default;
+            a.updated_at = default;
+            a.checksum = default;
+            a.slug = default;
+            a.url = default;
         });
 
         await game.expand_websites(igdbApi);
         game.websites_expanded?.ForEach(a =>
         {
-            a.id = 0;
-            a.checksum = null;
-            a.game = 0;
+            a.id = default;
+            a.checksum = default;
+            a.game = default;
         });
 
         await game.expand_game_modes(igdbApi);
         game.game_modes_expanded?.ForEach(a =>
         {
-            a.id = 0;
-            a.created_at = 0;
-            a.updated_at = 0;
-            a.checksum = null;
-            a.slug = null;
-            a.url = null;
+            a.id = default;
+            a.created_at = default;
+            a.updated_at = default;
+            a.checksum = default;
+            a.slug = default;
+            a.url = default;
         });
 
         await game.expand_age_ratings(igdbApi);
         game.age_ratings_expanded?.ForEach(a =>
         {
-            a.id = 0;
-            a.checksum = null;
-            a.content_descriptions = null;
-            a.rating_cover_url = null;
-            a.synopsis = null;
+            a.id = default;
+            a.checksum = default;
+            a.content_descriptions = default;
+            a.rating_cover_url = default;
+            a.synopsis = default;
         });
 
         await game.expand_collection(igdbApi);
-        if (game.collection_expanded != null)
+        if (game.collection_expanded != default)
         {
-            game.collection_expanded.id = 0;
-            game.collection_expanded.created_at = 0;
-            game.collection_expanded.updated_at = 0;
-            game.collection_expanded.checksum = null;
-            game.collection_expanded.slug = null;
-            game.collection_expanded.games = null;
-            game.collection_expanded.url = null;
+            game.collection_expanded.id = default;
+            game.collection_expanded.created_at = default;
+            game.collection_expanded.updated_at = default;
+            game.collection_expanded.checksum = default;
+            game.collection_expanded.slug = default;
+            game.collection_expanded.games = default;
+            game.collection_expanded.url = default;
         }
 
         await game.expand_platforms(igdbApi);
         game.platforms_expanded?.ForEach(a =>
         {
-            a.id = 0;
-            a.checksum = null;
-            a.created_at = 0;
-            a.updated_at = 0;
-            a.abbreviation = null;
-            a.generation = 0;
-            a.platform_logo = 0;
-            a.platform_family = 0;
-            a.slug = null;
-            a.summary = null;
-            a.versions = null;
-            a.websites = null;
+            a.id = default;
+            a.checksum = default;
+            a.created_at = default;
+            a.updated_at = default;
+            a.abbreviation = default;
+            a.generation = default;
+            a.platform_logo = default;
+            a.platform_family = default;
+            a.slug = default;
+            a.summary = default;
+            a.versions = default;
+            a.websites = default;
         });
 
         await game.expand_involved_companies(igdbApi);
         foreach (var company in game.involved_companies_expanded ?? Enumerable.Empty<InvolvedCompany>())
         {
             await company.expand_company(igdbApi);
-            if (company.company_expanded != null)
+            if (company.company_expanded != default)
             {
-                company.company_expanded.id = 0;
-                company.company_expanded.change_date = 0;
-                company.company_expanded.change_date_category = DateFormatChangeDateCategoryEnum.YYYYMMMMDD;
-                company.company_expanded.changed_company_id = 0;
-                company.company_expanded.country = 0;
-                company.company_expanded.created_at = 0;
-                company.company_expanded.updated_at = 0;
-                company.company_expanded.description = null;
-                company.company_expanded.developed = null;
-                company.company_expanded.logo = 0;
-                company.company_expanded.parent = 0;
-                company.company_expanded.published = null;
-                company.company_expanded.slug = null;
-                company.company_expanded.start_date = 0;
-                company.company_expanded.start_date_category = DateFormatChangeDateCategoryEnum.YYYYMMMMDD;
-                company.company_expanded.url = null;
-                company.company_expanded.websites = null;
-                company.company_expanded.checksum = null;
+                company.company_expanded.id = default;
+                company.company_expanded.change_date = default;
+                company.company_expanded.change_date_category = default;
+                company.company_expanded.changed_company_id = default;
+                company.company_expanded.country = default;
+                company.company_expanded.created_at = default;
+                company.company_expanded.updated_at = default;
+                company.company_expanded.description = default;
+                company.company_expanded.developed = default;
+                company.company_expanded.logo = default;
+                company.company_expanded.parent = default;
+                company.company_expanded.published = default;
+                company.company_expanded.slug = default;
+                company.company_expanded.start_date = default;
+                company.company_expanded.start_date_category = default;
+                company.company_expanded.url = default;
+                company.company_expanded.websites = default;
+                company.company_expanded.checksum = default;
             }
 
-            company.id = 0;
-            company.company = 0;
-            company.created_at = 0;
-            company.updated_at = 0;
-            company.checksum = null;
-            company.game = 0;
+            company.id = default;
+            company.company = default;
+            company.created_at = default;
+            company.updated_at = default;
+            company.checksum = default;
+            company.game = default;
         }
 
-        game.age_ratings = null;
-        game.aggregated_rating_count = 0;
-        game.alternative_names = null;
-        game.artworks = null;
-        game.bundles = null;
-        game.collection = 0;
-        game.cover = 0;
-        game.created_at = 0;
-        game.dlcs = null;
-        game.expansions = null;
-        game.external_games = null;
-        game.follows = 0;
-        game.franchise = 0;
-        game.franchises = null;
-        game.game_engines = null;
-        game.game_modes = null;
-        game.genres = null;
-        game.hypes = 0;
-        game.involved_companies = null;
-        game.keywords = null;
-        game.multiplayer_modes = null;
-        game.platforms = null;
-        game.player_perspectives = null;
-        game.rating_count = 0;
-        game.release_dates = null;
-        game.screenshots = null;
-        game.similar_games = null;
-        game.slug = null;
-        game.standalone_expansions = null;
-        game.storyline = null;
-        game.tags = null;
-        game.themes = null;
-        game.total_rating_count = 0;
-        game.updated_at = 0;
-        game.videos = null;
-        game.websites = null;
-        game.checksum = null;
-        game.remakes = null;
-        game.remasters = null;
-        game.expanded_games = null;
-        game.ports = null;
-        game.forks = null;
-        game.language_supports = null;
-        game.game_localizations = null;
+        StripExpandableBases(game);
+    }
+
+    private void StripExpandableBases(Game game)
+    {
+        game.age_ratings = default;
+        game.aggregated_rating_count = default;
+        game.alternative_names = default;
+        game.artworks = default;
+        game.bundles = default;
+        game.collection = default;
+        game.cover = default;
+        game.created_at = default;
+        game.dlcs = default;
+        game.expansions = default;
+        game.external_games = default;
+        game.follows = default;
+        game.franchise = default;
+        game.franchises = default;
+        game.game_engines = default;
+        game.game_modes = default;
+        game.genres = default;
+        game.hypes = default;
+        game.involved_companies = default;
+        game.keywords = default;
+        game.multiplayer_modes = default;
+        game.platforms = default;
+        game.player_perspectives = default;
+        game.rating_count = default;
+        game.release_dates = default;
+        game.screenshots = default;
+        game.similar_games = default;
+        game.slug = default;
+        game.standalone_expansions = default;
+        game.storyline = default;
+        game.tags = default;
+        game.themes = default;
+        game.total_rating_count = default;
+        game.updated_at = default;
+        game.videos = default;
+        game.websites = default;
+        game.checksum = default;
+        game.remakes = default;
+        game.remasters = default;
+        game.expanded_games = default;
+        game.ports = default;
+        game.forks = default;
+        game.language_supports = default;
+        game.game_localizations = default;
     }
 
     private async Task<List<TextSearchResult>> SearchGameByName(string searchTerm)
