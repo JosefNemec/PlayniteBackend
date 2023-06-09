@@ -638,23 +638,30 @@ public partial class GamesController : Controller
             }
             else
             {
-                // If multiple matches are found and we don't have release date then prioritize older game
                 if (res.All(a => a.Game.first_release_date == 0))
                 {
                     return res[0].Game;
                 }
+
+                // If multiple matches are found and we don't have release date
+                // then prioritize newer games if they are also from some library plugin.
+                // Manually added games should prefer older games (most likely to be emulated).
+                TextSearchResult? game = null;
+                if (metadataRequest.LibraryId == Guid.Empty)
+                {
+                    game = res.OrderBy(a => a.Game.first_release_date).FirstOrDefault(a => a.Game.first_release_date > 0);
+                }
                 else
                 {
-                    var game = res.OrderBy(a => a.Game.first_release_date).FirstOrDefault(a => a.Game.first_release_date > 0);
-                    if (game == null)
-                    {
-                        return res[0].Game;
-                    }
-                    else
-                    {
-                        return game.Game;
-                    }
+                    game = res.OrderByDescending(a => a.Game.first_release_date).FirstOrDefault(a => a.Game.first_release_date > 0);
                 }
+
+                if (game != null)
+                {
+                    return game.Game;
+                }
+
+                return res[0].Game;
             }
         }
 
@@ -677,7 +684,6 @@ public partial class GamesController : Controller
         name = BracketsRegex().Replace(name, string.Empty);
         name = name.RemoveTrademarks();
         name = name.Replace('_', ' ');
-        name = name.Replace('.', ' ');
         name = name.Replace(',', ' ');
         name = name.Replace('’', '\'');
         name = WhiteSpacesRegex().Replace(name, " ");

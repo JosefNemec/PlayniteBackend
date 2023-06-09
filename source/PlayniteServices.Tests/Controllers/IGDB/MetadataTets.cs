@@ -149,7 +149,7 @@ public class MetadataTets
 
     [Fact]
     public async Task GetGameTest()
-    { 
+    {
         var response = await client.GetAsync(@"/igdb/game/333");
         var cnt = await response.Content.ReadAsStringAsync();
         var game = Serialization.FromJson<DataResponse<Game>>(cnt)?.Data;
@@ -167,33 +167,33 @@ public class MetadataTets
         Assert.DoesNotContain(games, a => a.category == GameCategoryEnum.MOD);
     }
 
-    //[Fact]
-    //public async Task BigMatchingTest()
-    //{
-    //    var gameList = File.ReadAllLines(@"c:\devel\test.txt", Encoding.UTF8);
-    //    var found = new StringBuilder();
-    //    var missing = new StringBuilder();
-
-    //    foreach (var game in gameList)
-    //    {
-    //        if (game.IsNullOrEmpty())
-    //        {
-    //            continue;
-    //        }
-
-    //        var metadata = await GetMetadata(new MetadataRequest(game));
-    //        if (metadata?.id > 0)
-    //        {
-    //            found.AppendLine($"{game}#{metadata.id}#{metadata.name}");
-    //        }
-    //        else
-    //        {
-    //            missing.AppendLine(game);
-    //        }
-    //    }
-
-    //    var id = Guid.NewGuid();
-    //    File.WriteAllText($@"c:\devel\test_found_{id}.txt", found.ToString(), Encoding.UTF8);
-    //    File.WriteAllText($@"c:\devel\test_missing_{id}.txt", missing.ToString(), Encoding.UTF8);
-    //}
+    // [Fact]
+    // public async Task BigMatchingTest()
+    // {
+    //     var gameList = System.IO.File.ReadAllLines(@"c:\devel\test.txt", Encoding.UTF8);
+    //     var found = new StringBuilder();
+    //     var missing = new StringBuilder();
+    //
+    //     foreach (var game in gameList)
+    //     {
+    //         if (game.IsNullOrEmpty())
+    //         {
+    //             continue;
+    //         }
+    //
+    //         var metadata = await GetMetadata(new MetadataRequest(game));
+    //         if (metadata?.id > 0)
+    //         {
+    //             found.AppendLine($"{game}#{metadata.id}#{metadata.name}");
+    //         }
+    //         else
+    //         {
+    //             missing.AppendLine(game);
+    //         }
+    //     }
+    //
+    //     var id = Guid.NewGuid();
+    //     System.IO.File.WriteAllText($@"c:\devel\test_found_{id}.txt", found.ToString(), Encoding.UTF8);
+    //     System.IO.File.WriteAllText($@"c:\devel\test_missing_{id}.txt", missing.ToString(), Encoding.UTF8);
+    // }
 }
