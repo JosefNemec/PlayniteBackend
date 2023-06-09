@@ -403,7 +403,7 @@ public partial class GamesController : Controller
               },
               {
                 $match: {
-                  textScore: { $gte: 0.7 }
+                  textScore: { $gte: 0.6 }
                 }
               },
               {

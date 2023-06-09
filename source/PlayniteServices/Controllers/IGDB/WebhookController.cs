@@ -8,6 +8,10 @@ public abstract class WebhookController<T> : Controller where T : class, IIgdbIt
 {
     private static readonly ILogger logger = LogManager.GetLogger();
 
+    private const string createAction = "create";
+    private const string deleteAction = "delete";
+    private const string updateAction = "update";
+
     private readonly UpdatableAppSettings settings;
     private readonly IgdbManager igdb;
     private readonly IgdbCollection<T> collection;
@@ -46,6 +50,20 @@ public abstract class WebhookController<T> : Controller where T : class, IIgdbIt
         }
     }
 
+    public class TempItem
+    {
+        public ulong id { get; set; }
+    }
+
+    private Task TryFetchUpdatedItem(ulong itemId)
+    {
+        return Task.Run(async () =>
+        {
+            await collection.Delete(itemId);
+            var item = await collection.GetItem(itemId, true);
+        });
+    }
+
     private async Task<ActionResult> ProcessHook(Func<T, Task> itemAction, string actionDescription)
     {
         if (!ValidateWebhook())
@@ -69,6 +87,26 @@ public abstract class WebhookController<T> : Controller where T : class, IIgdbIt
 
             if (item == null)
             {
+                // IGDB sometimes delives payload with missing propertie or numeric properties set to "null"
+                // but the actual data in the DB are correct, so we fetch them manually.
+                if (Serialization.TryFromJson<TempItem>(jsonString, out var tempItem, out _) &&
+                    tempItem?.id > 0)
+                {
+                    logger.Warn($"Trying to fix broken {actionDescription} {EndpointPath} webhook from IGDB: {tempItem.id}");
+#pragma warning disable CS4014
+                    if (actionDescription == deleteAction)
+                    {
+                        collection.Delete(tempItem.id);
+                    }
+                    else
+                    {
+                        TryFetchUpdatedItem(tempItem.id);
+                    }
+#pragma warning restore CS4014
+
+                    return Ok();
+                }
+
                 logger.Error($"Failed {actionDescription} {EndpointPath} webhook content deserialization.");
                 if (serError != null)
                 {
@@ -91,21 +129,21 @@ public abstract class WebhookController<T> : Controller where T : class, IIgdbIt
         return Ok();
     }
 
-    [HttpPost("create")]
+    [HttpPost(createAction)]
     public async Task<ActionResult> Create()
     {
-        return await ProcessHook(collection.Add, "create");
+        return await ProcessHook(collection.Add, createAction);
     }
 
-    [HttpPost("delete")]
+    [HttpPost(deleteAction)]
     public async Task<ActionResult> Delete()
     {
-        return await ProcessHook(collection.Delete, "delete");
+        return await ProcessHook(collection.Delete, deleteAction);
     }
 
-    [HttpPost("update")]
+    [HttpPost(updateAction)]
     public async Task<ActionResult> Update()
     {
-        return await ProcessHook(collection.Add, "update");
+        return await ProcessHook(collection.Add, updateAction);
     }
 }
