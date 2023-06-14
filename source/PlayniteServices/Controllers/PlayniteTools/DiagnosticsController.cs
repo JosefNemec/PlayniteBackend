@@ -50,7 +50,12 @@ public class DiagnosticsController : Controller
 
         using (var zip = ZipFile.Open(zipLog, ZipArchiveMode.Create))
         {
-            zip.CreateEntryFromFile(logPath, "serverlog.log");
+            var logEntry = zip.CreateEntry("serverlog.log");
+            using (var cefS = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var writer = new StreamWriter(logEntry.Open()))
+            {
+                cefS.CopyTo(writer.BaseStream);
+            }
         }
 
         return PhysicalFile(zipLog, System.Net.Mime.MediaTypeNames.Application.Zip, "serverlog.zip");
