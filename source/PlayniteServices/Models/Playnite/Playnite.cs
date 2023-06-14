@@ -71,3 +71,11 @@ public class ServiceStats
     public int X86Count;
     public int X64Count;
 }
+
+public class DiagPackage
+{
+    public string? Id { get; set; }
+    public string? Version { get; set; }
+    public bool IsCrash { get; set; }
+    public DateTime Date { get; set; }
+}

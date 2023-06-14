@@ -92,18 +92,34 @@ public class DiagnosticsController : Controller
 
     [ServiceFilter(typeof(ServiceKeyFilter))]
     [HttpGet]
-    public DataResponse<List<string>> GetPackages()
+    public DataResponse<List<DiagPackage>> GetPackages()
     {
         if (!Directory.Exists(diagsDir))
         {
-            return new DataResponse<List<string>>(new List<string>());
+            return new DataResponse<List<DiagPackage>>(new List<DiagPackage>());
         }
 
-        var diagFiles = Directory.
-            GetFiles(diagsDir, "*.zip", SearchOption.AllDirectories).
-            Select(a => a.Replace(diagsDir, "", StringComparison.Ordinal).Trim(Path.DirectorySeparatorChar) + $",{new FileInfo(a).CreationTime}").
-            ToList();
-        return new DataResponse<List<string>>(diagFiles);
+        var packages = new List<DiagPackage>();
+        foreach (var file in Directory.GetFiles(diagsDir, "*.zip", SearchOption.AllDirectories))
+        {
+            var isCrash = false;
+            string? version = null;
+            if (file.StartsWith(diagsCrashDir, StringComparison.OrdinalIgnoreCase))
+            {
+                isCrash = true;
+                version = file.Split(Path.DirectorySeparatorChar)[^2];
+            }
+
+            packages.Add(new()
+            {
+                Id = Path.GetFileNameWithoutExtension(file),
+                IsCrash = isCrash,
+                Date = new FileInfo(file).CreationTime,
+                Version = version
+            });
+        }
+
+        return new DataResponse<List<DiagPackage>>(packages);
     }
 
     [ServiceFilter(typeof(PlayniteVersionFilter))]
