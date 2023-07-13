@@ -385,7 +385,7 @@ public partial class GamesController : Controller
               {
                 $match: {
                   category: {
-                    $in: [0, 2, 3, 4, 8, 9, 10],
+                    $in: [0, 2, 3, 4, 8, 9, 10, 11],
                   },
                   $text: {
                     $search: {{serTerm}},
@@ -428,6 +428,11 @@ public partial class GamesController : Controller
             if (item.name.IsNullOrEmpty())
             {
                 continue;
+            }
+
+            if (item.category == GameCategoryEnum.PORT)
+            {
+                item.textScore -= 0.01;
             }
 
             res.Add(new TextSearchResult(item.textScore, item.name, item));
@@ -487,7 +492,7 @@ public partial class GamesController : Controller
               {
                 $match: {
                   category: {
-                    $in: [0, 2, 3, 4, 8, 9, 10],
+                    $in: [0, 2, 3, 4, 8, 9, 10, 11],
                   },
                 },
               },
@@ -511,6 +516,11 @@ public partial class GamesController : Controller
             await item.expand_game(igdbApi);
             if (item.game_expanded != null)
             {
+                if (item.game_expanded.category == GameCategoryEnum.PORT)
+                {
+                    item.textScore -= 0.01;
+                }
+
                 res.Add(new TextSearchResult(item.textScore, item.name, item.game_expanded));
             }
         }
