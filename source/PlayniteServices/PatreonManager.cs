@@ -88,6 +88,8 @@ public class PatreonManager : IDisposable
             }
         }
         while (!nextLink.IsNullOrEmpty());
+
+        PatronsList.AddRange(GetKofiMembers());
         PatronsList.Sort();
     }
 
@@ -183,5 +185,37 @@ public class PatreonManager : IDisposable
         return await response.Content.ReadAsStringAsync();
     }
 
+    public List<string> GetKofiMembers()
+    {
+        var members = new List<string>();
+        var kofiMembersFile = Path.Combine(PlaynitePaths.RuntimeDataDir, "kofi.csv");
+        if (!File.Exists(kofiMembersFile))
+        {
+            return members;
+        }
 
+        var lines = File.ReadAllLines(kofiMembersFile);
+        if (lines.Length <= 1)
+        {
+            logger.Error("Can't parse Kofi members, no members in csv.");
+            return members;
+        }
+
+        for (int i = 1; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            if (line.IsNullOrWhiteSpace())
+            {
+                break;
+            }
+
+            var vars = line.Split(',');
+            if (vars.Length > 0)
+            {
+                members.Add(vars[0].Trim('"'));
+            }
+        }
+
+        return members;
+    }
 }
