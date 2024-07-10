@@ -107,12 +107,128 @@ public partial class Collection : IIgdbItem
             cm.AutoMap();
             cm.MapIdMember(p => p.id);
             cm.SetIgnoreExtraElements(true);
-            cm.UnmapProperty(p => p.games_expanded);
+            cm.UnmapProperty(p => p.type_expanded);
+            cm.UnmapProperty(p => p.as_parent_relations_expanded);
+            cm.UnmapProperty(p => p.as_child_relations_expanded);
         });
     }
-    public async Task expand_games(IgdbManager igdb)
+    public async Task expand_type(IgdbManager igdb)
     {
-        games_expanded = await igdb.Games.GetItem(games);
+        type_expanded = await igdb.CollectionTypes.GetItem(type);
+    }
+    public async Task expand_as_parent_relations(IgdbManager igdb)
+    {
+        as_parent_relations_expanded = await igdb.CollectionRelations.GetItem(as_parent_relations);
+    }
+    public async Task expand_as_child_relations(IgdbManager igdb)
+    {
+        as_child_relations_expanded = await igdb.CollectionRelations.GetItem(as_child_relations);
+    }
+}
+
+public partial class CollectionMembership : IIgdbItem
+{
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CollectionMembership>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.game_expanded);
+            cm.UnmapProperty(p => p.collection_expanded);
+            cm.UnmapProperty(p => p.type_expanded);
+        });
+    }
+    public async Task expand_game(IgdbManager igdb)
+    {
+        game_expanded = await igdb.Games.GetItem(game);
+    }
+    public async Task expand_collection(IgdbManager igdb)
+    {
+        collection_expanded = await igdb.Collections.GetItem(collection);
+    }
+    public async Task expand_type(IgdbManager igdb)
+    {
+        type_expanded = await igdb.CollectionMembershipTypes.GetItem(type);
+    }
+}
+
+public partial class CollectionMembershipType : IIgdbItem
+{
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CollectionMembershipType>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.allowed_collection_type_expanded);
+        });
+    }
+    public async Task expand_allowed_collection_type(IgdbManager igdb)
+    {
+        allowed_collection_type_expanded = await igdb.CollectionTypes.GetItem(allowed_collection_type);
+    }
+}
+
+public partial class CollectionRelation : IIgdbItem
+{
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CollectionRelation>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.child_collection_expanded);
+            cm.UnmapProperty(p => p.parent_collection_expanded);
+            cm.UnmapProperty(p => p.type_expanded);
+        });
+    }
+    public async Task expand_child_collection(IgdbManager igdb)
+    {
+        child_collection_expanded = await igdb.Collections.GetItem(child_collection);
+    }
+    public async Task expand_parent_collection(IgdbManager igdb)
+    {
+        parent_collection_expanded = await igdb.Collections.GetItem(parent_collection);
+    }
+    public async Task expand_type(IgdbManager igdb)
+    {
+        type_expanded = await igdb.CollectionRelationTypes.GetItem(type);
+    }
+}
+
+public partial class CollectionRelationType : IIgdbItem
+{
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CollectionRelationType>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.allowed_child_type_expanded);
+            cm.UnmapProperty(p => p.allowed_parent_type_expanded);
+        });
+    }
+    public async Task expand_allowed_child_type(IgdbManager igdb)
+    {
+        allowed_child_type_expanded = await igdb.CollectionTypes.GetItem(allowed_child_type);
+    }
+    public async Task expand_allowed_parent_type(IgdbManager igdb)
+    {
+        allowed_parent_type_expanded = await igdb.CollectionTypes.GetItem(allowed_parent_type);
+    }
+}
+
+public partial class CollectionType : IIgdbItem
+{
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<CollectionType>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
     }
 }
 
@@ -257,7 +373,6 @@ public partial class Game : IIgdbItem
             cm.UnmapProperty(p => p.alternative_names_expanded);
             cm.UnmapProperty(p => p.artworks_expanded);
             cm.UnmapProperty(p => p.bundles_expanded);
-            cm.UnmapProperty(p => p.collection_expanded);
             cm.UnmapProperty(p => p.cover_expanded);
             cm.UnmapProperty(p => p.dlcs_expanded);
             cm.UnmapProperty(p => p.expansions_expanded);
@@ -288,6 +403,7 @@ public partial class Game : IIgdbItem
             cm.UnmapProperty(p => p.forks_expanded);
             cm.UnmapProperty(p => p.language_supports_expanded);
             cm.UnmapProperty(p => p.game_localizations_expanded);
+            cm.UnmapProperty(p => p.collections_expanded);
         });
     }
     public async Task expand_age_ratings(IgdbManager igdb)
@@ -305,10 +421,6 @@ public partial class Game : IIgdbItem
     public async Task expand_bundles(IgdbManager igdb)
     {
         bundles_expanded = await igdb.Games.GetItem(bundles);
-    }
-    public async Task expand_collection(IgdbManager igdb)
-    {
-        collection_expanded = await igdb.Collections.GetItem(collection);
     }
     public async Task expand_cover(IgdbManager igdb)
     {
@@ -429,6 +541,10 @@ public partial class Game : IIgdbItem
     public async Task expand_game_localizations(IgdbManager igdb)
     {
         game_localizations_expanded = await igdb.GameLocalizations.GetItem(game_localizations);
+    }
+    public async Task expand_collections(IgdbManager igdb)
+    {
+        collections_expanded = await igdb.Collections.GetItem(collections);
     }
 }
 

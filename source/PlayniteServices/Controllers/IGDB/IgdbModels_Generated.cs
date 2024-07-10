@@ -417,14 +417,112 @@ public partial class Collection : IIgdbItem
 {
     public ulong id { get; set; }
     public long created_at { get; set; }
-    public List<ulong>? games { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
     public long updated_at { get; set; }
     public string? url { get; set; }
     public string? checksum { get; set; }
+    public ulong type { get; set; }
+    public List<ulong>? as_parent_relations { get; set; }
+    public List<ulong>? as_child_relations { get; set; }
 
-    public List<Game>? games_expanded { get; set; }
+    public CollectionType? type_expanded { get; set; }
+    public List<CollectionRelation>? as_parent_relations_expanded { get; set; }
+    public List<CollectionRelation>? as_child_relations_expanded { get; set; }
+
+    public override string ToString()
+    {
+        return $"{id}: {name}";
+    }
+}
+
+public partial class CollectionMembership : IIgdbItem
+{
+    public ulong id { get; set; }
+    public ulong game { get; set; }
+    public ulong collection { get; set; }
+    public ulong type { get; set; }
+    public long updated_at { get; set; }
+    public long created_at { get; set; }
+    public string? checksum { get; set; }
+
+    public Game? game_expanded { get; set; }
+    public Collection? collection_expanded { get; set; }
+    public CollectionMembershipType? type_expanded { get; set; }
+
+    public override string ToString()
+    {
+        return id.ToString();
+    }
+}
+
+public partial class CollectionMembershipType : IIgdbItem
+{
+    public ulong id { get; set; }
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public ulong allowed_collection_type { get; set; }
+    public long updated_at { get; set; }
+    public long created_at { get; set; }
+    public string? checksum { get; set; }
+
+    public CollectionType? allowed_collection_type_expanded { get; set; }
+
+    public override string ToString()
+    {
+        return $"{id}: {name}";
+    }
+}
+
+public partial class CollectionRelation : IIgdbItem
+{
+    public ulong id { get; set; }
+    public ulong child_collection { get; set; }
+    public ulong parent_collection { get; set; }
+    public ulong type { get; set; }
+    public long updated_at { get; set; }
+    public long created_at { get; set; }
+    public string? checksum { get; set; }
+
+    public Collection? child_collection_expanded { get; set; }
+    public Collection? parent_collection_expanded { get; set; }
+    public CollectionRelationType? type_expanded { get; set; }
+
+    public override string ToString()
+    {
+        return id.ToString();
+    }
+}
+
+public partial class CollectionRelationType : IIgdbItem
+{
+    public ulong id { get; set; }
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public ulong allowed_child_type { get; set; }
+    public ulong allowed_parent_type { get; set; }
+    public long updated_at { get; set; }
+    public long created_at { get; set; }
+    public string? checksum { get; set; }
+
+    public CollectionType? allowed_child_type_expanded { get; set; }
+    public CollectionType? allowed_parent_type_expanded { get; set; }
+
+    public override string ToString()
+    {
+        return $"{id}: {name}";
+    }
+}
+
+public partial class CollectionType : IIgdbItem
+{
+    public ulong id { get; set; }
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public long updated_at { get; set; }
+    public long created_at { get; set; }
+    public string? checksum { get; set; }
+
 
     public override string ToString()
     {
@@ -576,14 +674,12 @@ public partial class Game : IIgdbItem
     public List<ulong>? artworks { get; set; }
     public List<ulong>? bundles { get; set; }
     public GameCategoryEnum category { get; set; }
-    public ulong collection { get; set; }
     public ulong cover { get; set; }
     public long created_at { get; set; }
     public List<ulong>? dlcs { get; set; }
     public List<ulong>? expansions { get; set; }
     public List<ulong>? external_games { get; set; }
     public long first_release_date { get; set; }
-    public int follows { get; set; }
     public ulong franchise { get; set; }
     public List<ulong>? franchises { get; set; }
     public List<ulong>? game_engines { get; set; }
@@ -625,12 +721,12 @@ public partial class Game : IIgdbItem
     public List<ulong>? forks { get; set; }
     public List<ulong>? language_supports { get; set; }
     public List<ulong>? game_localizations { get; set; }
+    public List<ulong>? collections { get; set; }
 
     public List<AgeRating>? age_ratings_expanded { get; set; }
     public List<AlternativeName>? alternative_names_expanded { get; set; }
     public List<Artwork>? artworks_expanded { get; set; }
     public List<Game>? bundles_expanded { get; set; }
-    public Collection? collection_expanded { get; set; }
     public Cover? cover_expanded { get; set; }
     public List<Game>? dlcs_expanded { get; set; }
     public List<Game>? expansions_expanded { get; set; }
@@ -661,6 +757,7 @@ public partial class Game : IIgdbItem
     public List<Game>? forks_expanded { get; set; }
     public List<LanguageSupport>? language_supports_expanded { get; set; }
     public List<GameLocalization>? game_localizations_expanded { get; set; }
+    public List<Collection>? collections_expanded { get; set; }
 
     public override string ToString()
     {

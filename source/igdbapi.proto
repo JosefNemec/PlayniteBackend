@@ -270,13 +270,85 @@ message CollectionResult {
 
 message Collection {
     uint64 id = 1;
-    google.protobuf.Timestamp created_at = 2; 
-    repeated Game games = 3; 
+    google.protobuf.Timestamp created_at = 2;
     string name = 4; 
     string slug = 5; 
     google.protobuf.Timestamp updated_at = 6; 
     string url = 7; 
     string checksum = 8; 
+    CollectionType type = 9; 
+    repeated CollectionRelation as_parent_relations = 10; 
+    repeated CollectionRelation as_child_relations = 11; 
+}
+
+message CollectionMembershipResult {
+    repeated CollectionMembership collectionmemberships = 1;
+}
+
+message CollectionMembership {
+    uint64 id = 1;
+    Game game = 2; 
+    Collection collection = 3; 
+    CollectionMembershipType type = 4; 
+    google.protobuf.Timestamp updated_at = 5; 
+    google.protobuf.Timestamp created_at = 6; 
+    string checksum = 7; 
+}
+
+message CollectionMembershipTypeResult {
+    repeated CollectionMembershipType collectionmembershiptypes = 1;
+}
+
+message CollectionMembershipType {
+    uint64 id = 1;
+    string name = 2; 
+    string description = 3; 
+    CollectionType allowed_collection_type = 4; 
+    google.protobuf.Timestamp updated_at = 5; 
+    google.protobuf.Timestamp created_at = 6; 
+    string checksum = 7; 
+}
+
+message CollectionRelationResult {
+    repeated CollectionRelation collectionrelations = 1;
+}
+
+message CollectionRelation {
+    uint64 id = 1;
+    Collection child_collection = 2; 
+    Collection parent_collection = 3; 
+    CollectionRelationType type = 4; 
+    google.protobuf.Timestamp updated_at = 5; 
+    google.protobuf.Timestamp created_at = 6; 
+    string checksum = 7; 
+}
+
+message CollectionRelationTypeResult {
+    repeated CollectionRelationType collectionrelationtypes = 1;
+}
+
+message CollectionRelationType {
+    uint64 id = 1;
+    string name = 2; 
+    string description = 3; 
+    CollectionType allowed_child_type = 4; 
+    CollectionType allowed_parent_type = 5; 
+    google.protobuf.Timestamp updated_at = 6; 
+    google.protobuf.Timestamp created_at = 7; 
+    string checksum = 8; 
+}
+
+message CollectionTypeResult {
+    repeated CollectionType collectiontypes = 1;
+}
+
+message CollectionType {
+    uint64 id = 1;
+    string name = 2; 
+    string description = 3; 
+    google.protobuf.Timestamp updated_at = 4; 
+    google.protobuf.Timestamp created_at = 5; 
+    string checksum = 6; 
 }
 
 message CompanyResult {
@@ -383,6 +455,60 @@ message Cover {
     GameLocalization game_localization = 10; 
 }
 
+message EventResult {
+    repeated Event events = 1;
+}
+
+message Event {
+    uint64 id = 1;
+    string name = 2; 
+    string description = 3; 
+    string slug = 4; 
+    EventLogo event_logo = 5; 
+    google.protobuf.Timestamp start_time = 6; 
+    string time_zone = 7; 
+    google.protobuf.Timestamp end_time = 8; 
+    string live_stream_url = 9; 
+    repeated Game games = 10; 
+    repeated GameVideo videos = 11; 
+    repeated EventNetwork event_networks = 12; 
+    google.protobuf.Timestamp created_at = 13; 
+    google.protobuf.Timestamp updated_at = 14; 
+    string checksum = 15; 
+}
+
+message EventLogoResult {
+    repeated EventLogo eventlogos = 1;
+}
+
+message EventLogo {
+    uint64 id = 1;
+    Event event = 2; 
+    bool alpha_channel = 3; 
+    bool animated = 4; 
+    int32 height = 5; 
+    string image_id = 6; 
+    string url = 7; 
+    int32 width = 8; 
+    google.protobuf.Timestamp created_at = 9; 
+    google.protobuf.Timestamp updated_at = 10; 
+    string checksum = 11; 
+}
+
+message EventNetworkResult {
+    repeated EventNetwork eventnetworks = 1;
+}
+
+message EventNetwork {
+    uint64 id = 1;
+    Event event = 2; 
+    string url = 3; 
+    NetworkType network_type = 4; 
+    google.protobuf.Timestamp created_at = 5; 
+    google.protobuf.Timestamp updated_at = 6; 
+    string checksum = 7; 
+}
+
 message ExternalGameResult {
     repeated ExternalGame externalgames = 1;
 }
@@ -462,15 +588,13 @@ message Game {
     repeated AlternativeName alternative_names = 5; 
     repeated Artwork artworks = 6; 
     repeated Game bundles = 7; 
-    GameCategoryEnum category = 8; 
-    Collection collection = 9; 
+    GameCategoryEnum category = 8;
     Cover cover = 10; 
     google.protobuf.Timestamp created_at = 11; 
     repeated Game dlcs = 12; 
     repeated Game expansions = 13; 
-    repeated ExternalGame external_games = 14; 
-    google.protobuf.Timestamp first_release_date = 15; 
-    int32 follows = 16; 
+    repeated ExternalGame external_games = 14;
+    google.protobuf.Timestamp first_release_date = 15;
     Franchise franchise = 17; 
     repeated Franchise franchises = 18; 
     repeated GameEngine game_engines = 19; 
@@ -512,6 +636,7 @@ message Game {
     repeated Game forks = 55; 
     repeated LanguageSupport language_supports = 56; 
     repeated GameLocalization game_localizations = 57; 
+    repeated Collection collections = 58; 
 }
 
 
@@ -781,6 +906,19 @@ message MultiplayerMode {
     string checksum = 15; 
 }
 
+message NetworkTypeResult {
+    repeated NetworkType networktypes = 1;
+}
+
+message NetworkType {
+    uint64 id = 1;
+    string name = 2; 
+    repeated EventNetwork event_networks = 3; 
+    google.protobuf.Timestamp created_at = 4; 
+    google.protobuf.Timestamp updated_at = 5; 
+    string checksum = 6; 
+}
+
 message PlatformResult {
     repeated Platform platforms = 1;
 }
@@ -939,6 +1077,41 @@ message PlayerPerspective {
     google.protobuf.Timestamp updated_at = 5; 
     string url = 6; 
     string checksum = 7; 
+}
+
+message PopularityPrimitiveResult {
+    repeated PopularityPrimitive popularityprimitives = 1;
+}
+
+message PopularityPrimitive {
+    uint64 id = 1;
+    int32 game_id = 2; 
+    PopularityType popularity_type = 3; 
+    PopularitySourcePopularitySourceEnum popularity_source = 4; 
+    double value = 5; 
+    google.protobuf.Timestamp calculated_at = 6; 
+    google.protobuf.Timestamp created_at = 7; 
+    google.protobuf.Timestamp updated_at = 8; 
+    string checksum = 9; 
+}
+
+
+enum PopularitySourcePopularitySourceEnum {
+    POPULARITYSOURCE_POPULARITY_SOURCE_NULL = 0;
+    IGDB = 121;
+}
+
+message PopularityTypeResult {
+    repeated PopularityType popularitytypes = 1;
+}
+
+message PopularityType {
+    uint64 id = 1;
+    PopularitySourcePopularitySourceEnum popularity_source = 2; 
+    string name = 3; 
+    google.protobuf.Timestamp created_at = 4; 
+    google.protobuf.Timestamp updated_at = 5; 
+    string checksum = 6; 
 }
 
 message RegionResult {

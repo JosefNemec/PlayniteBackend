@@ -11,6 +11,11 @@ public partial class IgdbManager : IDisposable
     [AllowNull] public CharacterCollection Characters { get; private set; }
     [AllowNull] public CharacterMugShotCollection CharacterMugShots { get; private set; }
     [AllowNull] public CollectionCollection Collections { get; private set; }
+    [AllowNull] public CollectionMembershipCollection CollectionMemberships { get; private set; }
+    [AllowNull] public CollectionMembershipTypeCollection CollectionMembershipTypes { get; private set; }
+    [AllowNull] public CollectionRelationCollection CollectionRelations { get; private set; }
+    [AllowNull] public CollectionRelationTypeCollection CollectionRelationTypes { get; private set; }
+    [AllowNull] public CollectionTypeCollection CollectionTypes { get; private set; }
     [AllowNull] public CompanyCollection Companys { get; private set; }
     [AllowNull] public CompanyLogoCollection CompanyLogos { get; private set; }
     [AllowNull] public CompanyWebsiteCollection CompanyWebsites { get; private set; }
@@ -70,6 +75,21 @@ public partial class IgdbManager : IDisposable
        Collections = new CollectionCollection(this, Database);
        Collections.CreateIndexes();
        DataCollections.Add(Collections);
+       CollectionMemberships = new CollectionMembershipCollection(this, Database);
+       CollectionMemberships.CreateIndexes();
+       DataCollections.Add(CollectionMemberships);
+       CollectionMembershipTypes = new CollectionMembershipTypeCollection(this, Database);
+       CollectionMembershipTypes.CreateIndexes();
+       DataCollections.Add(CollectionMembershipTypes);
+       CollectionRelations = new CollectionRelationCollection(this, Database);
+       CollectionRelations.CreateIndexes();
+       DataCollections.Add(CollectionRelations);
+       CollectionRelationTypes = new CollectionRelationTypeCollection(this, Database);
+       CollectionRelationTypes.CreateIndexes();
+       DataCollections.Add(CollectionRelationTypes);
+       CollectionTypes = new CollectionTypeCollection(this, Database);
+       CollectionTypes.CreateIndexes();
+       DataCollections.Add(CollectionTypes);
        Companys = new CompanyCollection(this, Database);
        Companys.CreateIndexes();
        DataCollections.Add(Companys);
@@ -188,6 +208,11 @@ Artwork.RegisterClassMap();
 Character.RegisterClassMap();
 CharacterMugShot.RegisterClassMap();
 Collection.RegisterClassMap();
+CollectionMembership.RegisterClassMap();
+CollectionMembershipType.RegisterClassMap();
+CollectionRelation.RegisterClassMap();
+CollectionRelationType.RegisterClassMap();
+CollectionType.RegisterClassMap();
 Company.RegisterClassMap();
 CompanyLogo.RegisterClassMap();
 CompanyWebsite.RegisterClassMap();
@@ -265,6 +290,36 @@ public partial class CharacterMugShotCollection : IgdbCollection<CharacterMugSho
 public partial class CollectionCollection : IgdbCollection<Collection>
 {
     public CollectionCollection(IgdbManager igdb, Database database) : base("collections", igdb, database)
+    {
+    }
+}
+public partial class CollectionMembershipCollection : IgdbCollection<CollectionMembership>
+{
+    public CollectionMembershipCollection(IgdbManager igdb, Database database) : base("collection_memberships", igdb, database)
+    {
+    }
+}
+public partial class CollectionMembershipTypeCollection : IgdbCollection<CollectionMembershipType>
+{
+    public CollectionMembershipTypeCollection(IgdbManager igdb, Database database) : base("collection_membership_types", igdb, database)
+    {
+    }
+}
+public partial class CollectionRelationCollection : IgdbCollection<CollectionRelation>
+{
+    public CollectionRelationCollection(IgdbManager igdb, Database database) : base("collection_relations", igdb, database)
+    {
+    }
+}
+public partial class CollectionRelationTypeCollection : IgdbCollection<CollectionRelationType>
+{
+    public CollectionRelationTypeCollection(IgdbManager igdb, Database database) : base("collection_relation_types", igdb, database)
+    {
+    }
+}
+public partial class CollectionTypeCollection : IgdbCollection<CollectionType>
+{
+    public CollectionTypeCollection(IgdbManager igdb, Database database) : base("collection_types", igdb, database)
     {
     }
 }

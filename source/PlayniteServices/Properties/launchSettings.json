@@ -21,7 +21,7 @@
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
         },
-        "commandLineArgs": "--RuntimeDataDir \"C:\\Devel\""
+        "commandLineArgs": "--RuntimeDataDir \"C:\\Devel\\_devel_backend_data\""
       }
     }
 }

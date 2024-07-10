@@ -41,6 +41,11 @@ public class IgdbProtoParser
         {  "Character", "characters" },
         {  "CharacterMugShot", "character_mug_shots" },
         {  "Collection", "collections" },
+        {  "CollectionMembership", "collection_memberships" },
+        {  "CollectionMembershipType", "collection_membership_types" },
+        {  "CollectionRelation", "collection_relations" },
+        {  "CollectionRelationType", "collection_relation_types" },
+        {  "CollectionType", "collection_types" },
         {  "Company", "companies" },
         {  "CompanyLogo", "company_logos" },
         {  "CompanyWebsite", "company_websites" },
@@ -236,7 +241,7 @@ public class IgdbProtoParser
         return pEnum;
     }
 
-    public void ParseFile(string protoFile, string outputDir)
+    public void ParseFile(string protoFile, string outputDir, List<string> blackList)
     {
         var messages = new List<ProtoMessage>();
         var enums = new List<ProtoEnum>();
@@ -254,7 +259,8 @@ public class IgdbProtoParser
                     message.Name != "TestDummy" &&
                     message.Name != "Search" &&
                     message.Name != "Count" &&
-                    message.Name != "MultiQueryResultArray")
+                    message.Name != "MultiQueryResultArray" &&
+                    !blackList.Contains(message.Name))
                 {
                     messages.Add(message);
                 }
@@ -262,7 +268,8 @@ public class IgdbProtoParser
             else if (token == "enum")
             {
                 var pEnum = ParseEnum();
-                if (pEnum.Name != "TestDummyEnumTestEnum")
+                if (pEnum.Name != "TestDummyEnumTestEnum" &&
+                    !blackList.Contains(pEnum.Name))
                 {
                     enums.Add(pEnum);
                 }
@@ -392,7 +399,6 @@ public class IgdbProtoParser
                     }
                 """);
             }
-
 
             result.AppendLine("    public override string ToString()\r\n    {");
             if (message.Properties.Any(a => a.Name == "name"))

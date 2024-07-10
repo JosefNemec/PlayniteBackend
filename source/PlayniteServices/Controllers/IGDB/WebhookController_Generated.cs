@@ -50,6 +50,41 @@ public class CollectionWebhookController : WebhookController<Collection>
     {
     }
 }
+[Route("igdb/webhooks/collection_memberships")]
+public class CollectionMembershipWebhookController : WebhookController<CollectionMembership>
+{
+    public CollectionMembershipWebhookController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_memberships", igdb, settings)
+    {
+    }
+}
+[Route("igdb/webhooks/collection_membership_types")]
+public class CollectionMembershipTypeWebhookController : WebhookController<CollectionMembershipType>
+{
+    public CollectionMembershipTypeWebhookController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_membership_types", igdb, settings)
+    {
+    }
+}
+[Route("igdb/webhooks/collection_relations")]
+public class CollectionRelationWebhookController : WebhookController<CollectionRelation>
+{
+    public CollectionRelationWebhookController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_relations", igdb, settings)
+    {
+    }
+}
+[Route("igdb/webhooks/collection_relation_types")]
+public class CollectionRelationTypeWebhookController : WebhookController<CollectionRelationType>
+{
+    public CollectionRelationTypeWebhookController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_relation_types", igdb, settings)
+    {
+    }
+}
+[Route("igdb/webhooks/collection_types")]
+public class CollectionTypeWebhookController : WebhookController<CollectionType>
+{
+    public CollectionTypeWebhookController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_types", igdb, settings)
+    {
+    }
+}
 [Route("igdb/webhooks/companies")]
 public class CompanyWebhookController : WebhookController<Company>
 {

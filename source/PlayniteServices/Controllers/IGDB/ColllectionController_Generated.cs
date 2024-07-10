@@ -50,6 +50,41 @@ public class CollectionCollectionController : CollectionController<Collection>
     {
     }
 }
+[Route("igdb/collections/collection_memberships")]
+public class CollectionMembershipCollectionController : CollectionController<CollectionMembership>
+{
+    public CollectionMembershipCollectionController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_memberships", igdb, settings)
+    {
+    }
+}
+[Route("igdb/collections/collection_membership_types")]
+public class CollectionMembershipTypeCollectionController : CollectionController<CollectionMembershipType>
+{
+    public CollectionMembershipTypeCollectionController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_membership_types", igdb, settings)
+    {
+    }
+}
+[Route("igdb/collections/collection_relations")]
+public class CollectionRelationCollectionController : CollectionController<CollectionRelation>
+{
+    public CollectionRelationCollectionController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_relations", igdb, settings)
+    {
+    }
+}
+[Route("igdb/collections/collection_relation_types")]
+public class CollectionRelationTypeCollectionController : CollectionController<CollectionRelationType>
+{
+    public CollectionRelationTypeCollectionController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_relation_types", igdb, settings)
+    {
+    }
+}
+[Route("igdb/collections/collection_types")]
+public class CollectionTypeCollectionController : CollectionController<CollectionType>
+{
+    public CollectionTypeCollectionController(IgdbManager igdb, UpdatableAppSettings settings) : base("collection_types", igdb, settings)
+    {
+    }
+}
 [Route("igdb/collections/companies")]
 public class CompanyCollectionController : CollectionController<Company>
 {

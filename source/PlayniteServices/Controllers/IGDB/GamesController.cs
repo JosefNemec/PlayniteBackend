@@ -263,17 +263,26 @@ public partial class GamesController : Controller
             a.synopsis = default;
         });
 
-        await game.expand_collection(igdbApi);
-        if (game.collection_expanded != default)
+        await game.expand_collections(igdbApi);
+        game.collections_expanded?.ForEach(async a =>
         {
-            game.collection_expanded.id = default;
-            game.collection_expanded.created_at = default;
-            game.collection_expanded.updated_at = default;
-            game.collection_expanded.checksum = default;
-            game.collection_expanded.slug = default;
-            game.collection_expanded.games = default;
-            game.collection_expanded.url = default;
-        }
+            await a.expand_type(igdbApi);
+            if (a.type_expanded != null)
+            {
+                a.type_expanded.id = default;
+                a.type_expanded.created_at = default;
+                a.type_expanded.updated_at = default;
+                a.type_expanded.checksum = default;
+            }
+
+            a.id = default;
+            a.created_at = default;
+            a.updated_at = default;
+            a.checksum = default;
+            a.type = default;
+            a.as_child_relations = default;
+            a.as_parent_relations = default;
+        });
 
         await game.expand_platforms(igdbApi);
         game.platforms_expanded?.ForEach(a =>
@@ -336,13 +345,12 @@ public partial class GamesController : Controller
         game.alternative_names = default;
         game.artworks = default;
         game.bundles = default;
-        game.collection = default;
+        game.collections = default;
         game.cover = default;
         game.created_at = default;
         game.dlcs = default;
         game.expansions = default;
         game.external_games = default;
-        game.follows = default;
         game.franchise = default;
         game.franchises = default;
         game.game_engines = default;
