@@ -2,7 +2,7 @@
 using Playnite;
 using System.Net.Http;
 
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 
 public interface IIgdbCollection
 {
@@ -44,6 +44,7 @@ public class IgdbCollection<T> : IIgdbCollection  where T : class, IIgdbItem
     public async Task CloneCollection()
     {
         DropCollection();
+        logger.Debug($"{EndpointPath} prefetch");
         var colCount = await GetCollectionCount();
         logger.Debug($"{EndpointPath} clone start, {colCount} items, {DateTime.Now:HH:mm:ss}");
 

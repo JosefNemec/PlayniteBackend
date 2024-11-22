@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Playnite;
-using PlayniteServices.GitHub;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
+using Playnite.Backend.GitHub;
 
-namespace PlayniteServices.Webhooks;
+namespace Playnite.Backend.Webhooks;
 
 [Route("hooks/github")]
 public class GitHubWebHookController : Controller

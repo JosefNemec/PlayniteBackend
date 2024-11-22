@@ -4,7 +4,7 @@ using System.Net.Http;
 using JsonApiSerializer;
 using JsonApiSerializer.JsonApi;
 
-namespace PlayniteServices.Patreon;
+namespace Playnite.Backend.Patreon;
 
 public class PatreonManager : IDisposable
 {

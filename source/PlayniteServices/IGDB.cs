@@ -3,8 +3,9 @@ using Playnite;
 using RateLimiter;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 
 public partial class IgdbManager : IDisposable
 {
@@ -17,10 +18,12 @@ public partial class IgdbManager : IDisposable
     private static readonly ILogger logger = LogManager.GetLogger();
     public readonly UpdatableAppSettings Settings;
     public readonly Database Database;
-    private readonly System.Threading.Timer? webhookTimer;
+    private readonly Timer? webhookTimer;
+    private readonly SemaphoreSlim authSemaphore = new SemaphoreSlim(1, 1);
+    private bool isAuthenticated = false;
 
     public HttpClient HttpClient { get; }
-    public List<IIgdbCollection> DataCollections { get; } = new();
+    public List<IIgdbCollection> DataCollections { get; } = [];
 
     public IgdbManager(UpdatableAppSettings settings, Database db)
     {
@@ -50,7 +53,7 @@ public partial class IgdbManager : IDisposable
 
         if (settings.Settings.IGDB.RegisterWebhooks && !settings.Settings.IGDB.WebHookSecret.IsNullOrEmpty())
         {
-            webhookTimer = new System.Threading.Timer(
+            webhookTimer = new Timer(
                 RegiserWebhooksCallback,
                 null,
                 new TimeSpan(0),
@@ -92,7 +95,7 @@ public partial class IgdbManager : IDisposable
     public async Task<List<Webhook>> GetWebhooks()
     {
         var webhooksString = await SendStringRequest("webhooks", null, HttpMethod.Get, true);
-        return Serialization.FromJson<List<Webhook>>(webhooksString) ?? new List<Webhook>();
+        return Serialization.FromJson<List<Webhook>>(webhooksString) ?? [];
     }
 
     public async Task DeleteWebhook(int webhookId)
@@ -104,7 +107,7 @@ public partial class IgdbManager : IDisposable
     {
         await Parallel.ForEachAsync(
             DataCollections,
-            new ParallelOptions { MaxDegreeOfParallelism = 3 },
+            new ParallelOptions { MaxDegreeOfParallelism = 4 },
             async (collection, _) =>
             {
                 await collection.CloneCollection();
@@ -113,7 +116,6 @@ public partial class IgdbManager : IDisposable
 
     private static async Task SaveTokens(string accessToken)
     {
-        await Task.Delay(2000);
         var path = Path.Combine(PlaynitePaths.RuntimeDataDir, PlaynitePaths.TwitchConfigFileName);
         var config = new Dictionary<string, Dictionary<string, string>>
         {
@@ -135,22 +137,38 @@ public partial class IgdbManager : IDisposable
 
     private async Task Authenticate()
     {
-        var clientId = Settings.Settings.IGDB!.ClientId;
-        var clientSecret = Settings.Settings.IGDB.ClientSecret;
-        var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
-        var response = await HttpClient.PostAsync(authUrl, null);
-        var auth = Serialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
-        if (auth?.access_token == null)
+        await authSemaphore.WaitAsync();
+        if (isAuthenticated)
         {
-            throw new Exception("Failed to authenticate IGDB.");
+            authSemaphore.Release();
+            return;
         }
-        else
+
+        try
         {
+            var clientId = Settings.Settings.IGDB!.ClientId;
+            var clientSecret = Settings.Settings.IGDB.ClientSecret;
+            var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
+            var response = await HttpClient.PostAsync(authUrl, null);
+            var auth = Serialization.FromJson<AuthResponse>(await response.Content.ReadAsStringAsync());
+            if (auth?.access_token == null)
+            {
+                throw new Exception("Failed to authenticate IGDB.");
+            }
+
             logger.Info($"New IGDB auth token generated: {auth.access_token}");
             Settings.Settings.IGDB.AccessToken = auth.access_token;
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            SaveTokens(auth.access_token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            await SaveTokens(auth.access_token);
+            isAuthenticated = true;
+        }
+        catch
+        {
+            isAuthenticated = false;
+            throw;
+        }
+        finally
+        {
+            authSemaphore.Release();
         }
     }
 
@@ -168,54 +186,61 @@ public partial class IgdbManager : IDisposable
         return request;
     }
 
-    public async Task<string> SendStringRequest(string url, string query, bool reTry = true, bool log = true)
+    public async Task<string> SendStringRequest(string url, string query, bool allowRetry = true, bool log = true)
     {
         if (log) { logger.Debug($"IGDB live request: {url}, {query}"); }
-        return await SendStringRequest(url, new StringContent(query), HttpMethod.Post, reTry);
+        return await SendStringRequest(url, new StringContent(query), HttpMethod.Post, allowRetry);
     }
 
-    public async Task<string> SendStringRequest(string url, HttpContent? content, HttpMethod method, bool reTry)
+    public async Task<string> SendStringRequest(string url, HttpContent? content, HttpMethod method, bool allowRetry)
     {
         var sharedRequest = CreateRequest(url, content, method);
         var response = await HttpClient.SendAsync(sharedRequest);
-
         if (response.StatusCode == System.Net.HttpStatusCode.OK)
         {
             return await response.Content.ReadAsStringAsync();
         }
 
         var authFailed = response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden;
-        if (authFailed && reTry)
+        var tooManyRequest = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
+        if (!allowRetry)
+        {
+            if (authFailed)
+            {
+                throw new Exception($"Failed to authenticate IGDB {response.StatusCode}.");
+            }
+
+            if (tooManyRequest)
+            {
+                throw new Exception("IGDB failed due to too many requests.");
+            }
+
+            throw new Exception($"Uknown IGDB API response {response.StatusCode}.");
+        }
+
+        if (authFailed)
         {
             logger.Error($"IGDB request failed on authentication {response.StatusCode}.");
             await Authenticate();
             return await SendStringRequest(url, content, method, false);
         }
 
-        if (authFailed)
+        if (tooManyRequest)
         {
-            throw new Exception($"Failed to authenticate IGDB {response.StatusCode}.");
-        }
-
-        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests && reTry)
-        {
-            await Task.Delay(250);
+            await Task.Delay(500);
             return await SendStringRequest(url, content, method, false);
-        }
-
-        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-        {
-            throw new Exception("IGDB failed due to too many requests.");
         }
 
         var errorMessage = await response.Content.ReadAsStringAsync();
         logger.Error(errorMessage);
         // Request sometimes fails on generic error, but then works when sent again...
-        if (errorMessage.Contains("Internal server error", StringComparison.OrdinalIgnoreCase) && reTry)
+        if (errorMessage.Contains("Internal server error", StringComparison.OrdinalIgnoreCase) && allowRetry)
         {
+            await Task.Delay(2_000);
             return await SendStringRequest(url, content, method, false);
         }
 
         throw new Exception($"Uknown IGDB API response {response.StatusCode}.");
+
     }
 }

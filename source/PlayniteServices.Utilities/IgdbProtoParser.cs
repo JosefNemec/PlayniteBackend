@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace PlayniteServices.Utilities;
+namespace Playnite.Backend.Utilities;
 
 public class IgdbProtoParser
 {

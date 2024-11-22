@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Playnite;
 using System.IO;
 
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 
 public abstract class WebhookController<T> : Controller where T : class, IIgdbItem
 {

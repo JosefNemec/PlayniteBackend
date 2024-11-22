@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 
-namespace PlayniteServices.Playnite;
+namespace Playnite.Backend.Playnite;
 
 [Route("playnite/users")]
 public class UsersController : Controller

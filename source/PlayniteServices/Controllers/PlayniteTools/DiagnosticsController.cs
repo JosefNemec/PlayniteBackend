@@ -3,7 +3,7 @@ using Playnite;
 using System.IO;
 using System.IO.Compression;
 
-namespace PlayniteServices.Playnite;
+namespace Playnite.Backend.Playnite;
 
 [Route("playnite/diag")]
 public class DiagnosticsController : Controller

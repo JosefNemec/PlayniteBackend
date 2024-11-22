@@ -1,9 +1,9 @@
 ﻿using Xunit;
 using System.Net.Http;
 using Playnite;
-using PlayniteServices.Tests;
+using Playnite.Backend.Tests;
 
-namespace PlayniteServices.Steam.Tests;
+namespace Playnite.Backend.Steam.Tests;
 
 [Collection("DefaultCollection")]
 public class LibraryControllerTests

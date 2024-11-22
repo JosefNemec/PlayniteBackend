@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace PlayniteServices.Patreon;
+namespace Playnite.Backend.Patreon;
 
 [Route("patreon")]
 public class PatronsController : Controller

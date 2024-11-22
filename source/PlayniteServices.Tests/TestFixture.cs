@@ -2,7 +2,7 @@
 using Xunit;
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace PlayniteServices.Tests;
+namespace Playnite.Backend.Tests;
 
 [CollectionDefinition("DefaultCollection")]
 public class DefaultTestCollection : ICollectionFixture<TestFixture>

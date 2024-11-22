@@ -1,5 +1,5 @@
 ﻿using MongoDB.Bson.Serialization;
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 public partial class AgeRating : IIgdbItem
 {
     public static void RegisterClassMap()

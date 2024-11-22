@@ -2,12 +2,12 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Playnite;
-using PlayniteServices.Webhooks;
-using PlayniteServices.GitHub;
 using System.IO;
+using Playnite.Backend.GitHub;
+using Playnite.Backend.Webhooks;
 using IO = System.IO;
 
-namespace PlayniteServices.Addons;
+namespace Playnite.Backend.Addons;
 
 public class AddonRequest
 {

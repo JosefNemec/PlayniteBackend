@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 
-namespace PlayniteServices;
+namespace Playnite.Backend;
 
 public class SteamSettings
 {

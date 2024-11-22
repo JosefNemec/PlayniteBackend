@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Playnite;
 
-namespace PlayniteServices;
+namespace Playnite.Backend;
 
 public class ApiExceptionFilter : ExceptionFilterAttribute
 {

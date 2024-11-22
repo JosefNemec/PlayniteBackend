@@ -1,4 +1,4 @@
-﻿namespace PlayniteServices;
+﻿namespace Playnite.Backend;
 
 public class AssertException : Exception
 {

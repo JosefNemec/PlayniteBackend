@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PlayniteServices\PlayniteServices.csproj" />
+    <ProjectReference Include="..\PlayniteServices\Playnite.Backend.csproj" />
   </ItemGroup>
 
   <ItemGroup>

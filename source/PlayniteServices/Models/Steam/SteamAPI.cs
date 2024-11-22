@@ -1,4 +1,4 @@
-﻿namespace PlayniteServices.Steam;
+﻿namespace Playnite.Backend.Steam;
 
 public class ResolveVanityResult
 {

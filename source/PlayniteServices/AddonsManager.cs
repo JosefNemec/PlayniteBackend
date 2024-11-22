@@ -4,18 +4,19 @@ using Playnite;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 
-namespace PlayniteServices.Addons;
+namespace Playnite.Backend.Addons;
 
 public class AddonsManager : IDisposable
 {
     private static bool instantiated = false;
-    private readonly static object generatorLock = new object();
+    private readonly static Lock generatorLock = new Lock();
     private readonly static ILogger logger = LogManager.GetLogger();
     private readonly UpdatableAppSettings settings;
     private readonly Database db;
     private readonly HttpClient httpClient;
-    private System.Threading.Timer? addonUpdatesTimer;
+    private Timer? addonUpdatesTimer;
 
     public event EventHandler? InstallerManifestsUpdated;
 
@@ -46,7 +47,7 @@ public class AddonsManager : IDisposable
             throw new Exception("Addon update checker already started.");
         }
 
-        addonUpdatesTimer = new System.Threading.Timer(
+        addonUpdatesTimer = new Timer(
             UpdateAddonInstallersCallback,
             null,
             new TimeSpan(0),

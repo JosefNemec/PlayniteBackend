@@ -2,9 +2,9 @@
 using System.Net.Mime;
 using Xunit;
 using Playnite;
-using PlayniteServices.Tests;
+using Playnite.Backend.Tests;
 
-namespace PlayniteServices.IGDB.Tests;
+namespace Playnite.Backend.IGDB.Tests;
 
 [Collection("DefaultCollection")]
 public class MetadataTets

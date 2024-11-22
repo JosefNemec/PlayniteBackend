@@ -4,7 +4,7 @@ using Playnite;
 using RateLimiter;
 using ComposableAsync;
 
-namespace PlayniteServices.Steam;
+namespace Playnite.Backend.Steam;
 
 [ServiceFilter(typeof(PlayniteVersionFilter))]
 [Route("steam/library")]

@@ -4,9 +4,9 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
-using PlayniteServices.Addons;
+using Playnite.Backend.Addons;
 
-namespace PlayniteServices.Discord;
+namespace Playnite.Backend.Discord;
 
 public class DiscordManager : IDisposable
 {

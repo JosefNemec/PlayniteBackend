@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace PlayniteServices.GitHub;
+namespace Playnite.Backend.GitHub;
 
 public static class WebHookEvents
 {

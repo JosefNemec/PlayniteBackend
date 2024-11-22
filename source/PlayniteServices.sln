@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlayniteServices", "PlayniteServices\PlayniteServices.csproj", "{5C36DDAA-F490-451C-9EF8-F949683F3821}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Playnite.Backend", "PlayniteServices\Playnite.Backend.csproj", "{5C36DDAA-F490-451C-9EF8-F949683F3821}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlayniteServices.Tests", "PlayniteServices.Tests\PlayniteServices.Tests.csproj", "{AE1E4C0B-5C86-4C6A-87AA-2588935A6C53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Playnite.Backend.Tests", "PlayniteServices.Tests\Playnite.Backend.Tests.csproj", "{AE1E4C0B-5C86-4C6A-87AA-2588935A6C53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayniteServices.Utilities", "PlayniteServices.Utilities\PlayniteServices.Utilities.csproj", "{6BE671FE-5638-48F3-AF86-D8AF6FF44F6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playnite.Backend.Utilities", "PlayniteServices.Utilities\Playnite.Backend.Utilities.csproj", "{6BE671FE-5638-48F3-AF86-D8AF6FF44F6B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

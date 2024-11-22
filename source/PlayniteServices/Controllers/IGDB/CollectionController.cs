@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 
 [ServiceFilter(typeof(ServiceKeyFilter))]
 public class CollectionController<T> : Controller where T : class, IIgdbItem

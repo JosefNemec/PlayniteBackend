@@ -1,4 +1,4 @@
-﻿namespace PlayniteServices.Utilities;
+﻿namespace Playnite.Backend.Utilities;
 
 public partial class Program
 {

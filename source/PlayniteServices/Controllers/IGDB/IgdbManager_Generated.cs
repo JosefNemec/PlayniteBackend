@@ -1,7 +1,7 @@
-﻿using PlayniteServices.IGDB;
+﻿using Playnite.Backend.IGDB;
 using MongoDB.Driver;
 using System.Diagnostics.CodeAnalysis;
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 public partial class IgdbManager : IDisposable
 {
     [AllowNull] public AgeRatingCollection AgeRatings { get; private set; }

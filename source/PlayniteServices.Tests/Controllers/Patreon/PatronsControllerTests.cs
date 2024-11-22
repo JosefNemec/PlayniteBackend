@@ -1,9 +1,9 @@
 ﻿using System.Net.Http;
 using Xunit;
 using Playnite;
-using PlayniteServices.Tests;
+using Playnite.Backend.Tests;
 
-namespace PlayniteServices.Patreon.Tests;
+namespace Playnite.Backend.Patreon.Tests;
 
 [Collection("DefaultCollection")]
 public class PatronsControllerTests

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Playnite;
 using ILogger = Playnite.ILogger;
 
-namespace PlayniteServices;
+namespace Playnite.Backend;
 
 public class Program
 {
@@ -90,6 +90,7 @@ public class Program
 
     private static void Run(string[] args)
     {
+        LogManager.SetLogManager(new NLogLogProvider());
         var builder = WebApplication.CreateBuilder(args);
         builder.Configuration.AddCommandLine(args);
         var runtimeDataDir = builder.Configuration.GetValue<string>("RuntimeDataDir");

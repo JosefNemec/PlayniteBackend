@@ -4,7 +4,7 @@ using MongoDB.Driver;
 using Playnite;
 using System.Text.RegularExpressions;
 
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 
 [Route("igdb")]
 public partial class GamesController : Controller

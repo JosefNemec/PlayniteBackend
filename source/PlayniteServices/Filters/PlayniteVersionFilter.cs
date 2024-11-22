@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace PlayniteServices;
+namespace Playnite.Backend;
 
 public class PlayniteVersionFilter : ActionFilterAttribute
 {

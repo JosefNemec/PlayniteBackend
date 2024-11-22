@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Net.Http.Headers;
 
-namespace PlayniteServices.Discord;
+namespace Playnite.Backend.Discord;
 
 public class AddonUpdateNotification
 {

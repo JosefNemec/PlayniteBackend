@@ -1,4 +1,4 @@
-﻿namespace PlayniteServices.Patreon;
+﻿namespace Playnite.Backend.Patreon;
 
 public class User
 {

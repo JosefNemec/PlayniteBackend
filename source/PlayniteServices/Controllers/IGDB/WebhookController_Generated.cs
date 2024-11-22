@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace PlayniteServices.IGDB;
+namespace Playnite.Backend.IGDB;
 [Route("igdb/webhooks/age_ratings")]
 public class AgeRatingWebhookController : WebhookController<AgeRating>
 {

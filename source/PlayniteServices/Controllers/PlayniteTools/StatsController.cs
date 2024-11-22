@@ -2,7 +2,7 @@
 using MongoDB.Driver;
 using MongoDB.Bson;
 
-namespace PlayniteServices.Playnite;
+namespace Playnite.Backend.Playnite;
 
 [ServiceFilter(typeof(ServiceKeyFilter))]
 [Route("playnite/stats")]

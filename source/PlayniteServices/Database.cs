@@ -2,10 +2,10 @@
 using MongoDB.Bson.Serialization.Options;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
-using PlayniteServices.IGDB;
-using PlayniteServices.Discord;
+using Playnite.Backend.Discord;
+using Playnite.Backend.IGDB;
 
-namespace PlayniteServices;
+namespace Playnite.Backend;
 
 public class Database
 {
@@ -60,7 +60,6 @@ public class Database
         });
 
         var clientSettings = MongoClientSettings.FromConnectionString(settings.Settings.DatabaseConString);
-        clientSettings.LinqProvider = MongoDB.Driver.Linq.LinqProvider.V3;
         MongoClient = new MongoClient(clientSettings);
         MongoDb = MongoClient.GetDatabase("playnitebackend");
         Users = MongoDb.GetCollection<User>("Users");
