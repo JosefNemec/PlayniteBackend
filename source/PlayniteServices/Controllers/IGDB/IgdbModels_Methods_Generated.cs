@@ -107,10 +107,15 @@ public partial class Collection : IIgdbItem
             cm.AutoMap();
             cm.MapIdMember(p => p.id);
             cm.SetIgnoreExtraElements(true);
+            cm.UnmapProperty(p => p.games_expanded);
             cm.UnmapProperty(p => p.type_expanded);
             cm.UnmapProperty(p => p.as_parent_relations_expanded);
             cm.UnmapProperty(p => p.as_child_relations_expanded);
         });
+    }
+    public async Task expand_games(IgdbManager igdb)
+    {
+        games_expanded = await igdb.Games.GetItem(games);
     }
     public async Task expand_type(IgdbManager igdb)
     {
@@ -620,6 +625,19 @@ public partial class GameMode : IIgdbItem
     public static void RegisterClassMap()
     {
         BsonClassMap.RegisterClassMap<GameMode>(cm => {
+            cm.AutoMap();
+            cm.MapIdMember(p => p.id);
+            cm.SetIgnoreExtraElements(true);
+
+        });
+    }
+}
+
+public partial class GameTimeToBeat : IIgdbItem
+{
+    public static void RegisterClassMap()
+    {
+        BsonClassMap.RegisterClassMap<GameTimeToBeat>(cm => {
             cm.AutoMap();
             cm.MapIdMember(p => p.id);
             cm.SetIgnoreExtraElements(true);

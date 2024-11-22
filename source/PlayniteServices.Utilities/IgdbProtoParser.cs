@@ -82,6 +82,7 @@ public class IgdbProtoParser
         {  "Theme", "themes" },
         {  "Website", "websites" },
         {  "ReleaseDateStatus", "release_date_statuses" },
+        {  "GameTimeToBeat", "game_time_to_beats" },
     };
 
     private Dictionary<string, string> typeConversions = new Dictionary<string, string>

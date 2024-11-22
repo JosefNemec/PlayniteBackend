@@ -27,6 +27,7 @@ public partial class IgdbManager : IDisposable
     [AllowNull] public GameEngineLogoCollection GameEngineLogos { get; private set; }
     [AllowNull] public GameLocalizationCollection GameLocalizations { get; private set; }
     [AllowNull] public GameModeCollection GameModes { get; private set; }
+    [AllowNull] public GameTimeToBeatCollection GameTimeToBeats { get; private set; }
     [AllowNull] public GameVersionCollection GameVersions { get; private set; }
     [AllowNull] public GameVersionFeatureCollection GameVersionFeatures { get; private set; }
     [AllowNull] public GameVersionFeatureValueCollection GameVersionFeatureValues { get; private set; }
@@ -123,6 +124,9 @@ public partial class IgdbManager : IDisposable
        GameModes = new GameModeCollection(this, Database);
        GameModes.CreateIndexes();
        DataCollections.Add(GameModes);
+       GameTimeToBeats = new GameTimeToBeatCollection(this, Database);
+       GameTimeToBeats.CreateIndexes();
+       DataCollections.Add(GameTimeToBeats);
        GameVersions = new GameVersionCollection(this, Database);
        GameVersions.CreateIndexes();
        DataCollections.Add(GameVersions);
@@ -224,6 +228,7 @@ GameEngine.RegisterClassMap();
 GameEngineLogo.RegisterClassMap();
 GameLocalization.RegisterClassMap();
 GameMode.RegisterClassMap();
+GameTimeToBeat.RegisterClassMap();
 GameVersion.RegisterClassMap();
 GameVersionFeature.RegisterClassMap();
 GameVersionFeatureValue.RegisterClassMap();
@@ -386,6 +391,12 @@ public partial class GameLocalizationCollection : IgdbCollection<GameLocalizatio
 public partial class GameModeCollection : IgdbCollection<GameMode>
 {
     public GameModeCollection(IgdbManager igdb, Database database) : base("game_modes", igdb, database)
+    {
+    }
+}
+public partial class GameTimeToBeatCollection : IgdbCollection<GameTimeToBeat>
+{
+    public GameTimeToBeatCollection(IgdbManager igdb, Database database) : base("game_time_to_beats", igdb, database)
     {
     }
 }

@@ -162,6 +162,13 @@ public class GameModeWebhookController : WebhookController<GameMode>
     {
     }
 }
+[Route("igdb/webhooks/game_time_to_beats")]
+public class GameTimeToBeatWebhookController : WebhookController<GameTimeToBeat>
+{
+    public GameTimeToBeatWebhookController(IgdbManager igdb, UpdatableAppSettings settings) : base("game_time_to_beats", igdb, settings)
+    {
+    }
+}
 [Route("igdb/webhooks/game_versions")]
 public class GameVersionWebhookController : WebhookController<GameVersion>
 {

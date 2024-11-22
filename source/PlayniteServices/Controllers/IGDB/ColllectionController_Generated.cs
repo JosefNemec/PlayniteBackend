@@ -162,6 +162,13 @@ public class GameModeCollectionController : CollectionController<GameMode>
     {
     }
 }
+[Route("igdb/collections/game_time_to_beats")]
+public class GameTimeToBeatCollectionController : CollectionController<GameTimeToBeat>
+{
+    public GameTimeToBeatCollectionController(IgdbManager igdb, UpdatableAppSettings settings) : base("game_time_to_beats", igdb, settings)
+    {
+    }
+}
 [Route("igdb/collections/game_versions")]
 public class GameVersionCollectionController : CollectionController<GameVersion>
 {

@@ -417,6 +417,7 @@ public partial class Collection : IIgdbItem
 {
     public ulong id { get; set; }
     public long created_at { get; set; }
+    public List<ulong>? games { get; set; }
     public string? name { get; set; }
     public string? slug { get; set; }
     public long updated_at { get; set; }
@@ -426,6 +427,7 @@ public partial class Collection : IIgdbItem
     public List<ulong>? as_parent_relations { get; set; }
     public List<ulong>? as_child_relations { get; set; }
 
+    public List<Game>? games_expanded { get; set; }
     public CollectionType? type_expanded { get; set; }
     public List<CollectionRelation>? as_parent_relations_expanded { get; set; }
     public List<CollectionRelation>? as_child_relations_expanded { get; set; }
@@ -842,6 +844,25 @@ public partial class GameMode : IIgdbItem
     public override string ToString()
     {
         return $"{id}: {name}";
+    }
+}
+
+public partial class GameTimeToBeat : IIgdbItem
+{
+    public ulong id { get; set; }
+    public int game_id { get; set; }
+    public int hastily { get; set; }
+    public int normally { get; set; }
+    public int completely { get; set; }
+    public int count { get; set; }
+    public long created_at { get; set; }
+    public long updated_at { get; set; }
+    public string? checksum { get; set; }
+
+
+    public override string ToString()
+    {
+        return id.ToString();
     }
 }
 

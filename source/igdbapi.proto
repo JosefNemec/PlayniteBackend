@@ -270,7 +270,8 @@ message CollectionResult {
 
 message Collection {
     uint64 id = 1;
-    google.protobuf.Timestamp created_at = 2;
+    google.protobuf.Timestamp created_at = 2; 
+    repeated Game games = 3; 
     string name = 4; 
     string slug = 5; 
     google.protobuf.Timestamp updated_at = 6; 
@@ -588,13 +589,13 @@ message Game {
     repeated AlternativeName alternative_names = 5; 
     repeated Artwork artworks = 6; 
     repeated Game bundles = 7; 
-    GameCategoryEnum category = 8;
+    GameCategoryEnum category = 8; 
     Cover cover = 10; 
     google.protobuf.Timestamp created_at = 11; 
     repeated Game dlcs = 12; 
     repeated Game expansions = 13; 
-    repeated ExternalGame external_games = 14;
-    google.protobuf.Timestamp first_release_date = 15;
+    repeated ExternalGame external_games = 14; 
+    google.protobuf.Timestamp first_release_date = 15; 
     Franchise franchise = 17; 
     repeated Franchise franchises = 18; 
     repeated GameEngine game_engines = 19; 
@@ -730,6 +731,22 @@ message GameMode {
     google.protobuf.Timestamp updated_at = 5; 
     string url = 6; 
     string checksum = 7; 
+}
+
+message GameTimeToBeatResult {
+    repeated GameTimeToBeat gametimetobeats = 1;
+}
+
+message GameTimeToBeat {
+    uint64 id = 1;
+    int32 game_id = 2; 
+    int32 hastily = 3; 
+    int32 normally = 4; 
+    int32 completely = 5; 
+    int32 count = 6; 
+    google.protobuf.Timestamp created_at = 7; 
+    google.protobuf.Timestamp updated_at = 8; 
+    string checksum = 9; 
 }
 
 message GameVersionResult {
