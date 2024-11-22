@@ -1,0 +1,57 @@
+[*]
+indent_style = space
+end_of_line = crlf
+
+[*.{cs,axaml,xaml}]
+indent_size = 4
+indent_style = space
+tab_width = 4
+
+# Specify StringComparison for correctness
+dotnet_diagnostic.CA1310.severity = error
+dotnet_diagnostic.CA1307.severity = error
+
+# Async method is not awaited
+dotnet_diagnostic.CS4014.severity = error
+
+# nullable warnings as errors
+dotnet_diagnostic.CS8600.severity = error
+dotnet_diagnostic.CS8601.severity = error
+dotnet_diagnostic.CS8602.severity = error
+dotnet_diagnostic.CS8603.severity = error
+dotnet_diagnostic.CS8604.severity = error
+dotnet_diagnostic.CS8613.severity = error
+dotnet_diagnostic.CS8614.severity = error
+dotnet_diagnostic.CS8619.severity = error
+dotnet_diagnostic.CS8620.severity = error
+dotnet_diagnostic.CS8622.severity = error
+dotnet_diagnostic.CS8625.severity = error
+dotnet_diagnostic.CS8629.severity = error
+dotnet_diagnostic.CS8633.severity = error
+dotnet_diagnostic.CS8767.severity = error
+dotnet_diagnostic.CS8618.severity = error
+dotnet_diagnostic.CS8765.severity = error
+
+# Naming Styles
+dotnet_diagnostic.IDE1006.severity = none
+
+# Consider using Assert.That instead of classic assert
+dotnet_diagnostic.NUnit2005.severity = none
+dotnet_diagnostic.NUnit2006.severity = none
+dotnet_diagnostic.NUnit2003.severity = none
+dotnet_diagnostic.NUnit2017.severity = none
+dotnet_diagnostic.NUnit2002.severity = none
+dotnet_diagnostic.NUnit2019.severity = none
+dotnet_diagnostic.NUnit2045.severity = none
+
+# IDE0290: Use primary constructor
+csharp_style_prefer_primary_constructors = false
+
+# IDE0090: Use 'new(...)'
+csharp_style_implicit_object_creation_when_type_is_apparent = false
+
+# Mark members as static
+dotnet_diagnostic.CA1822.severity = none
+
+# CancellationToken parameters must come last
+dotnet_diagnostic.CA1068.severity = none
