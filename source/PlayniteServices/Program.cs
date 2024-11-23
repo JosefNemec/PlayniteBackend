@@ -31,11 +31,6 @@ public class Program
             options.AllowSynchronousIO = true;
         });
 
-        services.Configure<IISServerOptions>(options =>
-        {
-            options.AllowSynchronousIO = true;
-        });
-
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
