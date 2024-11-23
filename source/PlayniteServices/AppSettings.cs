@@ -63,15 +63,22 @@ public class AppSettings
     public AddonsSettings? Addons { get; set; }
     public DiscordSettings? Discord { get; set; }
     public Version? MinimumDiagVersion { get; set; }
+    public bool TraceLogEnabled { get; set; }
 }
 
 public class UpdatableAppSettings
 {
     public AppSettings Settings { get; private set; }
+    public EventHandler? SettingsChanged { get; set; }
+    public Guid Id = Guid.NewGuid();
 
     public UpdatableAppSettings(IOptionsMonitor<AppSettings> settings)
     {
         Settings = settings.CurrentValue;
-        settings.OnChange((s) => Settings = s);
+        settings.OnChange((s) =>
+        {
+            Settings = s;
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
+        });
     }
 }

@@ -38,7 +38,7 @@ public partial class Serialization
         catch (Exception e)
         {
             logger.Error(e, $"Failed to deserialize {typeof(T).FullName} from json:");
-            logger.Debug(json);
+            logger.Trace(json);
             throw;
         }
     }

@@ -108,6 +108,13 @@ public class Program
         ConfigureApp(app);
 
         var settings = app.Services.GetService<UpdatableAppSettings>()!;
+        settings.SettingsChanged += (_, _) =>
+        {
+            NLogLogProvider.TraceLoggingEnabled = settings.Settings.TraceLogEnabled;
+        };
+
+        NLogLogProvider.TraceLoggingEnabled = settings.Settings.TraceLogEnabled;
+
         if (settings.Settings.Addons?.AutoUpdate == true)
         {
             var addons = app.Services.GetService<Addons.AddonsManager>()!;

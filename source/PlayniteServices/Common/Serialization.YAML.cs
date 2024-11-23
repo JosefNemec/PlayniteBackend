@@ -24,7 +24,7 @@ public partial class Serialization
         catch (Exception e)
         {
             logger.Error(e, $"Failed to deserialize {typeof(T).FullName} from yaml:");
-            logger.Debug(yaml);
+            logger.Trace(yaml);
             throw;
         }
     }
