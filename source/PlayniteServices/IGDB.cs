@@ -146,6 +146,7 @@ public partial class IgdbManager : IDisposable
 
         try
         {
+            logger.Info("Getting new IGDB auth token.");
             var clientId = Settings.Settings.IGDB!.ClientId;
             var clientSecret = Settings.Settings.IGDB.ClientSecret;
             var authUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
@@ -156,7 +157,7 @@ public partial class IgdbManager : IDisposable
                 throw new Exception("Failed to authenticate IGDB.");
             }
 
-            logger.Info($"New IGDB auth token generated: {auth.access_token}");
+            logger.Info("New IGDB auth token generated.");
             Settings.Settings.IGDB.AccessToken = auth.access_token;
             await SaveTokens(auth.access_token);
             isAuthenticated = true;
