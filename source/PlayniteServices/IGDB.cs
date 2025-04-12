@@ -201,8 +201,11 @@ public partial class IgdbManager : IDisposable
             return await response.Content.ReadAsStringAsync();
         }
 
-        var authFailed = response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden;
         var tooManyRequest = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
+        var authFailed = response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden;
+        if (authFailed)
+            isAuthenticated = false;
+
         if (!allowRetry)
         {
             if (authFailed)
